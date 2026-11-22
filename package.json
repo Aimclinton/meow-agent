@@ -17,7 +17,6 @@
     "exceljs": "^4.4.0",
     "postcss": "^8.5.33",
     "react": "^19.3.1",
-    "react-camera-pro": "^1.4.0",
     "react-dom": "^19.3.1",
     "tailwindcss": "^3.4.19",
     "tesseract.js": "^7.0.0",
