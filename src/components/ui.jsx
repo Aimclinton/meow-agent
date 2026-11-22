@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import CalicoCat from './CalicoCat';
-import { useQuota, MONTHLY_LIMIT } from '../store/quotaStore';
+import { useQuota } from '../store/quotaStore';
 
 export function PixelLogo({ size = 22 }) {
   return (
@@ -189,8 +189,9 @@ export function TypeLine({ text, speed = 35, className = '' }) {
 // Thin bar shown at the top of every screen.
 export function QuotaBar() {
   const used = useQuota((s) => s.used);
-  const left = Math.max(0, MONTHLY_LIMIT - used);
-  const pct = (left / MONTHLY_LIMIT) * 100;
+  const limit = useQuota((s) => s.limit);
+  const left = Math.max(0, limit - used);
+  const pct = limit ? (left / limit) * 100 : 0;
   const low = pct <= 10;
   return (
     <div className="sticky top-0 z-40 bg-ink text-paper safe-x pt-[env(safe-area-inset-top)]">

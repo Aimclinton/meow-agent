@@ -1,4 +1,3 @@
-import { useState, useCallback } from 'react';
 import { createWorker } from 'tesseract.js';
 
 const LANGS = ['tha', 'eng'];
@@ -75,52 +74,17 @@ function toStage(m) {
   return null;
 }
 
-export function useOCR() {
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [stage, setStage] = useState('boot');
-  const [error, setError] = useState(null);
-
-  const processImage = useCallback(async (imageData) => {
-    setIsProcessing(true);
-    setProgress(0);
-    setStage('boot');
-    setError(null);
-    progressListener = (m) => {
-      const s = toStage(m);
-      if (s) {
-        setStage(s.stage);
-        setProgress((prev) => Math.max(prev, s.progress));
-      }
-    };
-
-    try {
-      const worker = await getWorker();
-      setStage('reading');
-      setProgress((prev) => Math.max(prev, 30));
-      const { data } = await worker.recognize(imageData, {}, { text: true, blocks: true });
-      setProgress(100);
-      return {
-        text: cleanThai(data.text || '').trim(),
-        confidence: data.confidence || 0,
-        layout: extractLayout(data),
-      };
-    } catch (err) {
-      const offline = typeof navigator !== 'undefined' && !navigator.onLine;
-      setError(
-        offline
-          ? 'ยังไม่ได้ต่ออินเทอร์เน็ต — ครั้งแรกต้องโหลดข้อมูลภาษาก่อน'
-          : `อ่านข้อความไม่สำเร็จ (${err?.message || err})`
-      );
-      console.error('OCR error', err);
-      return null;
-    } finally {
-      progressListener = null;
-      setIsProcessing(false);
-    }
-  }, []);
-
-  const clearError = useCallback(() => setError(null), []);
-
-  return { processImage, isProcessing, progress, stage, error, clearError };
+// Plain (non-hook) local OCR, used as offline fallback by the scan service.
+export async function localOCR(imageData, onProgress) {
+  progressListener = (m) => {
+    const st = toStage(m);
+    if (st) onProgress?.(st);
+  };
+  try {
+    const worker = await getWorker();
+    const { data } = await worker.recognize(imageData, {}, { text: true, blocks: true });
+    return { text: cleanThai(data.text || '').trim(), confidence: data.confidence || 0, layout: extractLayout(data) };
+  } finally {
+    progressListener = null;
+  }
 }

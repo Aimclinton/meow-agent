@@ -1,10 +1,11 @@
-import { useEffect, useRef } from 'react';
+import { useRef } from 'react';
 import { useEditor, useEditorState, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { TableKit } from '@tiptap/extension-table';
 import TextAlign from '@tiptap/extension-text-align';
 import Superscript from '@tiptap/extension-superscript';
 import Placeholder from '@tiptap/extension-placeholder';
+import { UnclearHighlight, findUnclear } from './editor/UnclearHighlight';
 
 function Tool({ on, active, disabled, label, children, wide }) {
   return (
@@ -45,6 +46,7 @@ function Toolbar({ editor, onCite }) {
       center: e.isActive({ textAlign: 'center' }),
       right: e.isActive({ textAlign: 'right' }),
       table: e.isActive('table'),
+      unclear: findUnclear(e.state.doc),
       undo: e.can().undo(),
       redo: e.can().redo(),
     }),
@@ -87,6 +89,22 @@ function Toolbar({ editor, onCite }) {
         )}
         <Sep />
         <Tool wide label="แทรกอ้างอิง" on={onCite}>[1] อ้างอิง</Tool>
+        {s.unclear.length > 0 && (
+          <>
+            <Sep />
+            <Tool
+              wide
+              label="ไปยังจุดที่ไม่ชัดเจนถัดไป"
+              on={() => {
+                const sel = editor.state.selection.to;
+                const next = s.unclear.find((h) => h.from >= sel) || s.unclear[0];
+                editor.chain().focus().setTextSelection(next).scrollIntoView().run();
+              }}
+            >
+              <span className="bg-yellow-300 text-ink px-1.5 rounded-[2px]">ไม่ชัดเจน {s.unclear.length}</span> ›
+            </Tool>
+          </>
+        )}
       </div>
     </div>
   );
@@ -111,18 +129,13 @@ export default function DocEditor({ value, onChange }) {
       TextAlign.configure({ types: ['heading', 'paragraph'] }),
       Superscript,
       Placeholder.configure({ placeholder: 'เริ่มพิมพ์เอกสารที่นี่...' }),
+      UnclearHighlight,
     ],
     content: value.content,
     immediatelyRender: true,
     editorProps: { attributes: { class: 'doc-prose outline-none min-h-[50vh]' } },
     onUpdate: ({ editor: e }) => emit({ content: e.getJSON() }),
   });
-
-  // Replace content when the document is regenerated from OCR.
-  const version = value.version || 0;
-  useEffect(() => {
-    if (editor && version) editor.commands.setContent(latest.current.content, { emitUpdate: false });
-  }, [editor, version]);
 
   const refs = value.references || [];
 

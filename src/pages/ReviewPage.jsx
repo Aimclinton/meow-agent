@@ -1,56 +1,140 @@
 import { useEffect, useRef, useState } from 'react';
 import { useDocumentStore } from '../store/documentStore';
-import DocumentViewer from '../components/DocumentViewer';
+import { useQuota } from '../store/quotaStore';
 import DocEditor from '../components/DocEditor';
-import { Button, PageTitle } from '../components/ui';
+import ZoomImage from '../components/ZoomImage';
+import CalicoCat from '../components/CalicoCat';
+import { Button, Card, PageTitle, PixelProgress } from '../components/ui';
 import { ocrPagesToDoc } from '../utils/ocrToDoc';
+import { scanPage } from '../services/ocrClient';
 
-function ensureRichDoc(document) {
-  return document.richDoc || {
-    content: ocrPagesToDoc(document.pages),
-    header: '',
-    footer: '',
-    pageNumbers: true,
-    references: [],
-    version: 0,
-  };
+const contentOf = (page) => page.content || ocrPagesToDoc([page]);
+
+// Drag & drop + up/down list for page order.
+function PageOrder({ pages, onMove, onDelete, onOpen }) {
+  const [dragged, setDragged] = useState(null);
+  return (
+    <ol className="space-y-2">
+      {pages.map((p, i) => (
+        <li
+          key={p.id}
+          draggable
+          onDragStart={() => setDragged(i)}
+          onDragOver={(e) => e.preventDefault()}
+          onDrop={() => { if (dragged !== null && dragged !== i) onMove(dragged, i); setDragged(null); }}
+          className={`flex items-center gap-3 bg-white/70 border border-ink/15 rounded-[3px] p-2 transition ${dragged === i ? 'opacity-40' : ''}`}
+        >
+          <span className="cursor-grab text-ink/40 px-1 select-none" aria-hidden="true">⋮⋮</span>
+          <button onClick={() => onOpen(i)} className="w-12 h-16 shrink-0 bg-white border border-ink/10 overflow-hidden">
+            <img src={p.imageData} alt="" className="w-full h-full object-cover object-top" />
+          </button>
+          <button onClick={() => onOpen(i)} className="flex-1 min-w-0 text-left">
+            <span className="font-pixel text-sm">หน้า {String(i + 1).padStart(2, '0')}</span>
+            <span className="block text-xs text-ink/50 truncate">{(p.ocrText || '').slice(0, 80) || '(ไม่พบข้อความ)'}</span>
+          </button>
+          <div className="flex shrink-0">
+            <button disabled={i === 0} onClick={() => onMove(i, i - 1)} aria-label="เลื่อนขึ้น" className="w-10 h-10 hover:bg-ink/5 disabled:opacity-25">↑</button>
+            <button disabled={i === pages.length - 1} onClick={() => onMove(i, i + 1)} aria-label="เลื่อนลง" className="w-10 h-10 hover:bg-ink/5 disabled:opacity-25">↓</button>
+            <button onClick={() => onDelete(i)} aria-label="ลบหน้า" className="w-10 h-10 text-red-700 hover:bg-red-50">✕</button>
+          </div>
+        </li>
+      ))}
+    </ol>
+  );
 }
 
 export default function ReviewPage({ document, onExport }) {
-  const { reorderPages, deletePage, updateDocumentTitle, updatePageText, updateDoc } = useDocumentStore();
-  const [tab, setTab] = useState('doc');
-  const [rich, setRich] = useState(() => ensureRichDoc(document));
-  const saveTimer = useRef();
+  const { reorderPages, deletePage, updateDocumentTitle, updatePage, updateMeta } = useDocumentStore();
+  const consume = useQuota((q) => q.consume);
+  const [tab, setTab] = useState('edit');
+  const [index, setIndex] = useState(0);
+  const [rescan, setRescan] = useState(null); // { progress }
+  const [rescanError, setRescanError] = useState('');
+  const [editorKey, setEditorKey] = useState(0);
+  const [showImage, setShowImage] = useState(true);
+  const timer = useRef(null);
+  const pending = useRef({ pages: {}, meta: {} });
+  const pages = document.pages;
+  const page = pages[Math.min(index, pages.length - 1)];
 
-  // Save the first generated version right away.
-  useEffect(() => {
-    if (!document.richDoc) updateDoc(document.id, (d) => ({ ...d, richDoc: rich }));
-    return () => clearTimeout(saveTimer.current);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  // Write queued edits to the store (and IndexedDB).
+  const flush = () => {
+    clearTimeout(timer.current);
+    const { pages: pp, meta } = pending.current;
+    pending.current = { pages: {}, meta: {} };
+    Object.entries(pp).forEach(([pid, content]) => updatePage(document.id, pid, { content }));
+    if (Object.keys(meta).length) updateMeta(document.id, meta);
+  };
+  const flushRef = useRef(flush);
+  flushRef.current = flush;
+  useEffect(() => () => flushRef.current(), []);
 
-  const change = (next) => {
-    setRich(next);
-    clearTimeout(saveTimer.current);
-    saveTimer.current = setTimeout(() => updateDoc(document.id, (d) => ({ ...d, richDoc: next })), 500);
+  const schedule = () => {
+    clearTimeout(timer.current);
+    timer.current = setTimeout(() => flushRef.current(), 400);
   };
 
-  const regenerate = () => {
-    if (!window.confirm('สร้างเอกสารใหม่จากข้อความที่สแกน? การแก้ไขในเอกสารจะหายไป')) return;
-    change({ ...rich, content: ocrPagesToDoc(document.pages), version: (rich.version || 0) + 1 });
-    setTab('doc');
+  if (!page) {
+    return <p className="text-center text-sm text-ink/60 py-20">ไม่มีหน้าแล้ว — กลับไปสแกนเพิ่มได้</p>;
+  }
+
+  const value = {
+    content: contentOf(page),
+    header: document.header || '',
+    footer: document.footer || '',
+    references: document.references || [],
+    pageNumbers: document.pageNumbers !== false,
+  };
+
+  const onChange = (next) => {
+    if (next.content !== value.content) pending.current.pages[page.id] = next.content;
+    ['header', 'footer', 'references', 'pageNumbers'].forEach((k) => {
+      if (next[k] !== value[k]) pending.current.meta[k] = next[k];
+    });
+    schedule();
+  };
+
+  const rescanDetailed = async () => {
+    if (!window.confirm('สแกนหน้านี้ใหม่แบบละเอียด? ข้อความที่แก้ในหน้านี้จะถูกแทนที่')) return;
+    flush();
+    delete pending.current.pages[page.id];
+    setRescan({ progress: 10 });
+    setRescanError('');
+    try {
+      const res = await scanPage(page.imageData, {
+        detailed: true,
+        onStage: (s) => setRescan((r) => ({ progress: Math.max(r?.progress || 0, s.progress || 0) })),
+      });
+      consume(res.usage);
+      updatePage(document.id, page.id, {
+        content: res.content, ocrText: res.ocrText, engine: res.engine, confidence: res.confidence,
+        header: res.header, footer: res.footer, references: res.references,
+      });
+      const meta = {};
+      if (!document.header && res.header) meta.header = res.header;
+      if (!document.footer && res.footer) meta.footer = res.footer;
+      const refs = [...new Set([...(document.references || []), ...(res.references || [])])];
+      if (refs.length !== (document.references || []).length) meta.references = refs;
+      if (Object.keys(meta).length) updateMeta(document.id, meta);
+      setEditorKey((k) => k + 1);
+      if (res.engine === 'tesseract') setRescanError('ตอนนี้ใช้ AI ไม่ได้ เลยสแกนแบบออฟไลน์ให้แทน');
+    } catch (err) {
+      setRescanError(err.message || 'สแกนใหม่ไม่สำเร็จ');
+    } finally {
+      setRescan(null);
+    }
   };
 
   const tabs = [
-    ['doc', 'เอกสาร'],
-    ['pages', `หน้าสแกน (${document.pages.length})`],
+    ['edit', 'แก้ไข'],
+    ['order', `จัดเรียงหน้า (${pages.length})`],
   ];
 
   return (
     <div className="safe-x pb-32">
-      <div className="max-w-4xl mx-auto pt-8">
-        <PageTitle kicker="Step 02" title="Edit">
-          แมวจัดหัวข้อ รายการ และตารางให้แล้ว แก้ต่อได้เลย — ตัวหนา ตัวเอียง ตาราง หัว/ท้ายกระดาษ และอ้างอิง
+      <div className="max-w-7xl mx-auto pt-8">
+        <PageTitle kicker="Step 02" title="Review">
+          เทียบกับต้นฉบับแล้วแก้ได้ทุกจุด — หัวข้อ ย่อหน้า ตาราง หัว/ท้ายกระดาษ และอ้างอิง จุดสีเหลืองคือที่แมวอ่านไม่ชัด
         </PageTitle>
 
         <label className="block max-w-md mb-6">
@@ -66,40 +150,86 @@ export default function ReviewPage({ document, onExport }) {
           {tabs.map(([k, label]) => (
             <button
               key={k}
-              onClick={() => setTab(k)}
+              onClick={() => { flush(); setTab(k); }}
               className={`min-h-[44px] px-4 -mb-px border-b-2 transition ${tab === k ? 'border-ink text-ink font-medium' : 'border-transparent text-ink/50 hover:text-ink'}`}
             >
               {label}
             </button>
           ))}
-          <button onClick={regenerate} className="ml-auto min-h-[44px] px-2 text-xs text-ink/60 hover:text-ink underline underline-offset-4">
-            ↻ จัดใหม่จากสแกน
-          </button>
         </div>
 
-        <div className={tab === 'doc' ? '' : 'hidden'}>
-          <DocEditor value={rich} onChange={change} />
-        </div>
-
-        {tab === 'pages' && (
-          <>
-            <p className="text-xs text-ink/50 mb-4">ข้อความดิบจากการสแกน — แก้แล้วกด “จัดใหม่จากสแกน” เพื่อสร้างเอกสารใหม่</p>
-            <DocumentViewer
-              pages={document.pages}
-              onReorder={(a, b) => reorderPages(document.id, a, b)}
-              onDelete={(i) => deletePage(document.id, i)}
-              onEditText={(pageId, text) => updatePageText(document.id, pageId, text)}
+        {tab === 'order' && (
+          <div className="max-w-2xl">
+            <p className="text-xs text-ink/50 mb-3">ลากวาง หรือกด ↑ ↓ เพื่อเรียงลำดับหน้าก่อนส่งออก</p>
+            <PageOrder
+              pages={pages}
+              onMove={(a, b) => { flush(); reorderPages(document.id, a, b); setIndex(b); }}
+              onDelete={(i) => {
+                if (!window.confirm(`ลบหน้า ${i + 1}?`)) return;
+                flush();
+                deletePage(document.id, i);
+                setIndex(0);
+              }}
+              onOpen={(i) => { setIndex(i); setTab('edit'); }}
             />
+          </div>
+        )}
+
+        {tab === 'edit' && (
+          <>
+            {/* Page switcher */}
+            <div className="flex flex-wrap items-center gap-2 mb-4">
+              <div className="flex items-center border border-ink/20 rounded-[3px] font-menu">
+                <button disabled={index === 0} onClick={() => { flush(); setIndex(index - 1); }} className="w-11 h-11 disabled:opacity-25" aria-label="หน้าก่อนหน้า">‹</button>
+                <select
+                  value={index}
+                  onChange={(e) => { flush(); setIndex(Number(e.target.value)); }}
+                  className="h-11 bg-transparent text-sm px-1 outline-none"
+                  aria-label="เลือกหน้า"
+                >
+                  {pages.map((p, i) => <option key={p.id} value={i}>หน้า {i + 1} / {pages.length}</option>)}
+                </select>
+                <button disabled={index >= pages.length - 1} onClick={() => { flush(); setIndex(index + 1); }} className="w-11 h-11 disabled:opacity-25" aria-label="หน้าถัดไป">›</button>
+              </div>
+              <button onClick={() => setShowImage((v) => !v)} className="md:hidden font-menu text-sm min-h-[44px] px-3 underline underline-offset-4 text-ink/70">
+                {showImage ? 'ซ่อนต้นฉบับ' : 'ดูต้นฉบับ'}
+              </button>
+              <Button variant="ghost" onClick={rescanDetailed} disabled={!!rescan} className="ml-auto">
+                🔍 สแกนหน้านี้ใหม่แบบละเอียด
+              </Button>
+            </div>
+
+            {(rescan || rescanError) && (
+              <Card className="p-3 mb-4 flex items-center gap-3">
+                <div className="w-10 shrink-0"><CalicoCat backdrop={false} blink={false} mood={rescan ? 'open' : 'closed'} /></div>
+                {rescan ? (
+                  <div className="flex-1"><p className="text-xs mb-2">แมวกำลังอ่านหน้า {index + 1} อย่างละเอียด...</p><PixelProgress value={rescan.progress} /></div>
+                ) : (
+                  <p className="text-sm text-[#c9661d]">{rescanError}</p>
+                )}
+              </Card>
+            )}
+
+            <div className="grid md:grid-cols-2 gap-4 items-start">
+              <div className={`${showImage ? '' : 'hidden'} md:block md:sticky md:top-[calc(env(safe-area-inset-top)+6rem)]`}>
+                <ZoomImage key={page.id} src={page.imageData} alt={`ต้นฉบับหน้า ${index + 1}`} className="h-[42vh] md:h-[calc(100vh-8rem)]" />
+                <p className="text-[11px] text-ink/40 mt-1">
+                  ต้นฉบับ · {page.engine === 'tesseract' ? 'อ่านแบบออฟไลน์' : page.engine ? `อ่านโดย ${page.engine}` : ''} · ดับเบิลแตะหรือจีบนิ้วเพื่อซูม
+                </p>
+              </div>
+              <div className="min-w-0">
+                <DocEditor key={`${page.id}-${editorKey}`} value={value} onChange={onChange} />
+              </div>
+            </div>
           </>
         )}
       </div>
 
       <div className="fixed bottom-0 inset-x-0 z-20 bg-paper/90 backdrop-blur border-t border-ink/10 safe-x pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3">
-        <div className="max-w-4xl mx-auto flex justify-end">
+        <div className="max-w-7xl mx-auto flex justify-end">
           <Button
             onClick={() => {
-              clearTimeout(saveTimer.current);
-              updateDoc(document.id, (d) => ({ ...d, richDoc: rich }));
+              flush(); // export always uses the latest edits
               onExport();
             }}
             className="w-full sm:w-auto sm:px-10"
@@ -111,3 +241,4 @@ export default function ReviewPage({ document, onExport }) {
     </div>
   );
 }
+

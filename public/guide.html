@@ -2,418 +2,382 @@
 <html lang="th">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>🐱 MEOW Agent - Quick Start Guide</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>MEOW Agent — คู่มือ</title>
+  <meta name="theme-color" content="#eeeeec">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+Thai:wght@400;500;700&family=Silkscreen:wght@400;700&display=swap" rel="stylesheet">
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
+    :root {
+      --paper: #eeeeec; --ink: #111; --orange: #e2782a; --amber: #e9b949; --pink: #e58d8d;
+      --grey: #b9b9b4; --line: rgba(17,17,17,.15); --purple: #7c3aed;
     }
-
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { -webkit-text-size-adjust: 100%; }
     body {
-      font-family: 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      background: linear-gradient(135deg, #fafafa 0%, #f0f0f0 100%);
-      color: #1a1a1a;
-      line-height: 1.8;
+      background: var(--paper); color: var(--ink);
+      font-family: 'IBM Plex Mono', 'Noto Sans Thai', ui-monospace, monospace;
+      line-height: 1.7; overflow-x: hidden;
     }
+    a { color: inherit; }
+    .wrap { max-width: 1040px; margin: 0 auto; padding: 0 max(20px, env(safe-area-inset-right)) 0 max(20px, env(safe-area-inset-left)); }
+    .pixel { font-family: 'Silkscreen', monospace; text-transform: uppercase; }
+    .menu { font-family: 'Google Sans', 'Noto Sans Thai', system-ui, sans-serif; }
 
-    .container {
-      max-width: 900px;
-      margin: 0 auto;
-      padding: 40px 20px;
-    }
+    /* top quota-style bar */
+    .bar { position: sticky; top: 0; z-index: 10; background: var(--ink); color: var(--paper); font-size: 12px; padding-top: env(safe-area-inset-top); }
+    .bar .wrap { height: 30px; display: flex; align-items: center; gap: 12px; }
+    .bar a { margin-left: auto; font-family: 'Google Sans', sans-serif; text-decoration: none; border: 1px solid rgba(238,238,236,.4); padding: 2px 10px; border-radius: 3px; }
 
-    header {
-      text-align: center;
-      margin-bottom: 50px;
-      padding: 40px 0;
-      background: white;
-      border-radius: 20px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-      margin-top: 20px;
-    }
+    header.hero { padding: 48px 0 24px; display: grid; gap: 24px; align-items: center; }
+    @media (min-width: 768px) { header.hero { grid-template-columns: 1.2fr 1fr; padding: 72px 0 40px; } }
+    h1 { font-family: 'Silkscreen', monospace; font-weight: 700; font-size: clamp(2.6rem, 11vw, 5.2rem); line-height: .95; text-transform: uppercase; letter-spacing: -.01em; }
+    .lead { margin-top: 18px; max-width: 30em; font-size: 15px; color: rgba(17,17,17,.7); }
+    .cta { display: inline-flex; align-items: center; gap: 8px; margin-top: 24px; min-height: 48px; padding: 0 22px; background: var(--ink); color: var(--paper); text-decoration: none; border-radius: 3px; font-family: 'Google Sans', sans-serif; font-weight: 500; }
+    .cta:active { transform: scale(.98); }
 
-    h1 {
-      font-size: 3em;
-      margin-bottom: 10px;
-      color: #000;
-    }
+    /* hero cat */
+    .hero-cat { position: relative; width: min(340px, 80%); margin: 0 auto; cursor: pointer; }
+    .hero-cat svg { width: 100%; height: auto; display: block; }
+    .bubble { position: absolute; left: 4%; top: -4%; background: var(--ink); color: var(--paper); font-family: 'Google Sans', 'Noto Sans Thai', sans-serif; font-size: 14px; padding: 6px 12px; border-radius: 3px; opacity: 0; transform: scale(.6); transition: .2s steps(3); white-space: nowrap; pointer-events: none; }
+    .bubble.on { opacity: 1; transform: none; }
 
-    .subtitle {
-      font-size: 1.2em;
-      color: #666;
-      margin-bottom: 20px;
-    }
+    /* scanline look for pixel art */
+    .scan { position: relative; }
+    .scan::after { content: ''; position: absolute; inset: 0; background: repeating-linear-gradient(to bottom, transparent 0 2px, var(--paper) 2px 3px); pointer-events: none; mix-blend-mode: lighten; }
 
-    .link-box {
-      background: #000;
-      color: white;
-      padding: 20px;
-      border-radius: 12px;
-      text-align: center;
-      font-size: 1.1em;
-      font-weight: bold;
-      word-break: break-all;
-    }
+    .wiggle { transform-origin: 50% 100%; animation: wiggle 1.6s ease-in-out infinite; }
+    @keyframes wiggle { 0%,100% { transform: rotate(0); } 25% { transform: rotate(-3deg); } 75% { transform: rotate(3deg); } }
+    .tail { transform-origin: 6px 30px; animation: tail 1.2s ease-in-out infinite; }
+    @keyframes tail { 0%,100% { transform: rotate(-8deg); } 50% { transform: rotate(10deg); } }
+    .hop { animation: hop .5s ease-out; }
+    @keyframes hop { 40% { transform: translateY(-10%); } }
 
-    h2 {
-      font-size: 2em;
-      margin: 40px 0 20px;
-      color: #000;
-      border-left: 5px solid #000;
-      padding-left: 15px;
-    }
+    /* steps */
+    section { padding: 40px 0; border-top: 1px solid var(--line); }
+    .kicker { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: rgba(17,17,17,.5); margin-bottom: 8px; }
+    h2 { font-family: 'Silkscreen', monospace; font-size: clamp(1.6rem, 6vw, 2.6rem); text-transform: uppercase; line-height: 1; margin-bottom: 24px; }
+    .steps { display: grid; gap: 16px; }
+    .step { display: grid; grid-template-columns: 96px 1fr; gap: 16px; align-items: center; background: rgba(255,255,255,.6); border: 1px solid var(--line); border-radius: 3px; padding: 16px; }
+    @media (min-width: 768px) { .step { grid-template-columns: 150px 1fr; padding: 22px 26px; gap: 28px; } }
+    .step .art { width: 100%; aspect-ratio: 1; display: grid; place-items: center; cursor: pointer; user-select: none; -webkit-tap-highlight-color: transparent; }
+    .step .art svg { width: 100%; height: 100%; overflow: visible; }
+    .num { display: inline-block; background: var(--ink); color: var(--paper); font-family: 'Silkscreen', monospace; font-size: 12px; padding: 2px 8px; margin-bottom: 6px; }
+    .step h3 { font-family: 'Google Sans', 'Noto Sans Thai', sans-serif; font-size: 18px; line-height: 1.35; margin-bottom: 6px; }
+    .step p, .step li { font-size: 14px; color: rgba(17,17,17,.72); }
+    .step ul { padding-left: 1.2em; }
+    .tag { display: inline-block; font-size: 12px; border: 1px solid var(--line); padding: 0 6px; border-radius: 3px; margin: 2px 2px 0 0; background: #fff; }
+    .hint { font-size: 11px; color: rgba(17,17,17,.4); margin-top: 6px; }
 
-    h3 {
-      font-size: 1.3em;
-      margin: 20px 0 10px;
-      color: #333;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
+    /* props */
+    .wand { transform-origin: 12px 8px; animation: wand 2.4s ease-in-out infinite; }
+    .wand.fast { animation-duration: .5s; }
+    @keyframes wand { 0%,100% { transform: rotate(-14deg); } 50% { transform: rotate(16deg); } }
+    .feather { transform-origin: 50% 0; animation: feather 1.2s ease-in-out infinite; }
+    @keyframes feather { 0%,100% { transform: rotate(10deg); } 50% { transform: rotate(-12deg); } }
+    .paw { animation: paw 2.4s ease-in-out infinite; }
+    @keyframes paw { 0%,100% { transform: translateY(0); } 50% { transform: translate(6px,-8px); } }
 
-    .step {
-      background: white;
-      padding: 20px;
-      margin: 15px 0;
-      border-radius: 12px;
-      border-left: 5px solid #000;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-    }
+    .sachet { transform-origin: 50% 100%; animation: squeeze 1.4s ease-in-out infinite; }
+    @keyframes squeeze { 0%,100% { transform: scaleX(1); } 50% { transform: scaleX(.86); } }
+    .drip { animation: drip 1.4s ease-in infinite; }
+    @keyframes drip { 0% { transform: translateY(0); opacity: 1; } 80% { opacity: 1; } 100% { transform: translateY(14px); opacity: 0; } }
+    .tongue { transform-origin: 50% 0; animation: lick 1.4s steps(2) infinite; }
+    @keyframes lick { 50% { transform: scaleY(1.8); } }
 
-    .step-number {
-      display: inline-block;
-      background: #000;
-      color: white;
-      width: 35px;
-      height: 35px;
-      border-radius: 50%;
-      text-align: center;
-      line-height: 35px;
-      font-weight: bold;
-      margin-right: 10px;
-      font-size: 1.2em;
-    }
+    .kibble { animation: kibble 1s ease-in-out infinite; }
+    .kibble:nth-child(2) { animation-delay: .15s; } .kibble:nth-child(3) { animation-delay: .3s; } .kibble:nth-child(4) { animation-delay: .45s; } .kibble:nth-child(5) { animation-delay: .6s; }
+    @keyframes kibble { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+    .steam { animation: steam 2s ease-in-out infinite; opacity: .5; }
+    @keyframes steam { 0% { transform: translateY(4px); opacity: 0; } 50% { opacity: .5; } 100% { transform: translateY(-8px); opacity: 0; } }
 
-    .tip {
-      background: #f0f7ff;
-      border-left: 5px solid #2563eb;
-      padding: 15px;
-      margin: 15px 0;
-      border-radius: 8px;
-    }
+    .jump { animation: jump 1.2s cubic-bezier(.3,.7,.4,1) infinite; transform-origin: 50% 100%; }
+    @keyframes jump { 0%,100% { transform: translateY(0) scaleY(1); } 15% { transform: translateY(0) scaleY(.9); } 45% { transform: translateY(-14%) scaleY(1.04); } }
+    .spark { animation: spark 1.2s steps(2) infinite; }
+    @keyframes spark { 50% { opacity: 0; } }
 
-    .warning {
-      background: #fff3cd;
-      border-left: 5px solid #ffc107;
-      padding: 15px;
-      margin: 15px 0;
-      border-radius: 8px;
-    }
+    .grid2 { display: grid; gap: 12px; }
+    @media (min-width: 768px) { .grid2 { grid-template-columns: 1fr 1fr; } }
+    .card { background: rgba(255,255,255,.6); border: 1px solid var(--line); border-radius: 3px; padding: 16px 18px; }
+    .card h4 { font-family: 'Google Sans', 'Noto Sans Thai', sans-serif; font-size: 16px; margin-bottom: 6px; }
+    .card p, .card li { font-size: 14px; color: rgba(17,17,17,.72); }
+    details { background: rgba(255,255,255,.6); border: 1px solid var(--line); border-radius: 3px; padding: 0 18px; margin-bottom: 8px; }
+    summary { cursor: pointer; min-height: 52px; display: flex; align-items: center; font-family: 'Google Sans', 'Noto Sans Thai', sans-serif; font-weight: 500; list-style: none; }
+    summary::after { content: '+'; margin-left: auto; font-family: 'Silkscreen', monospace; }
+    details[open] summary::after { content: '−'; }
+    details p { padding-bottom: 16px; font-size: 14px; color: rgba(17,17,17,.72); }
+    footer { padding: 40px 0 calc(40px + env(safe-area-inset-bottom)); text-align: center; font-size: 12px; color: rgba(17,17,17,.5); }
 
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin: 20px 0;
-      background: white;
-      border-radius: 12px;
-      overflow: hidden;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-    }
-
-    th, td {
-      padding: 15px;
-      text-align: left;
-      border-bottom: 1px solid #eee;
-    }
-
-    th {
-      background: #000;
-      color: white;
-      font-weight: 600;
-    }
-
-    tr:hover {
-      background: #f5f5f5;
-    }
-
-    ul, ol {
-      margin-left: 20px;
-      margin-bottom: 15px;
-    }
-
-    li {
-      margin: 8px 0;
-    }
-
-    .emoji {
-      font-size: 1.3em;
-      margin-right: 5px;
-    }
-
-    .faq {
-      background: white;
-      padding: 20px;
-      margin: 15px 0;
-      border-radius: 12px;
-      border-left: 5px solid #10b981;
-    }
-
-    .faq strong {
-      color: #000;
-      display: block;
-      margin-bottom: 10px;
-    }
-
-    .cta-button {
-      display: inline-block;
-      background: #000;
-      color: white;
-      padding: 15px 40px;
-      border-radius: 12px;
-      text-decoration: none;
-      font-weight: bold;
-      text-align: center;
-      transition: all 0.3s;
-      margin: 20px auto;
-      display: block;
-      width: fit-content;
-    }
-
-    .cta-button:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-    }
-
-    footer {
-      text-align: center;
-      padding: 40px 20px;
-      color: #666;
-      border-top: 1px solid #ddd;
-      margin-top: 60px;
-    }
-
-    @media (max-width: 768px) {
-      h1 {
-        font-size: 2em;
-      }
-
-      h2 {
-        font-size: 1.5em;
-      }
-
-      .container {
-        padding: 20px 15px;
-      }
-
-      header {
-        padding: 30px 20px;
-      }
-    }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
   </style>
 </head>
 <body>
-  <div class="container">
-    <!-- Header -->
-    <header>
-      <h1>🐱 MEOW Agent</h1>
-      <p class="subtitle">Quick Start Guide</p>
-      <div class="link-box">
-        👉 https://meow-agent.vercel.app
+  <div class="bar"><div class="wrap"><span class="pixel">=^.^=</span><span>คู่มือแมวเลีย ฉบับย่อ</span><a href="/">เปิดแอป ›</a></div></div>
+
+  <div class="wrap">
+    <header class="hero">
+      <div>
+        <p class="kicker">Quick start guide</p>
+        <h1>Meow<br>Guide</h1>
+        <p class="lead">สแกนเอกสารลายมือหรือพิมพ์ แล้วให้แมว AI แกะเป็นไฟล์ Word / Excel ที่มีหัวข้อ ตัวหนา ตาราง หัว-ท้ายกระดาษ และอ้างอิง พร้อมใช้ใน 5 ขั้นตอน</p>
+        <a class="cta" href="/">เริ่มใช้งาน ›</a>
       </div>
-      <p style="margin-top: 15px; font-size: 0.9em; color: #999;">
-        สแกนเอกสารเขียนมือ + OCR + Export เป็น Word/Excel ไว้ใจได้
-      </p>
+      <div class="hero-cat" id="heroCat" role="button" tabindex="0" aria-label="แตะแมว">
+        <span class="bubble" id="heroBubble">เมี้ยว!</span>
+        <div class="scan wiggle" id="heroCatInner"><svg id="catBig" viewBox="0 0 34 32" shape-rendering="crispEdges"></svg></div>
+      </div>
     </header>
 
-    <!-- 5 Steps -->
     <section>
-      <h2><span class="emoji">🚀</span>5 ขั้นตอนใช้งาน</h2>
+      <p class="kicker">How it works</p>
+      <h2>5 Steps</h2>
+      <div class="steps">
 
-      <div class="step">
-        <h3><span class="step-number">1</span>เปิด App</h3>
-        <ul>
-          <li>ไปที่ <strong>https://meow-agent.vercel.app</strong></li>
-          <li>ใช้ได้ทั้ง PC / iPhone / Android</li>
-          <li>ไม่ต้อง download app ใดๆ</li>
-        </ul>
-      </div>
+        <!-- 1 -->
+        <article class="step">
+          <div class="art" data-toy="cat" aria-label="แมวดุ๊กดิ๊ก แตะได้">
+            <svg viewBox="0 0 40 40">
+              <g class="wiggle"><g class="cat-small"></g></g>
+            </svg>
+          </div>
+          <div>
+            <span class="num">01</span>
+            <h3>เปิดแอป แล้วตั้งรหัสผ่าน</h3>
+            <p>ครั้งแรกให้ตั้งรหัสผ่าน แอปจะให้ <b>รหัสกู้คืน</b> (MEOW-XXXX-XXXX-XXXX) กดบันทึกเก็บไว้ ถ้าลืมรหัสผ่านใช้รหัสนี้ตั้งใหม่ได้ เอกสารไม่หาย (ถ้าทีมเปิดระบบบัญชี ให้ล็อกอินด้วยอีเมล และกด “ลืมรหัสผ่าน” เพื่อรับลิงก์ทางอีเมลได้)</p>
+            <p class="hint">แตะน้องแมวดูสิ</p>
+          </div>
+        </article>
 
-      <div class="step">
-        <h3><span class="step-number">2</span>ตั้ง Password (ครั้งแรก)</h3>
-        <ul>
-          <li>สร้าง password 4 หลักขึ้นไป</li>
-          <li>เก็บรหัสไว้ให้ดี (จำเป็นอย่างยิ่ง)</li>
-          <li>ใช้เข้าซ้ำแต่ละครั้ง</li>
-        </ul>
-        <div class="warning">
-          <span class="emoji">⚠️</span> ถ้าลืม password ต้องรีเซ็ต browser → เก็บไว้ให้ดี!
-        </div>
-      </div>
+        <!-- 2 -->
+        <article class="step">
+          <div class="art" data-toy="wand" aria-label="ไม้ตกแมว แตะได้">
+            <svg viewBox="0 0 40 40">
+              <g class="wand" id="wand">
+                <path d="M12 8 L30 4" stroke="#8b5a2b" stroke-width="1.6" stroke-linecap="round"/>
+                <path d="M30 4 Q34 12 31 20" stroke="#111" stroke-width=".6" fill="none"/>
+                <g transform="translate(31 20)"><g class="feather">
+                  <path d="M0 0 C-3 4 -3 9 0 13 C3 9 3 4 0 0Z" fill="#e2782a"/>
+                  <path d="M0 0 L0 13" stroke="#111" stroke-width=".4"/>
+                  <circle cx="0" cy="0" r="1.2" fill="#e9b949"/>
+                </g></g>
+              </g>
+              <g transform="translate(6 26)"><g class="paw">
+                <rect x="0" y="4" width="10" height="8" rx="4" fill="#fff" stroke="#111" stroke-width=".8"/>
+                <circle cx="2.5" cy="4" r="1.6" fill="#e58d8d"/><circle cx="5" cy="3" r="1.6" fill="#e58d8d"/><circle cx="7.5" cy="4" r="1.6" fill="#e58d8d"/>
+              </g></g>
+            </svg>
+          </div>
+          <div>
+            <span class="num">02</span>
+            <h3>ถ่ายรูป หรือเลือกรูปจากอัลบั้ม</h3>
+            <p>กด <span class="tag">Open Camera</span> เพื่อถ่ายสด หรือ <span class="tag">Choose Photo</span> เพื่อเลือกรูปจากคลังภาพ (เลือกได้หลายรูป) วางเอกสารให้เต็มกรอบ แสงสว่าง ไม่มีเงา</p>
+            <p class="hint">แตะไม้ตกแมวให้แกว่งเร็วขึ้น</p>
+          </div>
+        </article>
 
-      <div class="step">
-        <h3><span class="step-number">3</span>ถ่ายรูป / เลือกรูป</h3>
-        <ul>
-          <li>🎥 กด <strong>📷 Open Camera</strong> (ถ่ายรูปสด)</li>
-          <li>📁 หรือ <strong>📁 Choose Photo</strong> (เลือกจากสต็อก)</li>
-          <li>✅ ตรวจสอบรูป → กด <strong>Add Page</strong></li>
-          <li>🔁 ถ่ายหลายหน้าได้ เรื่อยๆ</li>
-        </ul>
-        <div class="tip">
-          <span class="emoji">💡</span> <strong>แสงสว่าง</strong> ชัดดี + <strong>ไม่เอียง</strong> = OCR อ่านได้ดี
-        </div>
-      </div>
+        <!-- 3 -->
+        <article class="step">
+          <div class="art" data-toy="sachet" aria-label="ซองแมวเลีย แตะได้">
+            <svg viewBox="0 0 40 40">
+              <g transform="translate(13 2)"><g class="sachet">
+                <path d="M2 0 H12 L13 3 H1 Z" fill="#7c3aed"/>
+                <rect x="1" y="3" width="12" height="17" rx="1.5" fill="#e2782a" stroke="#111" stroke-width=".7"/>
+                <rect x="3" y="7" width="8" height="5" fill="#fff"/>
+                <text x="7" y="11" font-size="3.2" text-anchor="middle" font-family="Silkscreen,monospace" fill="#111">LICK</text>
+                <path d="M5 20 L7 24 L9 20 Z" fill="#e9b949" stroke="#111" stroke-width=".5"/>
+              </g></g>
+              <circle class="drip" cx="20" cy="27" r="1.3" fill="#e9b949"/>
+              <g transform="translate(10 28)">
+                <path d="M0 10 Q10 -4 20 10 Z" fill="#fff" stroke="#111" stroke-width=".8"/>
+                <path d="M2 3 L4 -2 L6 2" fill="#111"/><path d="M14 2 L16 -2 L18 3" fill="#111"/>
+                <rect x="6" y="5" width="1.6" height="1.6" fill="#111"/><rect x="12.4" y="5" width="1.6" height="1.6" fill="#111"/>
+                <rect class="tongue" x="9.2" y="7.4" width="1.6" height="1.6" fill="#e58d8d"/>
+              </g>
+            </svg>
+          </div>
+          <div>
+            <span class="num">03</span>
+            <h3>แมว AI อ่านทีละหน้า</h3>
+            <p>แอปย่อรูปแล้วส่งให้ Gemini อ่านทีละหน้าตามลำดับ (ขึ้นสถานะ “กำลังประมวลผลหน้าที่ 1 จาก 5...”) แมวจะแกะหัวข้อ ย่อหน้า ตัวหนา/เอียง ตาราง หัว-ท้ายกระดาษ และอ้างอิงให้เอง ระหว่างนั้นถ่ายหน้าต่อไปได้เลย</p>
+            <p>แถบดำด้านบนบอกว่า <b>“แมวเลียตอนนี้ แมวทำให้ได้อีก xxx รูป”</b> ของวันนี้ รีเซ็ตทุกวันตอนบ่ายสองถึงบ่ายสามโมง (เที่ยงคืนเวลาแปซิฟิก) และหน้าเว็บจะรีเฟรชเอง</p>
+            <p class="hint" id="lickCount">แตะซองแมวเลีย (เลียไปแล้ว 0 ครั้ง)</p>
+          </div>
+        </article>
 
-      <div class="step">
-        <h3><span class="step-number">4</span>จัดเรียง + ตรวจสอบ</h3>
-        <ul>
-          <li>🔄 <strong>Drag & Drop</strong> เรียงลำดับหน้า</li>
-          <li>👀 <strong>Click ดูข้อความ</strong> OCR (อ่านอัตโนมัติ)</li>
-          <li>🗑️ ลบหน้าที่ไม่ต้อง</li>
-          <li>✅ กด <strong>✓ Continue to Export</strong></li>
-        </ul>
-      </div>
-
-      <div class="step">
-        <h3><span class="step-number">5</span>Export เป็นไฟล์</h3>
-        <ul>
-          <li>
-            <strong>📄 DOCX</strong> (Microsoft Word)
+        <!-- 4 -->
+        <article class="step">
+          <div class="art" data-toy="bowl" aria-label="ถ้วยข้าวแมว แตะได้">
+            <svg viewBox="0 0 40 40">
+              <path class="steam" d="M15 10 q2 -3 0 -6" stroke="#b9b9b4" stroke-width="1" fill="none"/>
+              <path class="steam" style="animation-delay:.6s" d="M21 10 q2 -3 0 -6" stroke="#b9b9b4" stroke-width="1" fill="none"/>
+              <path class="steam" style="animation-delay:1.2s" d="M27 10 q2 -3 0 -6" stroke="#b9b9b4" stroke-width="1" fill="none"/>
+              <g id="kibbles">
+                <circle class="kibble" cx="13" cy="20" r="2" fill="#8b5a2b"/>
+                <circle class="kibble" cx="17" cy="18" r="2" fill="#a0522d"/>
+                <circle class="kibble" cx="21" cy="19" r="2" fill="#8b5a2b"/>
+                <circle class="kibble" cx="25" cy="18" r="2" fill="#a0522d"/>
+                <circle class="kibble" cx="28" cy="20" r="2" fill="#8b5a2b"/>
+              </g>
+              <path d="M6 21 H34 L31 32 H9 Z" fill="#e2782a" stroke="#111" stroke-width=".8"/>
+              <rect x="6" y="20" width="28" height="2" fill="#111"/>
+              <text x="20" y="29" font-size="4" text-anchor="middle" font-family="Silkscreen,monospace" fill="#fff">MEOW</text>
+              <path d="M17 26 l1 -1 l1 1 m2 0 l1 -1 l1 1" stroke="#fff" stroke-width=".4" fill="none"/>
+            </svg>
+          </div>
+          <div>
+            <span class="num">04</span>
+            <h3>ตรวจทานและจัดหน้า</h3>
             <ul>
-              <li>ใช้: รายงาน, บันทึก, เอกสารธรรมชาติ</li>
-              <li>✓ แก้ไขได้, เก็บรูป + ข้อความ</li>
+              <li>หน้าจอแบ่งซ้าย-ขวา: ซ้ายเป็นต้นฉบับ (จีบนิ้วหรือกด +/− เพื่อซูม) ขวาเป็นข้อความที่แกะได้</li>
+              <li>แก้ได้ทุกจุด ทั้งหัวข้อ ตัวหนา/เอียง ตาราง (เพิ่ม/ลบแถวและคอลัมน์) หัว-ท้ายกระดาษ และอ้างอิง</li>
+              <li>คำที่ <mark style="background:#fde047">[ไม่ชัดเจน]</mark> จะเป็นสีเหลือง ถ้าตารางซับซ้อน กด “สแกนหน้านี้ใหม่แบบละเอียด”</li>
+              <li>แท็บ “จัดเรียงหน้า” ลากวาง หรือกด ↑ ↓ เพื่อเรียงหน้า</li>
             </ul>
-          </li>
-          <li>
-            <strong>📊 XLSX</strong> (Microsoft Excel)
-            <ul>
-              <li>ใช้: ข้อมูล, ตัวเลข, บันทึกย่อ</li>
-              <li>✓ ตัวเลขชัดเจน, จัดระเบียบง่าย</li>
-            </ul>
-          </li>
-        </ul>
-        <p style="margin-top: 15px;"><strong>กด Export</strong> → ไฟล์ลงมา 💾</p>
+            <p class="hint">แตะถ้วยเพื่อเติมข้าว</p>
+          </div>
+        </article>
+
+        <!-- 5 -->
+        <article class="step">
+          <div class="art" data-toy="jump" aria-label="แมวดีใจ แตะได้">
+            <svg viewBox="0 0 40 40">
+              <g class="spark"><rect x="5" y="6" width="2" height="2" fill="#e9b949"/><rect x="33" y="10" width="2" height="2" fill="#e2782a"/><rect x="30" y="3" width="1.5" height="1.5" fill="#111"/></g>
+              <g class="jump"><g class="cat-small happy"></g></g>
+              <rect x="8" y="38" width="24" height="1" fill="#b9b9b4"/>
+            </svg>
+          </div>
+          <div>
+            <span class="num">05</span>
+            <h3>ส่งออก Word / Excel / Slide</h3>
+            <p>เลือกฟอนต์ภาษาไทยและอังกฤษ (Sarabun, Noto Sans Thai, TH Sarabun New, Google Sans) แล้วกด <span class="tag">.DOCX</span> หรือ <span class="tag">.XLSX</span> ได้ไฟล์ที่มีโครงสร้างครบ ส่วน <span class="tag" style="color:#7c3aed">Export as Slide</span> ให้เลือกสไตล์โทนม่วง แล้วคัดลอก prompt ไปให้ AI ทำสไลด์ต่อ</p>
+            <p>เอกสารเก็บไว้ในหน้า History 7 วัน เปิดมาแก้หรือส่งออกซ้ำได้</p>
+          </div>
+        </article>
       </div>
     </section>
 
-    <!-- History -->
     <section>
-      <h2><span class="emoji">📚</span>Document History (ดูย้อนหลัง)</h2>
-
-      <div class="tip">
-        <strong>เก็บไว้กี่นาน?</strong><br>
-        ✅ <strong>7 วัน</strong> ต่อ user (อัตโนมัติลบ)
+      <p class="kicker">Tips</p>
+      <h2>Tips</h2>
+      <div class="grid2">
+        <div class="card"><h4>📷 ถ่ายให้แมวอ่านง่าย</h4><ul style="padding-left:1.2em"><li>ถ่ายตรง ๆ ทีละหน้า ให้เอกสารเต็มกรอบ</li><li>แสงสว่าง ไม่มีเงามือ ไม่สะท้อนแสง</li><li>ลายมือหวัดมาก ใช้ “สแกนหน้านี้ใหม่แบบละเอียด”</li></ul></div>
+        <div class="card"><h4>🔑 คีย์ส่วนตัว (BYOK)</h4><p>โควตาทีมหมด? ใส่ Gemini API Key ของตัวเองได้ที่ ⚙ ตั้งค่า คีย์เก็บในเครื่องคุณเท่านั้น</p></div>
+        <div class="card"><h4>📴 โหมดออฟไลน์</h4><p>ถ้าเน็ตหลุดหรือ AI ไม่ว่าง แมวจะอ่านในเครื่องแทน (แม่นน้อยกว่า ไม่มีตัวหนา/ตารางซับซ้อน) แล้วกดสแกนละเอียดทีหลังได้</p></div>
+        <div class="card"><h4>🔤 สระไม่ลอย</h4><p>ใช้ Sarabun หรือ Noto Sans Thai สำหรับภาษาไทย Google Sans ใช้กับภาษาอังกฤษ</p></div>
       </div>
-
-      <h3>ดูยังไง?</h3>
-      <ol>
-        <li>กลับไป Dashboard → <strong>📚 Document History</strong></li>
-        <li>ต้องใส่ password เพื่อ access</li>
-        <li>Export ใหม่ได้ตลอด 7 วัน</li>
-        <li>Delete ด้วยตัวเองได้ถ้าต้องการ</li>
-      </ol>
     </section>
 
-    <!-- Tips -->
     <section>
-      <h2><span class="emoji">💡</span>Tips & Tricks</h2>
-
-      <h3>ถ่ายรูปสวยๆ</h3>
-      <ul>
-        <li>📸 <strong>แสงสว่าง</strong> (ชัดดี)</li>
-        <li>📏 <strong>ไม่เอียง</strong> (ตรง)</li>
-        <li>📐 <strong>มองเห็นข้อความทั้งหมด</strong></li>
-        <li>🌞 <strong>หลีกเลี่ยงเงา</strong></li>
-      </ul>
-
-      <h3>OCR อ่านได้ดีขึ้น</h3>
-      <ul>
-        <li>✍️ <strong>หนังสือมือชัดๆ</strong> (90% แม่นยำ)</li>
-        <li>🖊️ <strong>เขียนด้วยปากกา/ดินสอ</strong></li>
-        <li>⚠️ ลายมือวุ่นวายอาจอ่านผิด → แก้มือ</li>
-      </ul>
-
-      <h3>Export ไฟล์</h3>
-      <ul>
-        <li>📄 <strong>DOCX</strong> = ร่วมไฟล์ + แก้ไขได้</li>
-        <li>📊 <strong>XLSX</strong> = กรอกข้อมูล + คำนวณ</li>
-        <li>💾 ไฟล์จะเก็บในโฟลเดอร์ <strong>Downloads</strong></li>
-      </ul>
+      <p class="kicker">FAQ</p>
+      <h2>FAQ</h2>
+      <details><summary>ข้อมูลเอกสารเก็บที่ไหน?</summary><p>เก็บในเครื่องที่ใช้งาน (และในบัญชี Supabase ของทีมถ้าเปิดใช้ระบบบัญชี) ลบอัตโนมัติหลัง 7 วัน รูปจะถูกส่งให้ Google Gemini อ่านเท่านั้น</p></details>
+      <details><summary>ลืมรหัสผ่านทำยังไง?</summary><p>หน้าล็อกอินกด “ลืมรหัสผ่าน?” แล้วใส่รหัสกู้คืน หรือถ้าใช้บัญชีอีเมล ระบบจะส่งลิงก์ตั้งรหัสใหม่ไปที่อีเมล</p></details>
+      <details><summary>ตัวเลข “แมวทำให้ได้อีก xxx รูป” คืออะไร?</summary><p>จำนวนรูปที่สแกนด้วย AI ได้อีกในวันนี้ตามโควตาฟรีของทีม รีเซ็ตทุกวันตอนเที่ยงคืนเวลาแปซิฟิก</p></details>
+      <details><summary>เปิดไฟล์ Word แล้วฟอนต์ไม่ตรง?</summary><p>เครื่องที่เปิดไฟล์ต้องมีฟอนต์นั้นติดตั้งอยู่ ถ้าไม่มี Word จะใช้ฟอนต์ใกล้เคียงแทน ดาวน์โหลด Sarabun / Noto Sans Thai ฟรีได้จาก Google Fonts</p></details>
     </section>
-
-    <!-- FAQ -->
-    <section>
-      <h2><span class="emoji">❓</span>FAQ</h2>
-
-      <div class="faq">
-        <strong><span class="emoji">Q:</span> ต้อง internet ไหม?</strong>
-        <p>✅ ครั้งแรกใช้ internet เพื่อเปิด app แล้ว <strong>OCR ทำงานในเบราว์เซอร์</strong> (ไม่ upload)</p>
-      </div>
-
-      <div class="faq">
-        <strong><span class="emoji">Q:</span> ข้อมูลจะไปไหน?</strong>
-        <p>🔐 ทั้งหมดเก็บในเบราว์เซอร์ของคุณ <strong>ไม่ส่งให้ server</strong> ใครใช้ receive</p>
-      </div>
-
-      <div class="faq">
-        <strong><span class="emoji">Q:</span> ลืม password ทำไง?</strong>
-        <p>⚠️ ต้องรีเซ็ต browser storage (ค่อนข้างยุ่น) → <strong>เก็บรหัสให้ดี</strong></p>
-      </div>
-
-      <div class="faq">
-        <strong><span class="emoji">Q:</span> ใช้ได้นานไหม?</strong>
-        <p>♾️ ไม่มีค่าสมัสชิก <strong>ใช้ได้นานเท่าไหร่ก็ได้ (100% free)</strong></p>
-      </div>
-
-      <div class="faq">
-        <strong><span class="emoji">Q:</span> OCR ไม่อ่านถูก?</strong>
-        <p>✏️ ตรวจสอบให้ครบ → <strong>แก้ข้อความเองในไฟล์ DOCX/XLSX</strong></p>
-      </div>
-    </section>
-
-    <!-- Troubleshooting -->
-    <section>
-      <h2><span class="emoji">🆘</span>ติดปัญหา?</h2>
-      <table>
-        <tr>
-          <th>ปัญหา</th>
-          <th>วิธีแก้</th>
-        </tr>
-        <tr>
-          <td><strong>🎥 Camera ไม่ทำงาน</strong></td>
-          <td>อนุญาต camera ใน browser settings</td>
-        </tr>
-        <tr>
-          <td><strong>📤 Export ล้มเหลว</strong></td>
-          <td>รีเฟรชหน้า → ลองใหม่</td>
-        </tr>
-        <tr>
-          <td><strong>⏳ OCR ช้า</strong></td>
-          <td>รอสักครู่ (ทำงานในเบราว์เซอร์)</td>
-        </tr>
-        <tr>
-          <td><strong>🔑 ลืม password</strong></td>
-          <td>ไม่มีวิธี → เก็บปลอดภัย</td>
-        </tr>
-      </table>
-    </section>
-
-    <!-- CTA -->
-    <div style="text-align: center; margin: 60px 0;">
-      <a href="https://meow-agent.vercel.app" class="cta-button">🐱 ไปใช้งาน MEOW Agent</a>
-    </div>
-
-    <!-- Footer -->
-    <footer>
-      <p><strong>🐱 MEOW Agent</strong> - Making document scanning magical ✨</p>
-      <p style="margin-top: 10px; font-size: 0.85em;">100% Free | No Cost | No Tracking | All Local</p>
-      <p style="margin-top: 15px; font-size: 0.8em;">ติดปัญหา? แจ้งให้ผู้ดูแล app ทราบ 📧</p>
-    </footer>
   </div>
+
+  <footer>MEOW AI Agent · ทำด้วยแมวและปลาทู 🐟</footer>
+
+  <script>
+    // Pixel calico cat (same art as the app), drawn as scanline rects.
+    const CAT = [
+      '....K...............K...........','...KOK.............KKK..........','...KOOK...........KKKK..........','..KOOOOK.........KKKKKK.........',
+      '..KOOOOOKKKKKKKKKKKKKKK.........','..KOOOOOOOWWWWWKKKKKKKK.........','.KOOOOOOOOWWWWWKKKKKKKKK........','.KOOOOOOOWWWWWWWKKKKKKKK........',
+      '.KOOOOOOWWWWWWWWWKKKKKKK........','.KOOOOEEWWWWWWWWEEKKKKKK........','.KOOOOEKWWWWWWWWKEKKKKKK........','.KOOOOOWWWWPPPWWWWKKKKKK........',
+      '..KOOOWWWWWWKWWWWWWKKKK.........','...KOOWWWWWKWKWWWWWKKK..........','....KKWWWWWWWWWWWWWKK...........','......KKWWWWWWWWWKK.............',
+      '.....KWWWWWWWWWWWWWK............','....KOOWWWWWWWWWWWKKK...........','....KOOOWWWWWWWWWWKKKK..........','...KOOOOWWWWWWWWWWWKKKK.........',
+      '...KOOOOWWWWWWWWWWWKKKK.........','...KOOOWWWWWWWWWWWWWKKK.........','..KOOOWWWWWWWWWWWWWWKKKK........','..KOOWWWKWWWWWWWKWWWWKKK........',
+      '..KOWWWWKWWWWWWWKWWWWWKK........','..KWWWWWKWWWWWWWKWWOOOWK........','..KWWWWWKWWWWWWWKWWOOOWK........','..KWWWWWKWWWKWWWKWWWWWWK........',
+      '..KWWWWWKWWWKWWWKWWWWWWK........','...KWWWKWWWWKWWWWKWWWWK.........','...KKKKKKKKKKKKKKKKKKKK.........',
+    ];
+    const TAIL = [[12,28,'KK'],[13,27,'KOOK'],[14,27,'KOKK'],[15,27,'KOOK'],[16,27,'KKOK'],[17,27,'KOOK'],[18,27,'KOKK'],[19,27,'KOOK'],[20,27,'KKOK'],[21,27,'KOOK'],[22,26,'KOOKK'],[23,25,'KOOOK'],[24,24,'KOOKK'],[25,24,'KKK']];
+    const COL = { K: '#111', W: '#b9b9b4', O: '#e2782a', E: '#e9b949', P: '#e58d8d' };
+    const HAPPY = [[9,6,'K'],[9,7,'K'],[10,6,'O'],[10,7,'O'],[9,16,'E'],[9,17,'E'],[10,16,'K'],[10,17,'K'],[12,4,'P'],[12,20,'P']];
+    const CLOSED = [[9,6,'O'],[9,7,'O'],[10,6,'K'],[10,7,'K'],[9,16,'K'],[9,17,'K'],[10,16,'E'],[10,17,'E']];
+
+    function grid(over = []) {
+      const g = CAT.map((r) => r.padEnd(34, '.').split(''));
+      TAIL.forEach(([r, c, s]) => [...s].forEach((ch, i) => { if (g[r][c + i] === '.') g[r][c + i] = ch; }));
+      over.forEach(([r, c, ch]) => { g[r][c] = ch; });
+      return g;
+    }
+    function rects(g, lines = 3) {
+      let out = '';
+      g.forEach((row, r) => {
+        let c = 0;
+        while (c < row.length) {
+          const ch = row[c];
+          if (ch === '.') { c++; continue; }
+          let e = c; while (e < row.length && row[e] === ch) e++;
+          for (let s = 0; s < lines; s++) out += `<rect x="${c}" y="${(r + (s + 0.2) / lines).toFixed(2)}" width="${e - c}" height="${(0.55 / lines * 1.4).toFixed(2)}" fill="${COL[ch]}"/>`;
+          c = e;
+        }
+      });
+      return out;
+    }
+
+    const big = document.getElementById('catBig');
+    const draw = (over) => { big.innerHTML = rects(grid(over)); };
+    draw();
+
+    // blink
+    setInterval(() => { draw(CLOSED); setTimeout(() => draw(), 160); }, 3800);
+
+    // small cats inside step art (scaled into a 40x40 box)
+    document.querySelectorAll('.cat-small').forEach((g) => {
+      g.setAttribute('transform', 'translate(4 6) scale(0.95)');
+      g.innerHTML = rects(grid(g.classList.contains('happy') ? HAPPY : []), 2);
+    });
+
+    // hero cat: tap → speech bubble + hop
+    const phrases = ['เมี้ยว!', 'ขอแมวเลียหน่อย', 'สแกนกันเถอะ', 'Purrr...', 'ไม้ตกแมวอยู่ไหน?', '=^..^='];
+    let pi = 0;
+    const heroCat = document.getElementById('heroCat');
+    const bubble = document.getElementById('heroBubble');
+    const inner = document.getElementById('heroCatInner');
+    const poke = () => {
+      bubble.textContent = phrases[pi++ % phrases.length];
+      bubble.classList.add('on');
+      draw(HAPPY);
+      inner.classList.remove('hop'); void inner.offsetWidth; inner.classList.add('hop');
+      clearTimeout(poke.t);
+      poke.t = setTimeout(() => { bubble.classList.remove('on'); draw(); }, 1600);
+    };
+    heroCat.addEventListener('click', poke);
+    heroCat.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); poke(); } });
+
+    // interactive toys
+    let licks = 0;
+    document.querySelectorAll('[data-toy]').forEach((el) => {
+      el.setAttribute('role', 'button');
+      el.setAttribute('tabindex', '0');
+      const act = () => {
+        const toy = el.dataset.toy;
+        if (toy === 'wand') {
+          const w = document.getElementById('wand');
+          w.classList.add('fast');
+          setTimeout(() => w.classList.remove('fast'), 1500);
+        } else if (toy === 'sachet') {
+          licks += 1;
+          document.getElementById('lickCount').textContent = `แตะซองแมวเลีย (เลียไปแล้ว ${licks} ครั้ง)`;
+        } else if (toy === 'bowl') {
+          const k = document.getElementById('kibbles');
+          const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+          c.setAttribute('cx', 10 + Math.random() * 20); c.setAttribute('cy', 14 + Math.random() * 4);
+          c.setAttribute('r', 1.8); c.setAttribute('fill', Math.random() > .5 ? '#8b5a2b' : '#a0522d'); c.setAttribute('class', 'kibble');
+          k.appendChild(c);
+          if (k.children.length > 14) k.removeChild(k.children[5]);
+        } else {
+          const svg = el.querySelector('svg');
+          svg.classList.remove('hop'); void svg.offsetWidth; svg.classList.add('hop');
+        }
+      };
+      el.addEventListener('click', act);
+      el.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); act(); } });
+    });
+  </script>
 </body>
 </html>

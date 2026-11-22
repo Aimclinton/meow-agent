@@ -3,10 +3,9 @@ import {
   Packer, PageBreak, PageNumber, Paragraph, ShadingType, Table, TableCell, TableRow, TextRun, WidthType,
 } from 'docx';
 import { saveAs } from 'file-saver';
-import { ocrPagesToDoc } from '../utils/ocrToDoc';
+import { pageContents } from '../utils/docContent';
+import { fontSizeFor } from '../utils/fonts';
 
-const FONT = 'TH Sarabun New';
-const SIZE = 32; // half-points → 16pt, the Thai document standard
 
 function dataURLToBytes(dataURL) {
   const bin = atob(dataURL.split(',')[1] || '');
@@ -40,7 +39,9 @@ function runs(nodes = [], extra = {}) {
     return [new TextRun({
       text: n.text,
       bold: m.bold || extra.bold,
+      boldComplexScript: m.bold || extra.bold,
       italics: m.italic || extra.italics,
+      italicsComplexScript: m.italic || extra.italics,
       underline: m.underline ? {} : undefined,
       strike: m.strike,
       superScript: m.superscript,
@@ -119,11 +120,26 @@ function cellChildren(cell, head, ctx) {
 }
 
 export function useDocxExport() {
-  const generateDocx = async (doc, { includeImages = false } = {}) => {
+  const generateDocx = async (doc, { includeImages = false, pageBreaks = true } = {}) => {
     try {
       listCounter = 0;
-      const rich = doc.richDoc || { content: ocrPagesToDoc(doc.pages, doc.title), references: [], pageNumbers: true };
-      const children = blocks(rich.content);
+      const rich = {
+        header: doc.header || '',
+        footer: doc.footer || '',
+        references: doc.references || [],
+        pageNumbers: doc.pageNumbers !== false,
+      };
+      const th = doc.fonts?.th || 'Sarabun';
+      const en = doc.fonts?.en || 'Google Sans';
+      // Latin text uses ascii/hAnsi, Thai uses the complex-script (cs) font.
+      const FONT = { ascii: en, hAnsi: en, cs: th, eastAsia: th };
+      const SIZE = fontSizeFor(th) * 2;
+
+      const children = [];
+      pageContents(doc).forEach((content, i) => {
+        if (i > 0) children.push(pageBreaks ? new Paragraph({ children: [new PageBreak()] }) : new Paragraph({ children: [] }));
+        children.push(...blocks(content));
+      });
 
       const refs = (rich.references || []).filter((r) => r.trim());
       if (refs.length) {
@@ -154,14 +170,14 @@ export function useDocxExport() {
       }
 
       const headers = rich.header?.trim()
-        ? { default: new Header({ children: [new Paragraph({ alignment: AlignmentType.RIGHT, children: [new TextRun({ text: rich.header, color: '777777', size: 24 })] })] }) }
+        ? { default: new Header({ children: [new Paragraph({ alignment: AlignmentType.RIGHT, children: [new TextRun({ text: rich.header, color: '777777', size: Math.round(SIZE * 0.75), sizeComplexScript: Math.round(SIZE * 0.75) })] })] }) }
         : undefined;
 
       const footerRuns = [];
-      if (rich.footer?.trim()) footerRuns.push(new TextRun({ text: rich.footer, color: '777777', size: 24 }));
+      if (rich.footer?.trim()) footerRuns.push(new TextRun({ text: rich.footer, color: '777777', size: Math.round(SIZE * 0.75), sizeComplexScript: Math.round(SIZE * 0.75) }));
       if (rich.pageNumbers !== false) {
         if (footerRuns.length) footerRuns.push(new TextRun({ text: '    ', size: 24 }));
-        footerRuns.push(new TextRun({ children: ['หน้า ', PageNumber.CURRENT, ' / ', PageNumber.TOTAL_PAGES], color: '777777', size: 24 }));
+        footerRuns.push(new TextRun({ children: ['หน้า ', PageNumber.CURRENT, ' / ', PageNumber.TOTAL_PAGES], color: '777777', size: Math.round(SIZE * 0.75), sizeComplexScript: Math.round(SIZE * 0.75) }));
       }
       const footers = footerRuns.length
         ? { default: new Footer({ children: [new Paragraph({ alignment: AlignmentType.CENTER, children: footerRuns })] }) }
@@ -180,10 +196,10 @@ export function useDocxExport() {
         title: doc.title,
         styles: {
           default: {
-            document: { run: { font: FONT, size: SIZE } },
-            heading1: { run: { font: FONT, size: 48, bold: true }, paragraph: { spacing: { before: 240, after: 120 } } },
-            heading2: { run: { font: FONT, size: 40, bold: true }, paragraph: { spacing: { before: 240, after: 120 } } },
-            heading3: { run: { font: FONT, size: 36, bold: true }, paragraph: { spacing: { before: 200, after: 80 } } },
+            document: { run: { font: FONT, size: SIZE, sizeComplexScript: SIZE } },
+            heading1: { run: { font: FONT, size: Math.round(SIZE * 1.6), sizeComplexScript: Math.round(SIZE * 1.6), bold: true, boldComplexScript: true, color: '111111' }, paragraph: { spacing: { before: 240, after: 120 } } },
+            heading2: { run: { font: FONT, size: Math.round(SIZE * 1.3), sizeComplexScript: Math.round(SIZE * 1.3), bold: true, boldComplexScript: true, color: '111111' }, paragraph: { spacing: { before: 240, after: 120 } } },
+            heading3: { run: { font: FONT, size: Math.round(SIZE * 1.12), sizeComplexScript: Math.round(SIZE * 1.12), bold: true, boldComplexScript: true, color: '111111' }, paragraph: { spacing: { before: 200, after: 80 } } },
           },
         },
         numbering: {

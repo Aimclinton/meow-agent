@@ -1,4 +1,6 @@
 import { create } from 'zustand';
+import { schedulePush, deleteRemote, pullDocuments } from '../services/sync';
+import { supabase, supabaseEnabled } from '../lib/supabase';
 
 const HISTORY_DAYS = 7;
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -6,7 +8,9 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 // Persist the latest version of one document (pages included).
 function persist(get, docId) {
   const doc = get().documents.find((d) => d.id === docId);
-  if (doc) saveToIndexedDB(doc).catch((err) => console.error('Save failed', err));
+  if (!doc) return;
+  saveToIndexedDB(doc).catch((err) => console.error('Save failed', err));
+  schedulePush(doc, (paths) => get().setImagePaths(docId, paths));
 }
 
 function touch(doc) {
@@ -37,17 +41,61 @@ export const useDocumentStore = create((set, get) => ({
   // Create a document, optionally with its pages, and save it.
   createDocument: (title = 'New Document', pages = []) => {
     const now = new Date();
+    // A footer that is only a page number ("หน้า 3", "Page 2 of 5") is dropped:
+    // the export adds real page numbers automatically.
+    const pageNo = /^(หน้า|page|p\.?)?\s*[\d๐-๙]+(\s*(\/|of|จาก)\s*[\d๐-๙]+)?$/i;
+    const first = (key) => pages.map((p) => (p[key] || '').trim()).find((t) => t && !(key === 'footer' && pageNo.test(t))) || '';
+    const references = [...new Set(pages.flatMap((p) => p.references || []).map((r) => r.trim()).filter(Boolean))];
     const newDoc = {
       id: Date.now().toString(),
       title: title.trim() || 'New Document',
       pages: pages.map((p, i) => ({ ...p, pageNumber: i + 1 })),
+      header: first('header'),
+      footer: first('footer'),
+      references,
+      pageNumbers: true,
+      fonts: { th: 'Sarabun', en: 'Google Sans' },
       createdAt: now,
       updatedAt: now,
     };
     set((state) => ({ documents: [...state.documents, newDoc], currentDocId: newDoc.id }));
-    saveToIndexedDB(newDoc).catch((err) => console.error('Save failed', err));
+    persist(get, newDoc.id);
     return newDoc;
   },
+
+  // Record uploaded image paths without changing updatedAt (avoids sync loops).
+  setImagePaths: (docId, paths) => {
+    const byId = new Map(paths.map((p) => [p.id, p.imagePath]));
+    set((state) => ({
+      documents: state.documents.map((d) => (d.id === docId
+        ? { ...d, pages: d.pages.map((p) => (byId.has(p.id) ? { ...p, imagePath: byId.get(p.id) } : p)) }
+        : d)),
+    }));
+    const doc = get().documents.find((d) => d.id === docId);
+    if (doc) saveToIndexedDB(doc).catch(() => {});
+  },
+
+  // Merge the cloud copy of the last 7 days into this device.
+  syncFromCloud: async () => {
+    try {
+      const fresh = await pullDocuments(get().documents);
+      if (!fresh.length) return;
+      const byId = new Map(get().documents.map((d) => [d.id, d]));
+      fresh.forEach((d) => { byId.set(d.id, d); saveToIndexedDB(d).catch(() => {}); });
+      const merged = [...byId.values()].sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+      set({ documents: merged });
+    } catch (err) {
+      console.warn('Sync pull failed', err);
+    }
+  },
+
+  updatePage: (docId, pageId, patch) =>
+    get().updateDoc(docId, (d) => ({
+      ...d,
+      pages: d.pages.map((p) => (p.id === pageId ? { ...p, ...(typeof patch === 'function' ? patch(p) : patch) } : p)),
+    })),
+
+  updateMeta: (docId, patch) => get().updateDoc(docId, (d) => ({ ...d, ...patch })),
 
   updateDoc: (docId, fn) => {
     set((state) => ({
@@ -80,8 +128,10 @@ export const useDocumentStore = create((set, get) => ({
     get().updateDoc(docId, (d) => ({ ...d, title })),
 
   deleteDocument: (docId) => {
+    const doc = get().documents.find((d) => d.id === docId);
     set((state) => ({ documents: state.documents.filter((d) => d.id !== docId) }));
     deleteFromIndexedDB(docId);
+    if (doc) deleteRemote(doc).catch((err) => console.warn('Remote delete failed', err));
   },
 
   getRecentDocuments: () => {
@@ -114,7 +164,19 @@ export const useDocumentStore = create((set, get) => ({
 
   finishAuth: () => set({ passwordSet: true, isAuthenticated: true }),
   authenticate: () => set({ isAuthenticated: true }),
-  logout: () => set({ isAuthenticated: false }),
+  logout: async () => {
+    if (supabaseEnabled) {
+      // Cloud mode: documents live in the account, so clear this device's copy.
+      await supabase.auth.signOut().catch(() => {});
+      const db = await openIndexedDB();
+      const tx = db.transaction('documents', 'readwrite');
+      tx.objectStore('documents').clear();
+      await txDone(tx).catch(() => {});
+      set({ isAuthenticated: false, documents: [] });
+      return;
+    }
+    set({ isAuthenticated: false });
+  },
 }));
 
 // ---------- crypto helpers ----------

@@ -4,6 +4,7 @@ import DocumentWorkflow from './DocumentWorkflow';
 import HistoryPage from './HistoryPage';
 import ExportPage from './ExportPage';
 import CreateSlidesModal from '../components/CreateSlidesModal';
+import SettingsModal from '../components/SettingsModal';
 import { CatMascot, PixelLogo } from '../components/ui';
 
 export default function MainApp() {
@@ -11,6 +12,7 @@ export default function MainApp() {
   const [selectedDocForExport, setSelectedDocForExport] = useState(null);
   const [slidesDoc, setSlidesDoc] = useState(null);
   const [editDocId, setEditDocId] = useState(null);
+  const [settings, setSettings] = useState(false);
   const { documents, logout } = useDocumentStore();
 
   // Handle page routing
@@ -73,6 +75,8 @@ export default function MainApp() {
           <nav className="font-menu flex items-center gap-1 sm:gap-4 text-sm">
             <button onClick={() => setCurrentPage('workflow')} className="px-2 py-2 hover:underline underline-offset-4">Scan</button>
             <button onClick={() => setCurrentPage('history')} className="px-2 py-2 hover:underline underline-offset-4">History</button>
+            <a href="/guide.html" className="hidden sm:inline px-2 py-2 hover:underline underline-offset-4">Guide</a>
+            <button onClick={() => setSettings(true)} aria-label="ตั้งค่า" className="px-2 py-2 hover:underline underline-offset-4">⚙</button>
             <button onClick={logout} className="px-2 py-2 hover:underline underline-offset-4">Logout</button>
           </nav>
         </div>
@@ -173,6 +177,7 @@ export default function MainApp() {
         </div>
       </main>
 
+      {settings && <SettingsModal onClose={() => setSettings(false)} />}
       {slidesDoc && <CreateSlidesModal document={slidesDoc} onClose={() => setSlidesDoc(null)} />}
     </div>
   );

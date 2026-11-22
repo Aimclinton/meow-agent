@@ -5,7 +5,7 @@
   "framework": "vite",
   "rewrites": [
     {
-      "source": "/(.*)",
+      "source": "/((?!api/|tesseract/|guide\\.html).*)",
       "destination": "/index.html"
     }
   ],
@@ -19,5 +19,13 @@
         }
       ]
     }
-  ]
+  ],
+  "functions": {
+    "api/ocr.js": {
+      "maxDuration": 60
+    },
+    "api/quota.js": {
+      "maxDuration": 10
+    }
+  }
 }

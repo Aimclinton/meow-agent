@@ -12,7 +12,9 @@
     "prebuild": "node scripts/copy-tesseract.mjs"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.119.2",
     "@tailwindcss/postcss": "^4.3.5",
+    "@tiptap/core": "^3.35.0",
     "@tiptap/extension-placeholder": "^3.35.0",
     "@tiptap/extension-superscript": "^3.35.0",
     "@tiptap/extension-table": "^3.35.0",

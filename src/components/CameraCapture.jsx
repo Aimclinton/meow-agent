@@ -3,7 +3,7 @@ import { compressToDataURL } from '../utils/image';
 
 // Full-screen live camera with a viewfinder and shutter.
 // Calls onCapture(dataURL) for each shot; stays open for multi-page scanning.
-export default function CameraCapture({ onCapture, onClose, shots = 0 }) {
+export default function CameraCapture({ onCapture, onClose, onNativeCamera, shots = 0 }) {
   const videoRef = useRef(null);
   const streamRef = useRef(null);
   const [error, setError] = useState(null);
@@ -23,7 +23,7 @@ export default function CameraCapture({ onCapture, onClose, shots = 0 }) {
         streamRef.current = stream;
         if (videoRef.current) videoRef.current.srcObject = stream;
       } catch {
-        setError('เปิดกล้องไม่ได้ — อนุญาตการใช้กล้องในการตั้งค่า หรือใช้ "เลือกรูป" แทน');
+        setError('เปิดกล้องสดไม่ได้ — อนุญาตการใช้กล้องในการตั้งค่า หรือใช้กล้องของเครื่องแทน');
       }
     })();
     return () => {
@@ -75,7 +75,18 @@ export default function CameraCapture({ onCapture, onClose, shots = 0 }) {
         {!ready && !error && (
           <p className="absolute inset-0 grid place-items-center text-sm text-white/60">กำลังเปิดกล้อง...</p>
         )}
-        {error && <p className="absolute inset-0 grid place-items-center text-center p-8 text-sm text-white/80">{error}</p>}
+        {error && (
+          <div className="absolute inset-0 grid place-items-center text-center p-8">
+            <div>
+              <p className="text-sm text-white/80 mb-4">{error}</p>
+              {onNativeCamera && (
+                <button onClick={onNativeCamera} className="font-menu min-h-[48px] px-5 bg-white text-black rounded-[3px] text-sm">
+                  ใช้กล้องของเครื่องแทน
+                </button>
+              )}
+            </div>
+          </div>
+        )}
         {flash > 0 && <div key={flash} className="flash absolute inset-0 pointer-events-none" />}
         <p className="absolute bottom-3 inset-x-0 text-center text-xs text-white/60">วางเอกสารให้อยู่ในกรอบ แสงสว่างพอ</p>
       </div>
