@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🐱 MEOW Agent - Quick Start Guide</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #fafafa 0%, #f0f0f0 100%);
+      color: #1a1a1a;
+      line-height: 1.8;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 40px 20px;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 50px;
+      padding: 40px 0;
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+      margin-top: 20px;
+    }
+
+    h1 {
+      font-size: 3em;
+      margin-bottom: 10px;
+      color: #000;
+    }
+
+    .subtitle {
+      font-size: 1.2em;
+      color: #666;
+      margin-bottom: 20px;
+    }
+
+    .link-box {
+      background: #000;
+      color: white;
+      padding: 20px;
+      border-radius: 12px;
+      text-align: center;
+      font-size: 1.1em;
+      font-weight: bold;
+      word-break: break-all;
+    }
+
+    h2 {
+      font-size: 2em;
+      margin: 40px 0 20px;
+      color: #000;
+      border-left: 5px solid #000;
+      padding-left: 15px;
+    }
+
+    h3 {
+      font-size: 1.3em;
+      margin: 20px 0 10px;
+      color: #333;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .step {
+      background: white;
+      padding: 20px;
+      margin: 15px 0;
+      border-radius: 12px;
+      border-left: 5px solid #000;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+
+    .step-number {
+      display: inline-block;
+      background: #000;
+      color: white;
+      width: 35px;
+      height: 35px;
+      border-radius: 50%;
+      text-align: center;
+      line-height: 35px;
+      font-weight: bold;
+      margin-right: 10px;
+      font-size: 1.2em;
+    }
+
+    .tip {
+      background: #f0f7ff;
+      border-left: 5px solid #2563eb;
+      padding: 15px;
+      margin: 15px 0;
+      border-radius: 8px;
+    }
+
+    .warning {
+      background: #fff3cd;
+      border-left: 5px solid #ffc107;
+      padding: 15px;
+      margin: 15px 0;
+      border-radius: 8px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+
+    th, td {
+      padding: 15px;
+      text-align: left;
+      border-bottom: 1px solid #eee;
+    }
+
+    th {
+      background: #000;
+      color: white;
+      font-weight: 600;
+    }
+
+    tr:hover {
+      background: #f5f5f5;
+    }
+
+    ul, ol {
+      margin-left: 20px;
+      margin-bottom: 15px;
+    }
+
+    li {
+      margin: 8px 0;
+    }
+
+    .emoji {
+      font-size: 1.3em;
+      margin-right: 5px;
+    }
+
+    .faq {
+      background: white;
+      padding: 20px;
+      margin: 15px 0;
+      border-radius: 12px;
+      border-left: 5px solid #10b981;
+    }
+
+    .faq strong {
+      color: #000;
+      display: block;
+      margin-bottom: 10px;
+    }
+
+    .cta-button {
+      display: inline-block;
+      background: #000;
+      color: white;
+      padding: 15px 40px;
+      border-radius: 12px;
+      text-decoration: none;
+      font-weight: bold;
+      text-align: center;
+      transition: all 0.3s;
+      margin: 20px auto;
+      display: block;
+      width: fit-content;
+    }
+
+    .cta-button:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+
+    footer {
+      text-align: center;
+      padding: 40px 20px;
+      color: #666;
+      border-top: 1px solid #ddd;
+      margin-top: 60px;
+    }
+
+    @media (max-width: 768px) {
+      h1 {
+        font-size: 2em;
+      }
+
+      h2 {
+        font-size: 1.5em;
+      }
+
+      .container {
+        padding: 20px 15px;
+      }
+
+      header {
+        padding: 30px 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header>
+      <h1>🐱 MEOW Agent</h1>
+      <p class="subtitle">Quick Start Guide</p>
+      <div class="link-box">
+        👉 https://meow-agent.vercel.app
+      </div>
+      <p style="margin-top: 15px; font-size: 0.9em; color: #999;">
+        สแกนเอกสารเขียนมือ + OCR + Export เป็น Word/Excel ไว้ใจได้
+      </p>
+    </header>
+
+    <!-- 5 Steps -->
+    <section>
+      <h2><span class="emoji">🚀</span>5 ขั้นตอนใช้งาน</h2>
+
+      <div class="step">
+        <h3><span class="step-number">1</span>เปิด App</h3>
+        <ul>
+          <li>ไปที่ <strong>https://meow-agent.vercel.app</strong></li>
+          <li>ใช้ได้ทั้ง PC / iPhone / Android</li>
+          <li>ไม่ต้อง download app ใดๆ</li>
+        </ul>
+      </div>
+
+      <div class="step">
+        <h3><span class="step-number">2</span>ตั้ง Password (ครั้งแรก)</h3>
+        <ul>
+          <li>สร้าง password 4 หลักขึ้นไป</li>
+          <li>เก็บรหัสไว้ให้ดี (จำเป็นอย่างยิ่ง)</li>
+          <li>ใช้เข้าซ้ำแต่ละครั้ง</li>
+        </ul>
+        <div class="warning">
+          <span class="emoji">⚠️</span> ถ้าลืม password ต้องรีเซ็ต browser → เก็บไว้ให้ดี!
+        </div>
+      </div>
+
+      <div class="step">
+        <h3><span class="step-number">3</span>ถ่ายรูป / เลือกรูป</h3>
+        <ul>
+          <li>🎥 กด <strong>📷 Open Camera</strong> (ถ่ายรูปสด)</li>
+          <li>📁 หรือ <strong>📁 Choose Photo</strong> (เลือกจากสต็อก)</li>
+          <li>✅ ตรวจสอบรูป → กด <strong>Add Page</strong></li>
+          <li>🔁 ถ่ายหลายหน้าได้ เรื่อยๆ</li>
+        </ul>
+        <div class="tip">
+          <span class="emoji">💡</span> <strong>แสงสว่าง</strong> ชัดดี + <strong>ไม่เอียง</strong> = OCR อ่านได้ดี
+        </div>
+      </div>
+
+      <div class="step">
+        <h3><span class="step-number">4</span>จัดเรียง + ตรวจสอบ</h3>
+        <ul>
+          <li>🔄 <strong>Drag & Drop</strong> เรียงลำดับหน้า</li>
+          <li>👀 <strong>Click ดูข้อความ</strong> OCR (อ่านอัตโนมัติ)</li>
+          <li>🗑️ ลบหน้าที่ไม่ต้อง</li>
+          <li>✅ กด <strong>✓ Continue to Export</strong></li>
+        </ul>
+      </div>
+
+      <div class="step">
+        <h3><span class="step-number">5</span>Export เป็นไฟล์</h3>
+        <ul>
+          <li>
+            <strong>📄 DOCX</strong> (Microsoft Word)
+            <ul>
+              <li>ใช้: รายงาน, บันทึก, เอกสารธรรมชาติ</li>
+              <li>✓ แก้ไขได้, เก็บรูป + ข้อความ</li>
+            </ul>
+          </li>
+          <li>
+            <strong>📊 XLSX</strong> (Microsoft Excel)
+            <ul>
+              <li>ใช้: ข้อมูล, ตัวเลข, บันทึกย่อ</li>
+              <li>✓ ตัวเลขชัดเจน, จัดระเบียบง่าย</li>
+            </ul>
+          </li>
+        </ul>
+        <p style="margin-top: 15px;"><strong>กด Export</strong> → ไฟล์ลงมา 💾</p>
+      </div>
+    </section>
+
+    <!-- History -->
+    <section>
+      <h2><span class="emoji">📚</span>Document History (ดูย้อนหลัง)</h2>
+
+      <div class="tip">
+        <strong>เก็บไว้กี่นาน?</strong><br>
+        ✅ <strong>7 วัน</strong> ต่อ user (อัตโนมัติลบ)
+      </div>
+
+      <h3>ดูยังไง?</h3>
+      <ol>
+        <li>กลับไป Dashboard → <strong>📚 Document History</strong></li>
+        <li>ต้องใส่ password เพื่อ access</li>
+        <li>Export ใหม่ได้ตลอด 7 วัน</li>
+        <li>Delete ด้วยตัวเองได้ถ้าต้องการ</li>
+      </ol>
+    </section>
+
+    <!-- Tips -->
+    <section>
+      <h2><span class="emoji">💡</span>Tips & Tricks</h2>
+
+      <h3>ถ่ายรูปสวยๆ</h3>
+      <ul>
+        <li>📸 <strong>แสงสว่าง</strong> (ชัดดี)</li>
+        <li>📏 <strong>ไม่เอียง</strong> (ตรง)</li>
+        <li>📐 <strong>มองเห็นข้อความทั้งหมด</strong></li>
+        <li>🌞 <strong>หลีกเลี่ยงเงา</strong></li>
+      </ul>
+
+      <h3>OCR อ่านได้ดีขึ้น</h3>
+      <ul>
+        <li>✍️ <strong>หนังสือมือชัดๆ</strong> (90% แม่นยำ)</li>
+        <li>🖊️ <strong>เขียนด้วยปากกา/ดินสอ</strong></li>
+        <li>⚠️ ลายมือวุ่นวายอาจอ่านผิด → แก้มือ</li>
+      </ul>
+
+      <h3>Export ไฟล์</h3>
+      <ul>
+        <li>📄 <strong>DOCX</strong> = ร่วมไฟล์ + แก้ไขได้</li>
+        <li>📊 <strong>XLSX</strong> = กรอกข้อมูล + คำนวณ</li>
+        <li>💾 ไฟล์จะเก็บในโฟลเดอร์ <strong>Downloads</strong></li>
+      </ul>
+    </section>
+
+    <!-- FAQ -->
+    <section>
+      <h2><span class="emoji">❓</span>FAQ</h2>
+
+      <div class="faq">
+        <strong><span class="emoji">Q:</span> ต้อง internet ไหม?</strong>
+        <p>✅ ครั้งแรกใช้ internet เพื่อเปิด app แล้ว <strong>OCR ทำงานในเบราว์เซอร์</strong> (ไม่ upload)</p>
+      </div>
+
+      <div class="faq">
+        <strong><span class="emoji">Q:</span> ข้อมูลจะไปไหน?</strong>
+        <p>🔐 ทั้งหมดเก็บในเบราว์เซอร์ของคุณ <strong>ไม่ส่งให้ server</strong> ใครใช้ receive</p>
+      </div>
+
+      <div class="faq">
+        <strong><span class="emoji">Q:</span> ลืม password ทำไง?</strong>
+        <p>⚠️ ต้องรีเซ็ต browser storage (ค่อนข้างยุ่น) → <strong>เก็บรหัสให้ดี</strong></p>
+      </div>
+
+      <div class="faq">
+        <strong><span class="emoji">Q:</span> ใช้ได้นานไหม?</strong>
+        <p>♾️ ไม่มีค่าสมัสชิก <strong>ใช้ได้นานเท่าไหร่ก็ได้ (100% free)</strong></p>
+      </div>
+
+      <div class="faq">
+        <strong><span class="emoji">Q:</span> OCR ไม่อ่านถูก?</strong>
+        <p>✏️ ตรวจสอบให้ครบ → <strong>แก้ข้อความเองในไฟล์ DOCX/XLSX</strong></p>
+      </div>
+    </section>
+
+    <!-- Troubleshooting -->
+    <section>
+      <h2><span class="emoji">🆘</span>ติดปัญหา?</h2>
+      <table>
+        <tr>
+          <th>ปัญหา</th>
+          <th>วิธีแก้</th>
+        </tr>
+        <tr>
+          <td><strong>🎥 Camera ไม่ทำงาน</strong></td>
+          <td>อนุญาต camera ใน browser settings</td>
+        </tr>
+        <tr>
+          <td><strong>📤 Export ล้มเหลว</strong></td>
+          <td>รีเฟรชหน้า → ลองใหม่</td>
+        </tr>
+        <tr>
+          <td><strong>⏳ OCR ช้า</strong></td>
+          <td>รอสักครู่ (ทำงานในเบราว์เซอร์)</td>
+        </tr>
+        <tr>
+          <td><strong>🔑 ลืม password</strong></td>
+          <td>ไม่มีวิธี → เก็บปลอดภัย</td>
+        </tr>
+      </table>
+    </section>
+
+    <!-- CTA -->
+    <div style="text-align: center; margin: 60px 0;">
+      <a href="https://meow-agent.vercel.app" class="cta-button">🐱 ไปใช้งาน MEOW Agent</a>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+      <p><strong>🐱 MEOW Agent</strong> - Making document scanning magical ✨</p>
+      <p style="margin-top: 10px; font-size: 0.85em;">100% Free | No Cost | No Tracking | All Local</p>
+      <p style="margin-top: 15px; font-size: 0.8em;">ติดปัญหา? แจ้งให้ผู้ดูแล app ทราบ 📧</p>
+    </footer>
+  </div>
+</body>
+</html>
