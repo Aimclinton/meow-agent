@@ -206,7 +206,9 @@ body {
 @media (prefers-reduced-motion: reduce) { .mood-cat * { animation: none !important; } }
 
 /* ---------- Page transitions ---------- */
-.page-in { animation: page-up .42s cubic-bezier(.2,.9,.3,1.15) both; position: relative; }
+.page-in { animation: page-up .42s cubic-bezier(.2,.9,.3,1.15) backwards; position: relative; }
+/* backwards (not both): once finished, no transform/opacity stays on the wrapper,
+   so fixed modals and bottom bars inside keep using the viewport */
 .page-in.page-next { animation-name: page-next; }
 .page-in.page-prev { animation-name: page-prev; }
 @keyframes page-up { from { opacity: 0; transform: translateY(18px) scale(.985); } to { opacity: 1; transform: none; } }

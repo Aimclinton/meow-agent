@@ -5,7 +5,7 @@ import { compressToDataURL } from '../utils/image';
 let nextId = 0;
 
 // Full-screen burst camera: every tap on the shutter drops a photo into the
-// tray at the bottom (no confirm step). "ให้แมวอ่านทั้งหมดทีเดียว" sends the
+// tray at the bottom (no confirm step). "ให้จ๋องอ่านทั้งหมดทีเดียว" sends the
 // whole tray to the sequential scan queue.
 export default function CameraCapture({ onDone, onClose, onNativeCamera, alreadyQueued = 0 }) {
   const videoRef = useRef(null);
@@ -148,7 +148,7 @@ export default function CameraCapture({ onDone, onClose, onNativeCamera, already
           disabled={!tray.length || saving > 0}
           className="col-span-3 font-menu font-medium min-h-[52px] rounded-[3px] bg-[#e2782a] text-white disabled:opacity-30 transition active:scale-[0.98]"
         >
-          {t('ให้แมวอ่านทั้งหมดทีเดียว')}{tray.length ? ` (${tray.length})` : ''}
+          {t('ให้จ๋องอ่านทั้งหมดทีเดียว')}{tray.length ? ` (${tray.length})` : ''}
         </button>
       </div>
 

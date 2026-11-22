@@ -23,7 +23,7 @@ function rich(nodes = [], font, extra = {}) {
 const textOf = (nodes = []) => nodes.map((n) => n.text || '').join('');
 
 export function useXlsxExport() {
-  const generateXlsx = async (doc) => {
+  const generateXlsx = async (doc, { download = true } = {}) => {
     try {
       const wb = new ExcelJS.Workbook();
       wb.creator = 'MEOW AI Agent';
@@ -110,8 +110,9 @@ export function useXlsxExport() {
 
       const buf = await wb.xlsx.writeBuffer();
       const fileName = `${safeFileName(doc.title)}.xlsx`;
-      saveAs(new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), fileName);
-      return { success: true, fileName };
+      const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      if (download) saveAs(blob, fileName);
+      return { success: true, fileName, blob };
     } catch (error) {
       console.error('XLSX generation failed:', error);
       return { success: false, error: error.message };

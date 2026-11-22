@@ -144,7 +144,7 @@ export default function ReviewPage({ document, onExport }) {
     <div className="safe-x pb-32">
       <div className="max-w-7xl mx-auto pt-8">
         <PageTitle kicker="Step 02" title="Review">
-          {t("เทียบกับต้นฉบับแล้วแก้ได้ทุกจุด — หัวข้อ ย่อหน้า ตาราง หัว/ท้ายกระดาษ และอ้างอิง จุดสีเหลืองคือที่แมวอ่านไม่ชัด")}
+          {t("เทียบกับต้นฉบับแล้วแก้ได้ทุกจุด — หัวข้อ ย่อหน้า ตาราง หัว/ท้ายกระดาษ และอ้างอิง จุดสีเหลืองคือที่จ๋องอ่านไม่ชัด")}
         </PageTitle>
 
         <HowTo
@@ -153,7 +153,7 @@ export default function ReviewPage({ document, onExport }) {
             ['‹ ›', 'กดลูกศร ‹ › หรือเลือกจากเมนู “หน้า 1 / 3” เพื่อเปลี่ยนหน้า'],
             ['🔍', 'รูปต้นฉบับ: จีบนิ้วหรือกด + − เพื่อซูม ดับเบิลแตะเพื่อซูมเร็ว'],
             ['✎', 'แตะข้อความเพื่อแก้ แถบเครื่องมือด้านบนปัดซ้าย-ขวาเพื่อดูปุ่มเพิ่ม (ตัวหนา ตาราง อ้างอิง)'],
-            ['🟨', 'คำสีเหลือง [ไม่ชัดเจน] คือจุดที่แมวอ่านไม่ออก แก้ให้ถูกก่อนส่งออก'],
+            ['🟨', 'คำสีเหลือง [ไม่ชัดเจน] คือจุดที่จ๋องอ่านไม่ออก แก้ให้ถูกก่อนส่งออก'],
             ['↑ ↓', 'แท็บ “จัดเรียงหน้า” ลากวาง หรือกดลูกศรเพื่อสลับหน้า'],
           ]}
         />
@@ -234,7 +234,7 @@ export default function ReviewPage({ document, onExport }) {
               <Card className="p-3 mb-4 flex items-center gap-3">
                 <div className="w-10 shrink-0"><CalicoCat backdrop={false} blink={false} mood={rescan ? 'open' : 'closed'} /></div>
                 {rescan ? (
-                  <div className="flex-1"><p className="text-xs mb-2">{t('แมวกำลังอ่านหน้า {n} อย่างละเอียด...', { n: index + 1 })}</p><PixelProgress value={rescan.progress} /></div>
+                  <div className="flex-1"><p className="text-xs mb-2">{t('จ๋องกำลังอ่านหน้า {n} อย่างละเอียด...', { n: index + 1 })}</p><PixelProgress value={rescan.progress} /></div>
                 ) : (
                   <p className="text-sm text-[#c9661d]">{rescanError}</p>
                 )}

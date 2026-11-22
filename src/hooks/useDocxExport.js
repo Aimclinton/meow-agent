@@ -121,7 +121,7 @@ function cellChildren(cell, head, ctx) {
 }
 
 export function useDocxExport() {
-  const generateDocx = async (doc, { includeImages = false, pageBreaks = true } = {}) => {
+  const generateDocx = async (doc, { includeImages = false, pageBreaks = true, download = true } = {}) => {
     try {
       listCounter = 0;
       const rich = {
@@ -213,7 +213,7 @@ export function useDocxExport() {
 
       const blob = await Packer.toBlob(file);
       const fileName = `${safeFileName(doc.title)}.docx`;
-      saveAs(blob, fileName);
+      if (download) saveAs(blob, fileName);
       return { success: true, fileName, blob };
     } catch (error) {
       console.error('DOCX generation failed:', error);

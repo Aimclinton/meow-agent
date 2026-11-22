@@ -202,14 +202,14 @@ export function QuotaBar() {
   return (
     <div className="sticky top-0 z-40 bg-ink text-paper safe-x pt-[env(safe-area-inset-top)]">
       <div className="max-w-6xl mx-auto h-7 flex items-center gap-2 sm:gap-3 text-[11px] sm:text-xs">
-        <span className="shrink-0 -mb-1" title={mood === 'playful' ? t('แมวคึกคัก') : mood === 'sleepy' ? t('แมวเริ่มง่วง') : t('แมวหลับ')}>
+        <span className="shrink-0 -mb-1" title={mood === 'playful' ? t('จ๋องคึกคัก') : mood === 'sleepy' ? t('จ๋องเริ่มง่วง') : t('จ๋องหลับ')}>
           <MoodCat mood={mood} size={30} />
         </span>
         <span className="truncate">
           {left > 0 ? (
-            <>{t("แมวเลียตอนนี้ แมวทำให้ได้อีก")} <b className={`font-pixel ${low ? 'text-[#e2782a]' : ''}`}>{left.toLocaleString()}</b> {t("รูป")}</>
+            <>{t("จ๋องเลียตอนนี้ จ๋องทำให้ได้อีก")} <b className={`font-pixel ${low ? 'text-[#e2782a]' : ''}`}>{left.toLocaleString()}</b> {t("รูป")}</>
           ) : (
-            <>{t("รอเติมแมวเลียพรุ่งนี้น้า")}</>
+            <>{t("รอเติมจ๋องเลียพรุ่งนี้น้า")}</>
           )}
         </span>
         <span className="ml-auto hidden sm:flex gap-[2px] w-24" aria-hidden="true">
@@ -220,7 +220,7 @@ export function QuotaBar() {
         <LangToggle className="ml-auto sm:ml-0" />
         <button
           onClick={toggleSound}
-          aria-label={soundOn ? t('ปิดเสียงแมว') : t('เปิดเสียงแมว')}
+          aria-label={soundOn ? t('ปิดเสียงจ๋อง') : t('เปิดเสียงจ๋อง')}
           aria-pressed={soundOn}
           className="w-7 h-7 -mr-1 grid place-items-center shrink-0 hover:bg-paper/10 rounded-[3px]"
         >

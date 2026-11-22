@@ -24,7 +24,7 @@ export default function TemplatePicker() {
           className="flex-1 min-w-0 min-h-[52px] px-3 bg-white/70 border border-ink/20 rounded-[3px] outline-none focus:border-ink"
           aria-label={t("เลือก Template")}
         >
-          <option value="">{t("ไม่ใช้ Template (ให้แมวจัดเอง)")}</option>
+          <option value="">{t("ไม่ใช้ Template (ให้จ๋องจัดเอง)")}</option>
           {templates.map((tp) => <option key={tp.id} value={tp.id}>📋 {tp.name}</option>)}
         </select>
         {current && (
@@ -34,7 +34,7 @@ export default function TemplatePicker() {
         )}
       </div>
       {!templates.length && <p className="text-xs text-ink/50 mt-2">{t("ยังไม่มี Template — สแกนฟอร์มที่มีตาราง แล้วกด “บันทึกโครงสร้างนี้เป็น Template” ในหน้าตรวจทาน")}</p>}
-      {current && <p className="text-xs text-[#c9661d] mt-2">{t('แมวจะกรอกข้อมูลจากรูปลงช่องของ “{name}”', { name: current.name })}</p>}
+      {current && <p className="text-xs text-[#c9661d] mt-2">{t('จ๋องจะกรอกข้อมูลจากรูปลงช่องของ “{name}”', { name: current.name })}</p>}
       {current && peek && (
         <div className="mt-3 bg-white/70 border border-ink/15 rounded-[3px] p-3">
           <pre className="text-[11px] leading-relaxed whitespace-pre-wrap max-h-48 overflow-auto">{contentToMarkdown(structuredToContent(current.structure))}</pre>

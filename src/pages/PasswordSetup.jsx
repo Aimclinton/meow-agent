@@ -51,7 +51,7 @@ export default function PasswordSetup() {
         <div>
           <p className="text-xs uppercase tracking-wider text-ink/50 mb-2">First time</p>
           <h1 className="font-pixel text-3xl uppercase leading-tight">{t("ตั้งรหัสผ่าน")}</h1>
-          <p className="text-sm text-ink/60 mt-2">{t("ใช้ล็อกเอกสารและประวัติ 7 วัน ใส่รหัสเดียวกันในเครื่องอื่นแล้วประวัติจะตามไปด้วย (แมวจะไม่แอบดู)")}</p>
+          <p className="text-sm text-ink/60 mt-2">{t("ใช้ล็อกเอกสารและประวัติ 7 วัน ใส่รหัสเดียวกันในเครื่องอื่นแล้วประวัติจะตามไปด้วย (จ๋องจะไม่แอบดู)")}</p>
         </div>
         <Field
           label="Password"

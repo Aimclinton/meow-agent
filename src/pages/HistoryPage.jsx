@@ -58,7 +58,7 @@ export default function HistoryPage({ onBack, onSelect, onExport, onNew }) {
             <div className="text-center py-12">
               <div className="w-32 mx-auto mb-6"><CalicoCat mood="closed" backdrop={false} blink={false} /></div>
               <p className="font-pixel text-lg uppercase mb-2">{query ? 'Not found' : 'Zzz... empty'}</p>
-              <p className="text-sm text-ink/60 mb-6">{query ? t('ไม่พบเอกสารที่ตรงกับคำค้น') : t('ยังไม่มีเอกสาร แมวเลยนอนรอ')}</p>
+              <p className="text-sm text-ink/60 mb-6">{query ? t('ไม่พบเอกสารที่ตรงกับคำค้น') : t('ยังไม่มีเอกสาร จ๋องเลยนอนรอ')}</p>
               {!query && <Button onClick={onNew}>{t("เริ่มสแกน")}</Button>}
             </div>
           ) : (

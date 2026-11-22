@@ -1,17 +1,18 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useDocxExport } from '../hooks/useDocxExport';
 import { useXlsxExport } from '../hooks/useXlsxExport';
 import { useDocumentStore } from '../store/documentStore';
-import { documentToMarkdown } from '../utils/docContent';
+import { documentToPlainText } from '../utils/docContent';
 import { useEffect } from 'react';
 import { REPORT_FONTS, docFont, docFontSize, fontInfo, loadPreviewFonts } from '../utils/fonts';
 import { t, useLang } from '../i18n';
 import CreateSlidesModal from '../components/CreateSlidesModal';
-import FeatureRequest from '../components/FeatureRequest';
+import FeatureRequest, { Toast } from '../components/FeatureRequest';
+import ShareModal, { ShareIcon } from '../components/ShareModal';
 import { meow } from '../utils/sound';
 import { AppHeader, Button, Card, CatMascot, HowTo, PageTitle, PawBurst } from '../components/ui';
 
-const DONE_PHRASES = ['เสร็จแล้ว! เมี้ยว~', 'ขอแมวเลียเป็นค่าจ้าง', 'Purrfect!', 'งานไวเหมือนแมววิ่ง'];
+const DONE_PHRASES = ['เสร็จแล้ว! เมี้ยว~', 'ขอจ๋องเลียเป็นค่าจ้าง', 'Purrfect!', 'งานไวเหมือนจ๋องวิ่ง'];
 
 // Report font picker: one font for Thai + English, each tile previews itself.
 function FontPicker({ value, size, onChange, onSize }) {
@@ -65,6 +66,71 @@ export default function ExportPage({ document, onDone, onBack, onEdit, embedded 
   const { generateXlsx } = useXlsxExport();
   const font = docFont(document);
   const fontSize = docFontSize(document);
+  const [shareModal, setShareModal] = useState(null); // File for the desktop fallback
+  const [tapAgain, setTapAgain] = useState(null); // kind whose file is ready but the gesture expired
+  const [toast, setToast] = useState('');
+  const fileCache = useRef({});
+  const optsKey = JSON.stringify([document.updatedAt, font, fontSize, withImages, pageBreaks]);
+
+  const makeFile = async (kind) => {
+    const cached = fileCache.current[kind];
+    if (cached && cached.key === optsKey) return cached.file;
+    const res = kind === 'docx'
+      ? await generateDocx(document, { includeImages: withImages, pageBreaks, download: false })
+      : await generateXlsx(document, { download: false });
+    if (!res.success) throw new Error(res.error);
+    const type = kind === 'docx'
+      ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+      : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+    const file = new File([res.blob], res.fileName, { type });
+    fileCache.current[kind] = { key: optsKey, file };
+    return file;
+  };
+
+  // Prepare both files in the background so the share sheet opens instantly
+  // (iOS only allows navigator.share right after a tap).
+  useEffect(() => {
+    const id = setTimeout(() => {
+      ['docx', 'xlsx'].reduce((p, k) => p.then(() => makeFile(k).catch(() => {})), Promise.resolve());
+    }, 700);
+    return () => clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [optsKey]);
+
+  const shared = () => {
+    meow();
+    setBurst((n) => n + 1);
+    setToast(t('จ๋องคาบไฟล์ไปส่งให้แล้วนะ 🐾'));
+  };
+
+  const shareFile = async (kind) => {
+    setMessage(null);
+    setTapAgain(null);
+    const ready = fileCache.current[kind]?.key === optsKey ? fileCache.current[kind].file : null;
+    let file = ready;
+    try {
+      if (!file) {
+        setBusy(`share-${kind}`);
+        file = await makeFile(kind);
+      }
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({ files: [file], title: t('เอกสารจาก MEOW Agent'), text: t('ส่งเอกสารที่สแกนเรียบร้อยแล้ว 🐱') });
+          shared();
+        } catch (err) {
+          if (err.name === 'AbortError') return; // user closed the share sheet
+          if (err.name === 'NotAllowedError' && !ready) { setTapAgain(kind); return; } // tap expired while building
+          throw err;
+        }
+      } else {
+        setShareModal(file);
+      }
+    } catch (err) {
+      setMessage({ ok: false, text: t('ไม่สำเร็จ: {msg}', { msg: err.message }) });
+    } finally {
+      setBusy(null);
+    }
+  };
 
   const run = async (kind, fn) => {
     setBusy(kind);
@@ -72,7 +138,7 @@ export default function ExportPage({ document, onDone, onBack, onEdit, embedded 
     try {
       const res = await fn();
       if (res?.success === false) throw new Error(res.error);
-      setMessage({ ok: true, text: res?.fileName ? `บันทึก ${res.fileName} แล้ว` : t('เรียบร้อย!') });
+      setMessage({ ok: true, text: res?.fileName ? t('บันทึก {name} แล้ว', { name: res.fileName }) : t('เรียบร้อย!') });
       setBurst((n) => n + 1);
       if (kind === 'docx' || kind === 'xlsx') meow();
     } catch (err) {
@@ -82,7 +148,7 @@ export default function ExportPage({ document, onDone, onBack, onEdit, embedded 
     }
   };
 
-  const allText = () => documentToMarkdown(document);
+  const allText = () => documentToPlainText(document);
   const copyText = () => run('copy', async () => {
     await navigator.clipboard.writeText(allText());
     return { success: true };
@@ -119,6 +185,7 @@ export default function ExportPage({ document, onDone, onBack, onEdit, embedded 
               ['Aa', 'แตะการ์ดฟอนต์เพื่อเลือก ดูตัวอย่างด้านล่างได้ทันที'],
               ['⬇', 'กดดาวน์โหลด .DOCX (Word) หรือ .XLSX (Excel) ไฟล์จะอยู่ในโฟลเดอร์ดาวน์โหลด'],
               ['🎬', 'Export as Slide = คัดลอก prompt ไปให้ AI ทำสไลด์ต่อ'],
+              ['↗', 'ปุ่มแชร์ข้างปุ่มดาวน์โหลด: มือถือส่งไฟล์เข้า LINE / Messenger / อีเมลได้เลย ส่วนคอมจะมีตัวเลือกอีเมลหรือคัดลอกข้อความ'],
               ['📋', 'คัดลอกข้อความทั้งหมด ไปวางในแชทหรือโน้ตได้'],
             ]}
           />
@@ -153,9 +220,22 @@ export default function ExportPage({ document, onDone, onBack, onEdit, embedded 
                     </label>
                   </div>
                 )}
-                <Button onClick={() => run(o.key, o.action)} disabled={!!busy}>
-                  {busy === o.key ? t('กำลังสร้างไฟล์...') : `ดาวน์โหลด ${o.tag}`}
-                </Button>
+                <div className="grid grid-cols-[1fr_auto] gap-2">
+                  <Button onClick={() => run(o.key, o.action)} disabled={!!busy}>
+                    {busy === o.key ? t('กำลังสร้างไฟล์...') : t('ดาวน์โหลด {tag}', { tag: o.tag })}
+                  </Button>
+                  <Button
+                    variant={tapAgain === o.key ? 'orange' : 'ghost'}
+                    onClick={() => shareFile(o.key)}
+                    disabled={!!busy}
+                    aria-label={t('แชร์ไฟล์ {tag}', { tag: o.tag })}
+                    className="px-4"
+                  >
+                    <ShareIcon />
+                    <span>{busy === `share-${o.key}` ? '...' : tapAgain === o.key ? t('แตะอีกครั้ง') : t('แชร์')}</span>
+                  </Button>
+                </div>
+                <p className="text-[11px] text-ink/45 mt-2">{t('แชร์ = ส่งเข้า LINE, Messenger, อีเมล หรือแอปอื่นได้ทันที')}</p>
               </Card>
             ))}
 
@@ -194,6 +274,16 @@ export default function ExportPage({ document, onDone, onBack, onEdit, embedded 
         </div>
       </div>
 
+      {shareModal && (
+        <ShareModal
+          file={shareModal}
+          document={document}
+          summary={allText()}
+          onClose={() => setShareModal(null)}
+          onDone={(how) => { if (how === 'email') shared(); }}
+        />
+      )}
+      {toast && <Toast text={toast} onDone={() => setToast('')} />}
       <FeatureRequest />
       {slides && <CreateSlidesModal document={document} onClose={() => setSlides(false)} />}
     </div>

@@ -107,7 +107,7 @@ export function FeatureRequestModal({ onClose, onSent }) {
           <div className="flex-1">
             <p className="text-xs uppercase tracking-wider text-ink/50 mb-1">Feature request</p>
             <h2 className="font-menu font-bold text-xl">{t("ข้าต้องการสิ่งนี้เพิ่ม")}</h2>
-            <p className="text-xs text-ink/60 mt-1">{t("บอกมาได้เลย แมวจ้องอยู่ จะส่งตรงถึง Dev")}</p>
+            <p className="text-xs text-ink/60 mt-1">{t("บอกมาได้เลย จ๋องจ้องอยู่ จะส่งตรงถึง Dev")}</p>
           </div>
           <button type="button" onClick={onClose} aria-label="Close" className="w-11 h-11 grid place-items-center hover:bg-ink/5 shrink-0">✕</button>
         </div>
@@ -135,7 +135,7 @@ export function FeatureRequestModal({ onClose, onSent }) {
         <input type="checkbox" name="botcheck" className="hidden" tabIndex={-1} autoComplete="off" />
         {error && <p className="text-sm text-red-700 border-l-2 border-red-700 pl-3 py-1 mb-4">{error}</p>}
         <button disabled={busy} className="font-menu font-medium w-full min-h-[52px] bg-ink text-paper rounded-[3px] hover:bg-neutral-700 disabled:opacity-40 transition">
-          {busy ? t('แมวกำลังวิ่งไปส่ง...') : t('ส่งให้แมว')}
+          {busy ? t('จ๋องกำลังวิ่งไปส่ง...') : t('ส่งให้จ๋อง')}
         </button>
       </form>
     </div>
@@ -179,7 +179,7 @@ export default function FeatureRequest({ variant = 'floating' }) {
         </button>
       )}
       {open && <FeatureRequestModal onClose={() => setOpen(false)} onSent={() => { setOpen(false); setToast(true); }} />}
-      {toast && <Toast text={t('แมวรับเรื่องไว้แล้ว เดี๋ยวไปสะกิด Dev ให้นะ!')} onDone={() => setToast(false)} />}
+      {toast && <Toast text={t('จ๋องรับเรื่องไว้แล้ว เดี๋ยวไปสะกิด Dev ให้นะ!')} onDone={() => setToast(false)} />}
     </>
   );
 }

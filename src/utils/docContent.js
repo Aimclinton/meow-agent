@@ -1,4 +1,4 @@
-import { ocrPagesToDoc } from './ocrToDoc';
+import { ocrPagesToDoc, docToPlainText } from './ocrToDoc';
 
 // TipTap content for every page, in the user's chosen order.
 export function pageContents(document) {
@@ -58,5 +58,17 @@ export function documentToMarkdown(document) {
   if (document.footer) parts.push(`_ท้ายกระดาษ: ${document.footer}_`);
   const refs = (document.references || []).filter((r) => r.trim());
   if (refs.length) parts.push(`## เอกสารอ้างอิง\n${refs.map((r, i) => `${i + 1}. ${r}`).join('\n')}`);
+  return parts.filter(Boolean).join('\n\n');
+}
+
+// Plain text (no Markdown symbols) for pasting into LINE / Messenger / email.
+export function documentToPlainText(document) {
+  const parts = [];
+  if (document.title) parts.push(document.title);
+  if (document.header) parts.push(document.header);
+  pageContents(document).forEach((c) => parts.push(docToPlainText(c).trim()));
+  if (document.footer) parts.push(document.footer);
+  const refs = (document.references || []).filter((r) => r.trim());
+  if (refs.length) parts.push(refs.map((r, i) => `[${i + 1}] ${r}`).join('\n'));
   return parts.filter(Boolean).join('\n\n');
 }
