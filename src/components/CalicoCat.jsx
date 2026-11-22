@@ -1,3 +1,5 @@
+import { useEffect, useState } from 'react';
+
 // Pixel-art calico (three-colour) cat drawn as horizontal scanlines,
 // in the style of a low-res CRT / ASCII render.
 
@@ -64,7 +66,21 @@ const COLORS = {
 const COLS = 34;
 const LINES_PER_PX = 3;
 
-function buildGrid() {
+// Eye cells per mood: [row, col, char]
+const EYES = {
+  open: [],
+  closed: [
+    [9, 6, 'O'], [9, 7, 'O'], [10, 6, 'K'], [10, 7, 'K'],
+    [9, 16, 'K'], [9, 17, 'K'], [10, 16, 'E'], [10, 17, 'E'],
+  ],
+  happy: [
+    [9, 6, 'K'], [9, 7, 'K'], [10, 6, 'O'], [10, 7, 'O'],
+    [9, 16, 'E'], [9, 17, 'E'], [10, 16, 'K'], [10, 17, 'K'],
+    [12, 4, 'P'], [12, 20, 'P'],
+  ],
+};
+
+function buildGrid(mood) {
   const grid = Array.from({ length: CAT.length }, () => Array(COLS).fill('.'));
   TAIL.forEach(([r, c, cells]) => {
     [...cells].forEach((ch, i) => { grid[r][c + i] = ch; });
@@ -72,6 +88,7 @@ function buildGrid() {
   CAT.forEach((row, r) => {
     [...row].forEach((ch, c) => { if (ch !== '.') grid[r][c] = ch; });
   });
+  (EYES[mood] || []).forEach(([r, c, ch]) => { grid[r][c] = ch; });
   return grid;
 }
 
@@ -81,8 +98,8 @@ function rand(seed) {
   return x - Math.floor(x);
 }
 
-function buildLines() {
-  const grid = buildGrid();
+function buildLines(mood) {
+  const grid = buildGrid(mood);
   const lines = [];
   grid.forEach((row, r) => {
     // merge neighbouring same-colour cells into runs
@@ -129,11 +146,30 @@ function buildBackdrop() {
   return out;
 }
 
-const LINES = buildLines();
+const LINES = { open: buildLines('open'), closed: buildLines('closed'), happy: buildLines('happy') };
 const BACKDROP = buildBackdrop();
 const LINE_H = 0.42 / LINES_PER_PX * 1.6;
 
-export default function CalicoCat({ className = '' }) {
+// mood: 'open' | 'closed' | 'happy'. blink: occasionally close the eyes.
+export default function CalicoCat({ className = '', mood = 'open', blink = true, backdrop = true }) {
+  const [blinking, setBlinking] = useState(false);
+
+  useEffect(() => {
+    if (!blink || mood !== 'open') return undefined;
+    let t1;
+    let t2;
+    const loop = () => {
+      t1 = setTimeout(() => {
+        setBlinking(true);
+        t2 = setTimeout(() => { setBlinking(false); loop(); }, 160);
+      }, 2500 + Math.random() * 3500);
+    };
+    loop();
+    return () => { clearTimeout(t1); clearTimeout(t2); };
+  }, [blink, mood]);
+
+  const lines = LINES[mood === 'open' && blinking ? 'closed' : mood] || LINES.open;
+
   return (
     <svg
       className={`calico-cat ${className}`}
@@ -142,14 +178,14 @@ export default function CalicoCat({ className = '' }) {
       aria-label="Pixel calico cat"
       preserveAspectRatio="xMidYMax meet"
     >
-      <g>
+      {backdrop && <g>
         {BACKDROP.map((l) => (
           <rect key={l.key} x={l.x} y={l.y} width={l.w} height={LINE_H}
             fill="var(--cat-backdrop, #8a8a86)" opacity={Math.max(0, l.o)} />
         ))}
-      </g>
+      </g>}
       <g className="calico-cat__body">
-        {LINES.map((l) => (
+        {lines.map((l) => (
           <rect
             key={l.key}
             x={l.x}

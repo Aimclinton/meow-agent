@@ -1,110 +1,113 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useDocumentStore } from '../store/documentStore';
 import DocumentViewer from '../components/DocumentViewer';
+import DocEditor from '../components/DocEditor';
+import { Button, PageTitle } from '../components/ui';
+import { ocrPagesToDoc } from '../utils/ocrToDoc';
 
-export default function ReviewPage({ documentId, onExport, onCancel }) {
-  const { documents, reorderPages, deletePage, updateDocumentTitle } = useDocumentStore();
-  const [document, setDocument] = useState(null);
-  const [title, setTitle] = useState('');
+function ensureRichDoc(document) {
+  return document.richDoc || {
+    content: ocrPagesToDoc(document.pages),
+    header: '',
+    footer: '',
+    pageNumbers: true,
+    references: [],
+    version: 0,
+  };
+}
 
+export default function ReviewPage({ document, onExport }) {
+  const { reorderPages, deletePage, updateDocumentTitle, updatePageText, updateDoc } = useDocumentStore();
+  const [tab, setTab] = useState('doc');
+  const [rich, setRich] = useState(() => ensureRichDoc(document));
+  const saveTimer = useRef();
+
+  // Save the first generated version right away.
   useEffect(() => {
-    const doc = documents.find((d) => d.id === documentId);
-    if (doc) {
-      setDocument(doc);
-      setTitle(doc.title);
-    }
-  }, [documentId, documents]);
+    if (!document.richDoc) updateDoc(document.id, (d) => ({ ...d, richDoc: rich }));
+    return () => clearTimeout(saveTimer.current);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  if (!document) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <p className="text-gray-600">Document not found</p>
-      </div>
-    );
-  }
-
-  const handleReorder = (oldIndex, newIndex) => {
-    reorderPages(documentId, oldIndex, newIndex);
+  const change = (next) => {
+    setRich(next);
+    clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(() => updateDoc(document.id, (d) => ({ ...d, richDoc: next })), 500);
   };
 
-  const handleDelete = (pageId) => {
-    setDocument((prev) => ({
-      ...prev,
-      pages: prev.pages.filter((p) => p.id !== pageId),
-    }));
-    // Also update in store
-    const pageIndex = document.pages.findIndex((p) => p.id === pageId);
-    if (pageIndex !== -1) {
-      deletePage(documentId, pageIndex);
-    }
+  const regenerate = () => {
+    if (!window.confirm('สร้างเอกสารใหม่จากข้อความที่สแกน? การแก้ไขในเอกสารจะหายไป')) return;
+    change({ ...rich, content: ocrPagesToDoc(document.pages), version: (rich.version || 0) + 1 });
+    setTab('doc');
   };
 
-  const handleTitleChange = (newTitle) => {
-    setTitle(newTitle);
-    updateDocumentTitle(documentId, newTitle);
-  };
-
-  const handleProceed = () => {
-    if (document.pages.length === 0) {
-      alert('Please add at least one page');
-      return;
-    }
-    onExport(document);
-  };
+  const tabs = [
+    ['doc', 'เอกสาร'],
+    ['pages', `หน้าสแกน (${document.pages.length})`],
+  ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <h1 className="text-2xl font-bold text-gray-900">📋 Review Document</h1>
-        </div>
-      </header>
+    <div className="safe-x pb-32">
+      <div className="max-w-4xl mx-auto pt-8">
+        <PageTitle kicker="Step 02" title="Edit">
+          แมวจัดหัวข้อ รายการ และตารางให้แล้ว แก้ต่อได้เลย — ตัวหนา ตัวเอียง ตาราง หัว/ท้ายกระดาษ และอ้างอิง
+        </PageTitle>
 
-      {/* Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Title Section */}
-        <div className="mb-8">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Document Title
-          </label>
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={title}
-              onChange={(e) => handleTitleChange(e.target.value)}
-              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="e.g., Case Report 001"
+        <label className="block max-w-md mb-6">
+          <span className="block text-xs uppercase tracking-wider text-ink/60 mb-2">Document title</span>
+          <input
+            value={document.title}
+            onChange={(e) => updateDocumentTitle(document.id, e.target.value)}
+            className="w-full min-h-[52px] px-4 bg-white/70 border border-ink/20 rounded-[3px] outline-none focus:border-ink focus:bg-white transition"
+          />
+        </label>
+
+        <div className="flex items-center gap-1 mb-4 border-b border-ink/15 font-menu text-sm">
+          {tabs.map(([k, label]) => (
+            <button
+              key={k}
+              onClick={() => setTab(k)}
+              className={`min-h-[44px] px-4 -mb-px border-b-2 transition ${tab === k ? 'border-ink text-ink font-medium' : 'border-transparent text-ink/50 hover:text-ink'}`}
+            >
+              {label}
+            </button>
+          ))}
+          <button onClick={regenerate} className="ml-auto min-h-[44px] px-2 text-xs text-ink/60 hover:text-ink underline underline-offset-4">
+            ↻ จัดใหม่จากสแกน
+          </button>
+        </div>
+
+        <div className={tab === 'doc' ? '' : 'hidden'}>
+          <DocEditor value={rich} onChange={change} />
+        </div>
+
+        {tab === 'pages' && (
+          <>
+            <p className="text-xs text-ink/50 mb-4">ข้อความดิบจากการสแกน — แก้แล้วกด “จัดใหม่จากสแกน” เพื่อสร้างเอกสารใหม่</p>
+            <DocumentViewer
+              pages={document.pages}
+              onReorder={(a, b) => reorderPages(document.id, a, b)}
+              onDelete={(i) => deletePage(document.id, i)}
+              onEditText={(pageId, text) => updatePageText(document.id, pageId, text)}
             />
-          </div>
-        </div>
+          </>
+        )}
+      </div>
 
-        {/* Document Viewer */}
-        <DocumentViewer
-          pages={document.pages}
-          onReorder={handleReorder}
-          onDelete={handleDelete}
-          onDownload={() => {}}
-        />
-
-        {/* Action Buttons */}
-        <div className="mt-10 flex gap-4 flex-wrap">
-          <button
-            onClick={onCancel}
-            className="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium rounded-xl transition"
+      <div className="fixed bottom-0 inset-x-0 z-20 bg-paper/90 backdrop-blur border-t border-ink/10 safe-x pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3">
+        <div className="max-w-4xl mx-auto flex justify-end">
+          <Button
+            onClick={() => {
+              clearTimeout(saveTimer.current);
+              updateDoc(document.id, (d) => ({ ...d, richDoc: rich }));
+              onExport();
+            }}
+            className="w-full sm:w-auto sm:px-10"
           >
-            ← Back
-          </button>
-
-          <button
-            onClick={handleProceed}
-            disabled={document.pages.length === 0}
-            className="px-8 py-4 bg-black hover:bg-gray-900 disabled:bg-gray-500 text-white font-bold text-lg rounded-xl transition-all shadow-md hover:shadow-lg"
-          >
-            ✓ Continue to Export
-          </button>
+            ส่งออก ›
+          </Button>
         </div>
-      </main>
+      </div>
     </div>
   );
 }

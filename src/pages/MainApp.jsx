@@ -3,23 +3,31 @@ import { useDocumentStore } from '../store/documentStore';
 import DocumentWorkflow from './DocumentWorkflow';
 import HistoryPage from './HistoryPage';
 import ExportPage from './ExportPage';
-import CalicoCat from '../components/CalicoCat';
+import CreateSlidesModal from '../components/CreateSlidesModal';
+import { CatMascot, PixelLogo } from '../components/ui';
 
 export default function MainApp() {
   const [currentPage, setCurrentPage] = useState('dashboard');
   const [selectedDocForExport, setSelectedDocForExport] = useState(null);
+  const [slidesDoc, setSlidesDoc] = useState(null);
+  const [editDocId, setEditDocId] = useState(null);
   const { documents, logout } = useDocumentStore();
 
   // Handle page routing
   if (currentPage === 'workflow') {
-    return <DocumentWorkflow />;
+    return <DocumentWorkflow initialDocId={editDocId} onExit={() => { setEditDocId(null); setCurrentPage('dashboard'); }} />;
   }
 
   if (currentPage === 'history') {
     return (
       <HistoryPage
         onBack={() => setCurrentPage('dashboard')}
+        onNew={() => setCurrentPage('workflow')}
         onSelect={(doc) => {
+          setEditDocId(doc.id);
+          setCurrentPage('workflow');
+        }}
+        onExport={(doc) => {
           setSelectedDocForExport(doc);
           setCurrentPage('export');
         }}
@@ -30,10 +38,19 @@ export default function MainApp() {
   if (currentPage === 'export' && selectedDocForExport) {
     return (
       <ExportPage
-        document={selectedDocForExport}
+        document={documents.find((d) => d.id === selectedDocForExport.id) || selectedDocForExport}
         onBack={() => {
           setCurrentPage('dashboard');
           setSelectedDocForExport(null);
+        }}
+        onDone={() => {
+          setCurrentPage('dashboard');
+          setSelectedDocForExport(null);
+        }}
+        onEdit={() => {
+          setEditDocId(selectedDocForExport.id);
+          setSelectedDocForExport(null);
+          setCurrentPage('workflow');
         }}
       />
     );
@@ -44,16 +61,16 @@ export default function MainApp() {
   const actions = [
     { n: '01', title: 'New Document', desc: 'Start scanning', onClick: () => setCurrentPage('workflow') },
     { n: '02', title: 'History', desc: 'Past 7 days', onClick: () => setCurrentPage('history') },
-    { n: '03', title: 'AI Slides', desc: 'Export to AI' },
+    { n: '03', title: 'AI Slides', desc: documents.length ? 'From latest doc' : 'Scan first', onClick: () => (documents.length ? setSlidesDoc(documents[documents.length - 1]) : setCurrentPage('workflow')) },
   ];
 
   return (
     <div className="min-h-screen bg-paper text-ink font-mono overflow-x-hidden">
       {/* Header */}
-      <header className="safe-x pt-[max(1.25rem,env(safe-area-inset-top))]">
+      <header className="safe-x pt-5">
         <div className="max-w-6xl mx-auto flex items-center justify-between h-12">
           <PixelLogo />
-          <nav className="flex items-center gap-1 sm:gap-4 text-[13px] md:text-sm">
+          <nav className="font-menu flex items-center gap-1 sm:gap-4 text-sm">
             <button onClick={() => setCurrentPage('workflow')} className="px-2 py-2 hover:underline underline-offset-4">Scan</button>
             <button onClick={() => setCurrentPage('history')} className="px-2 py-2 hover:underline underline-offset-4">History</button>
             <button onClick={logout} className="px-2 py-2 hover:underline underline-offset-4">Logout</button>
@@ -70,7 +87,7 @@ export default function MainApp() {
 
           {/* Cat: stacked on phones, floating right on iPad / desktop */}
           <div className="mx-auto w-[70%] max-w-[360px] my-5 md:my-0 md:absolute md:right-[-2%] md:bottom-6 md:w-[52%] md:max-w-[600px]">
-            <CalicoCat />
+            <CatMascot />
           </div>
 
           <div className="relative z-10 md:max-w-[40%]">
@@ -80,13 +97,13 @@ export default function MainApp() {
             <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
               <button
                 onClick={() => setCurrentPage('workflow')}
-                className="min-h-[48px] px-6 bg-ink text-paper text-sm rounded-[3px] hover:bg-neutral-700 active:scale-[0.98] transition"
+                className="font-menu font-medium min-h-[48px] px-6 bg-ink text-paper text-sm rounded-[3px] hover:bg-neutral-700 active:scale-[0.98] transition"
               >
                 Get Started
               </button>
               <button
                 onClick={() => setCurrentPage('history')}
-                className="min-h-[48px] text-sm inline-flex items-center gap-2 hover:underline underline-offset-4"
+                className="font-menu min-h-[48px] text-sm inline-flex items-center gap-2 hover:underline underline-offset-4"
               >
                 See History <span aria-hidden="true">›</span>
               </button>
@@ -141,10 +158,10 @@ export default function MainApp() {
                     </p>
                     <button
                       onClick={() => {
-                        setSelectedDocForExport(doc);
-                        setCurrentPage('export');
+                        setEditDocId(doc.id);
+                        setCurrentPage('workflow');
                       }}
-                      className="w-full min-h-[44px] border border-ink text-sm rounded-[3px] hover:bg-ink hover:text-paper transition"
+                      className="font-menu w-full min-h-[44px] border border-ink text-sm rounded-[3px] hover:bg-ink hover:text-paper transition"
                     >
                       Open
                     </button>
@@ -155,15 +172,9 @@ export default function MainApp() {
           )}
         </div>
       </main>
+
+      {slidesDoc && <CreateSlidesModal document={slidesDoc} onClose={() => setSlidesDoc(null)} />}
     </div>
   );
 }
 
-function PixelLogo() {
-  return (
-    <svg width="22" height="22" viewBox="0 0 7 7" aria-label="MEOW Agent" role="img" shapeRendering="crispEdges">
-      <path fill="#111" d="M0 0h3v3H0zM4 0h3v3H4zM0 4h3v3H0zM4 4h3v3H4z" />
-      <path fill="#eeeeec" d="M1 1h1v1H1zM5 1h1v1H5zM1 5h1v1H1zM5 5h1v1H5z" />
-    </svg>
-  );
-}

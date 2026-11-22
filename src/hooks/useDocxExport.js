@@ -1,68 +1,204 @@
-export function useDocxExport() {
-  const generateDocx = async (document) => {
-    try {
-      // Generate HTML content
-      let htmlContent = `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <title>${document.title || 'Document'}</title>
-  <style>
-    body { font-family: Arial, sans-serif; margin: 20px; }
-    h1 { color: #333; border-bottom: 2px solid #0066cc; padding-bottom: 10px; }
-    h2 { color: #0066cc; margin-top: 20px; }
-    .page { page-break-after: always; margin-bottom: 30px; }
-    img { max-width: 100%; height: auto; }
-    .metadata { font-size: 12px; color: #666; margin-top: 10px; }
-  </style>
-</head>
-<body>
-  <h1>${document.title || 'Untitled Document'}</h1>
-  <p class="metadata">Generated on ${new Date().toLocaleString()}</p>
-  <hr>
-`;
+import {
+  AlignmentType, BorderStyle, Document, Footer, Header, HeadingLevel, ImageRun, LevelFormat,
+  Packer, PageBreak, PageNumber, Paragraph, ShadingType, Table, TableCell, TableRow, TextRun, WidthType,
+} from 'docx';
+import { saveAs } from 'file-saver';
+import { ocrPagesToDoc } from '../utils/ocrToDoc';
 
-      // Add pages
-      for (let i = 0; i < document.pages.length; i++) {
-        const page = document.pages[i];
-        htmlContent += `
-  <div class="page">
-    <h2>Page ${i + 1}</h2>
-    <img src="${page.imageData}" alt="Page ${i + 1}">
-    ${
-      page.ocrText
-        ? `
-    <h3>Extracted Text:</h3>
-    <p>${page.ocrText.replace(/\n/g, '<br>')}</p>
-    <p class="metadata">OCR Confidence: ${Math.round(page.confidence || 0)}%</p>
-    `
-        : '<p><em>(No text detected)</em></p>'
+const FONT = 'TH Sarabun New';
+const SIZE = 32; // half-points → 16pt, the Thai document standard
+
+function dataURLToBytes(dataURL) {
+  const bin = atob(dataURL.split(',')[1] || '');
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return bytes;
+}
+
+function imageSize(dataURL) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => resolve({ w: img.naturalWidth, h: img.naturalHeight });
+    img.onerror = () => resolve({ w: 800, h: 1100 });
+    img.src = dataURL;
+  });
+}
+
+export function safeFileName(name) {
+  return (name || 'Document').replace(/[\\/:*?"<>|]+/g, '_').trim() || 'Document';
+}
+
+const ALIGN = { left: AlignmentType.LEFT, center: AlignmentType.CENTER, right: AlignmentType.RIGHT, justify: AlignmentType.JUSTIFIED };
+const HEADINGS = { 1: HeadingLevel.HEADING_1, 2: HeadingLevel.HEADING_2, 3: HeadingLevel.HEADING_3 };
+
+// Inline nodes → TextRuns, keeping bold / italic / underline / strike / superscript.
+function runs(nodes = [], extra = {}) {
+  return nodes.flatMap((n) => {
+    if (n.type === 'hardBreak') return [new TextRun({ break: 1 })];
+    if (n.type !== 'text') return [];
+    const m = Object.fromEntries((n.marks || []).map((mk) => [mk.type, true]));
+    return [new TextRun({
+      text: n.text,
+      bold: m.bold || extra.bold,
+      italics: m.italic || extra.italics,
+      underline: m.underline ? {} : undefined,
+      strike: m.strike,
+      superScript: m.superscript,
+      color: extra.color,
+    })];
+  });
+}
+
+let listCounter = 0;
+
+function blocks(node, ctx = {}) {
+  const align = ALIGN[node.attrs?.textAlign];
+  switch (node.type) {
+    case 'heading':
+      return [new Paragraph({ heading: HEADINGS[node.attrs.level] || HeadingLevel.HEADING_2, alignment: align, children: runs(node.content) })];
+    case 'paragraph':
+      return [new Paragraph({
+        alignment: align,
+        indent: ctx.quote ? { left: 720 } : undefined,
+        border: ctx.quote ? { left: { style: BorderStyle.SINGLE, size: 12, color: 'E2782A', space: 12 } } : undefined,
+        children: runs(node.content, ctx.quote ? { italics: true, color: '444444' } : {}),
+      })];
+    case 'blockquote':
+      return (node.content || []).flatMap((c) => blocks(c, { ...ctx, quote: true }));
+    case 'horizontalRule':
+      return [new Paragraph({ border: { bottom: { style: BorderStyle.SINGLE, size: 6, color: 'BBBBBB', space: 4 } }, children: [] })];
+    case 'bulletList':
+    case 'orderedList': {
+      const ordered = node.type === 'orderedList';
+      const instance = ordered ? ++listCounter : 0;
+      const level = ctx.level || 0;
+      return (node.content || []).flatMap((item) =>
+        (item.content || []).flatMap((child) => {
+          if (child.type === 'bulletList' || child.type === 'orderedList') return blocks(child, { ...ctx, level: level + 1 });
+          return [new Paragraph({
+            numbering: ordered ? { reference: 'meow-numbers', level, instance } : { reference: 'meow-bullets', level },
+            children: runs(child.content),
+          })];
+        })
+      );
     }
-  </div>
-`;
+    case 'table': {
+      const rows = node.content || [];
+      return [
+        new Table({
+          width: { size: 100, type: WidthType.PERCENTAGE },
+          rows: rows.map((row) => new TableRow({
+            tableHeader: row.content?.[0]?.type === 'tableHeader',
+            children: (row.content || []).map((cell) => {
+              const head = cell.type === 'tableHeader';
+              return new TableCell({
+                columnSpan: cell.attrs?.colspan || 1,
+                rowSpan: cell.attrs?.rowspan || 1,
+                shading: head ? { type: ShadingType.CLEAR, color: 'auto', fill: 'F1F1EE' } : undefined,
+                children: cellChildren(cell, head, ctx),
+              });
+            }),
+          })),
+        }),
+        new Paragraph({ children: [] }),
+      ];
+    }
+    default:
+      return (node.content || []).flatMap((c) => blocks(c, ctx));
+  }
+}
+
+// A Word table cell must contain at least one paragraph.
+function cellChildren(cell, head, ctx) {
+  const out = (cell.content || []).flatMap((c) =>
+    c.type === 'paragraph'
+      ? [new Paragraph({ alignment: ALIGN[c.attrs?.textAlign], children: runs(c.content, head ? { bold: true } : {}) })]
+      : blocks(c, ctx)
+  );
+  return out.length ? out : [new Paragraph('')];
+}
+
+export function useDocxExport() {
+  const generateDocx = async (doc, { includeImages = false } = {}) => {
+    try {
+      listCounter = 0;
+      const rich = doc.richDoc || { content: ocrPagesToDoc(doc.pages, doc.title), references: [], pageNumbers: true };
+      const children = blocks(rich.content);
+
+      const refs = (rich.references || []).filter((r) => r.trim());
+      if (refs.length) {
+        children.push(new Paragraph({ heading: HeadingLevel.HEADING_2, children: [new TextRun('เอกสารอ้างอิง')] }));
+        refs.forEach((r, i) => children.push(new Paragraph({
+          indent: { left: 720, hanging: 720 },
+          children: [new TextRun(`[${i + 1}]\t${r}`)],
+        })));
       }
 
-      htmlContent += `
-</body>
-</html>
-`;
+      if (includeImages) {
+        for (let i = 0; i < doc.pages.length; i++) {
+          const page = doc.pages[i];
+          if (!page.imageData?.startsWith('data:image')) continue;
+          const { w, h } = await imageSize(page.imageData);
+          const width = 450;
+          children.push(new Paragraph({ children: [new PageBreak()] }));
+          children.push(new Paragraph({ heading: HeadingLevel.HEADING_3, children: [new TextRun(`ภาพต้นฉบับ หน้า ${i + 1}`)] }));
+          children.push(new Paragraph({
+            alignment: AlignmentType.CENTER,
+            children: [new ImageRun({
+              type: page.imageData.includes('image/png') ? 'png' : 'jpg',
+              data: dataURLToBytes(page.imageData),
+              transformation: { width, height: Math.round((h / w) * width) },
+            })],
+          }));
+        }
+      }
 
-      // Convert HTML to DOCX using a simple approach
-      // For now, export as HTML which can be opened in Word
-      const blob = new Blob([htmlContent], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+      const headers = rich.header?.trim()
+        ? { default: new Header({ children: [new Paragraph({ alignment: AlignmentType.RIGHT, children: [new TextRun({ text: rich.header, color: '777777', size: 24 })] })] }) }
+        : undefined;
 
-      // Download
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `${document.title || 'Document'}_${Date.now()}.html`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
+      const footerRuns = [];
+      if (rich.footer?.trim()) footerRuns.push(new TextRun({ text: rich.footer, color: '777777', size: 24 }));
+      if (rich.pageNumbers !== false) {
+        if (footerRuns.length) footerRuns.push(new TextRun({ text: '    ', size: 24 }));
+        footerRuns.push(new TextRun({ children: ['หน้า ', PageNumber.CURRENT, ' / ', PageNumber.TOTAL_PAGES], color: '777777', size: 24 }));
+      }
+      const footers = footerRuns.length
+        ? { default: new Footer({ children: [new Paragraph({ alignment: AlignmentType.CENTER, children: footerRuns })] }) }
+        : undefined;
 
-      return { success: true, fileName: link.download };
+      const levels = (format, texts) => texts.map((text, level) => ({
+        level,
+        format,
+        text,
+        alignment: AlignmentType.LEFT,
+        style: { paragraph: { indent: { left: 720 * (level + 1), hanging: 360 } } },
+      }));
+
+      const file = new Document({
+        creator: 'MEOW AI Agent',
+        title: doc.title,
+        styles: {
+          default: {
+            document: { run: { font: FONT, size: SIZE } },
+            heading1: { run: { font: FONT, size: 48, bold: true }, paragraph: { spacing: { before: 240, after: 120 } } },
+            heading2: { run: { font: FONT, size: 40, bold: true }, paragraph: { spacing: { before: 240, after: 120 } } },
+            heading3: { run: { font: FONT, size: 36, bold: true }, paragraph: { spacing: { before: 200, after: 80 } } },
+          },
+        },
+        numbering: {
+          config: [
+            { reference: 'meow-bullets', levels: levels(LevelFormat.BULLET, ['•', '◦', '▪']) },
+            { reference: 'meow-numbers', levels: levels(LevelFormat.DECIMAL, ['%1.', '%2.', '%3.']) },
+          ],
+        },
+        sections: [{ headers, footers, children: children.length ? children : [new Paragraph('')] }],
+      });
+
+      const blob = await Packer.toBlob(file);
+      const fileName = `${safeFileName(doc.title)}.docx`;
+      saveAs(blob, fileName);
+      return { success: true, fileName, blob };
     } catch (error) {
       console.error('DOCX generation failed:', error);
       return { success: false, error: error.message };

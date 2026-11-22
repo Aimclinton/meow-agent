@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# generated OCR assets (scripts/copy-tesseract.mjs)
+public/tesseract

@@ -1,5 +1,6 @@
 import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
+import { safeFileName } from './useDocxExport';
 
 export function useXlsxExport() {
   const generateXlsx = async (document) => {
@@ -21,12 +22,14 @@ export function useXlsxExport() {
       worksheet.getRow(1).fill = {
         type: 'pattern',
         pattern: 'solid',
-        fgColor: { argb: 'FF0066CC' },
+        fgColor: { argb: 'FF111111' },
       };
       worksheet.getRow(1).font = {
         bold: true,
         color: { argb: 'FFFFFFFF' },
       };
+
+      worksheet.getColumn('text').alignment = { wrapText: true, vertical: 'top' };
 
       // Add data rows
       document.pages.forEach((page, index) => {
@@ -34,7 +37,7 @@ export function useXlsxExport() {
           pageNumber: index + 1,
           text: page.ocrText || '(No text detected)',
           confidence: Math.round(page.confidence || 0),
-          timestamp: new Date(page.timestamp).toLocaleString(),
+          timestamp: page.timestamp ? new Date(page.timestamp).toLocaleString() : '',
         });
       });
 
@@ -63,7 +66,7 @@ export function useXlsxExport() {
       summarySheet.getRow(1).fill = {
         type: 'pattern',
         pattern: 'solid',
-        fgColor: { argb: 'FF00AA00' },
+        fgColor: { argb: 'FFE2782A' },
       };
       summarySheet.getRow(1).font = {
         bold: true,
@@ -72,7 +75,7 @@ export function useXlsxExport() {
 
       // Generate blob and download
       const blob = await workbook.xlsx.writeBuffer();
-      const fileName = `${document.title || 'Document'}_${Date.now()}.xlsx`;
+      const fileName = `${safeFileName(document.title)}.xlsx`;
       saveAs(new Blob([blob]), fileName);
 
       return { success: true, fileName };

@@ -1,130 +1,101 @@
 import { useState } from 'react';
 import { useDocumentStore } from '../store/documentStore';
+import { AppHeader, Button, Card, PageTitle } from '../components/ui';
+import CalicoCat from '../components/CalicoCat';
 
-export default function HistoryPage({ onBack, onSelect }) {
-  const { documents, deleteDocument } = useDocumentStore();
-  const [expandedId, setExpandedId] = useState(null);
+const DAY = 24 * 60 * 60 * 1000;
 
-  // Get documents within 7 days
-  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-  const recentDocs = documents.filter((doc) => new Date(doc.updatedAt) > sevenDaysAgo);
+function ago(date) {
+  const days = Math.floor((Date.now() - new Date(date)) / DAY);
+  if (days <= 0) return 'วันนี้';
+  if (days === 1) return 'เมื่อวาน';
+  return `${days} วันก่อน`;
+}
 
-  const handleDelete = (docId) => {
-    if (window.confirm('Delete this document permanently?')) {
-      deleteDocument(docId);
-    }
-  };
-
-  const getDaysAgo = (date) => {
-    const now = new Date();
-    const diff = now - new Date(date);
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-    if (days === 0) return 'Today';
-    if (days === 1) return 'Yesterday';
-    return `${days} days ago`;
-  };
+export default function HistoryPage({ onBack, onSelect, onExport, onNew }) {
+  const { getRecentDocuments, deleteDocument } = useDocumentStore();
+  const [query, setQuery] = useState('');
+  const [confirmId, setConfirmId] = useState(null);
+  const docs = getRecentDocuments()
+    .slice()
+    .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
+    .filter((d) => {
+      const q = query.trim().toLowerCase();
+      if (!q) return true;
+      return d.title.toLowerCase().includes(q) || d.pages.some((p) => p.ocrText?.toLowerCase().includes(q));
+    });
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-white to-gray-100">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-gray-900">📚 Document History</h1>
-          <button
-            onClick={onBack}
-            className="px-4 py-2 text-sm font-medium text-gray-600 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors"
-          >
-            ← Back
-          </button>
-        </div>
-      </header>
+    <div className="min-h-screen bg-paper text-ink font-mono overflow-x-hidden">
+      <AppHeader onBack={onBack} backLabel="Home" />
+      <div className="safe-x pb-[max(2.5rem,env(safe-area-inset-bottom))]">
+        <div className="max-w-6xl mx-auto pt-8">
+          <PageTitle kicker="Last 7 days" title="History">
+            เอกสารเก็บไว้ในเครื่องนี้ 7 วัน แล้วลบอัตโนมัติ
+          </PageTitle>
 
-      {/* Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {recentDocs.length === 0 ? (
-          <div className="text-center py-12">
-            <div className="text-6xl mb-4">📭</div>
-            <h2 className="text-xl font-bold text-gray-900 mb-2">No Documents Yet</h2>
-            <p className="text-gray-600 mb-6">Documents are kept for 7 days. Start by creating a new document!</p>
-            <button
-              onClick={onBack}
-              className="px-6 py-3 bg-black hover:bg-gray-900 text-white font-bold rounded-xl transition-all"
-            >
-              Create Document
-            </button>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {/* Info Box */}
-            <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
-              <p className="text-blue-900 font-medium text-sm">
-                📌 Showing {recentDocs.length} document{recentDocs.length !== 1 ? 's' : ''} from the past 7 days.
-                Older documents are automatically removed.
-              </p>
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="🔍 ค้นหาชื่อหรือข้อความในเอกสาร"
+            className="w-full max-w-md min-h-[52px] px-4 mb-8 bg-white/70 border border-ink/20 rounded-[3px] outline-none focus:border-ink focus:bg-white transition"
+          />
+
+          {docs.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="w-32 mx-auto mb-6"><CalicoCat mood="closed" backdrop={false} blink={false} /></div>
+              <p className="font-pixel text-lg uppercase mb-2">{query ? 'Not found' : 'Zzz... empty'}</p>
+              <p className="text-sm text-ink/60 mb-6">{query ? 'ไม่พบเอกสารที่ตรงกับคำค้น' : 'ยังไม่มีเอกสาร แมวเลยนอนรอ'}</p>
+              {!query && <Button onClick={onNew}>เริ่มสแกน</Button>}
             </div>
-
-            {/* Documents List */}
-            <div className="space-y-4">
-              {recentDocs.map((doc) => (
-                <div
-                  key={doc.id}
-                  className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-lg hover:border-gray-300 transition-all"
-                >
-                  {/* Header */}
-                  <div className="flex justify-between items-start mb-4">
-                    <div className="flex-1">
-                      <h3 className="text-lg font-bold text-gray-900">{doc.title}</h3>
-                      <p className="text-sm text-gray-600 mt-1">
-                        {doc.pages.length} page{doc.pages.length !== 1 ? 's' : ''} • Updated {getDaysAgo(doc.updatedAt)}
-                      </p>
-                    </div>
-                    <div className="text-3xl">📄</div>
-                  </div>
-
-                  {/* Page Preview */}
-                  {doc.pages.length > 0 && (
-                    <div className="mb-4">
-                      <p className="text-xs text-gray-500 mb-2">First page preview:</p>
-                      <img
-                        src={doc.pages[0]?.imageData}
-                        alt="Preview"
-                        className="w-full h-40 object-cover rounded-lg bg-gray-100"
-                      />
-                    </div>
-                  )}
-
-                  {/* Actions */}
-                  <div className="flex gap-3">
-                    <button
-                      onClick={() => onSelect(doc)}
-                      className="flex-1 px-6 py-3 bg-black hover:bg-gray-900 text-white font-bold rounded-lg transition-all"
-                    >
-                      📤 Export
+          ) : (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
+              {docs.map((doc) => {
+                const left = Math.max(0, 7 - Math.floor((Date.now() - new Date(doc.updatedAt)) / DAY));
+                return (
+                  <Card key={doc.id} className="rise overflow-hidden flex flex-col">
+                    <button onClick={() => onSelect(doc)} className="text-left">
+                      <div className="relative h-40 bg-ink/5 scanlines overflow-hidden">
+                        {doc.pages[0]?.imageData && (
+                          <img src={doc.pages[0].imageData} alt="" className="w-full h-full object-cover object-top" />
+                        )}
+                        <span className="absolute top-2 left-2 bg-ink text-paper font-pixel text-xs px-2 py-1">{doc.pages.length}P</span>
+                      </div>
+                      <div className="p-4">
+                        <h3 className="font-medium truncate">{doc.title}</h3>
+                        <p className="text-xs text-ink/50 mt-1">อัปเดต{ago(doc.updatedAt)}</p>
+                      </div>
                     </button>
-                    <button
-                      onClick={() => handleDelete(doc.id)}
-                      className="px-4 py-3 bg-red-50 hover:bg-red-100 text-red-700 font-medium rounded-lg transition-all"
-                    >
-                      🗑️
-                    </button>
-                  </div>
-                </div>
-              ))}
+                    {/* days-left meter */}
+                    <div className="px-4 pb-1 flex items-center gap-2">
+                      <div className="flex gap-[2px] flex-1">
+                        {Array.from({ length: 7 }, (_, i) => (
+                          <span key={i} className={`h-1.5 flex-1 ${i < left ? (left <= 2 ? 'bg-[#e2782a]' : 'bg-ink') : 'bg-ink/10'}`} />
+                        ))}
+                      </div>
+                      <span className="text-[11px] text-ink/50 whitespace-nowrap">เหลือ {left} วัน</span>
+                    </div>
+                    <div className="p-3 flex gap-2 mt-auto">
+                      {confirmId === doc.id ? (
+                        <>
+                          <Button variant="danger" className="flex-1" onClick={() => { deleteDocument(doc.id); setConfirmId(null); }}>ยืนยันลบ</Button>
+                          <Button variant="soft" onClick={() => setConfirmId(null)}>ยกเลิก</Button>
+                        </>
+                      ) : (
+                        <>
+                          <Button className="flex-1" onClick={() => onSelect(doc)}>✎ แก้ไข</Button>
+                          <Button variant="ghost" onClick={() => onExport(doc)}>ส่งออก</Button>
+                          <Button variant="soft" aria-label="Delete" onClick={() => setConfirmId(doc.id)}>🗑</Button>
+                        </>
+                      )}
+                    </div>
+                  </Card>
+                );
+              })}
             </div>
-          </div>
-        )}
-
-        {/* Info Section */}
-        <div className="mt-12 bg-gray-50 rounded-xl p-8 border border-gray-200">
-          <h3 className="font-bold text-gray-900 mb-4">💡 7-Day History:</h3>
-          <ul className="text-sm text-gray-600 space-y-2">
-            <li>✓ All documents are kept for 7 days maximum</li>
-            <li>✓ You can re-export documents during this period</li>
-            <li>✓ Documents older than 7 days are automatically deleted</li>
-            <li>✓ Password protection keeps your history secure</li>
-          </ul>
+          )}
         </div>
-      </main>
+      </div>
     </div>
   );
 }

@@ -1,255 +1,94 @@
-import { useRef, useState, useEffect } from 'react';
-import Compressor from 'compressorjs';
+import { useEffect, useRef, useState } from 'react';
+import { compressToDataURL } from '../utils/image';
 
-export default function CameraCapture({ onCapture, onCancel }) {
+// Full-screen live camera with a viewfinder and shutter.
+// Calls onCapture(dataURL) for each shot; stays open for multi-page scanning.
+export default function CameraCapture({ onCapture, onClose, shots = 0 }) {
   const videoRef = useRef(null);
-  const canvasRef = useRef(null);
-  const fileInputRef = useRef(null);
-  const [isCameraActive, setIsCameraActive] = useState(false);
-  const [cameraError, setCameraError] = useState(null);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [previewImage, setPreviewImage] = useState(null);
+  const streamRef = useRef(null);
+  const [error, setError] = useState(null);
+  const [ready, setReady] = useState(false);
+  const [flash, setFlash] = useState(0);
+  const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    if (isCameraActive) {
-      startCamera();
-    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 } },
+          audio: false,
+        });
+        if (cancelled) return stream.getTracks().forEach((t) => t.stop());
+        streamRef.current = stream;
+        if (videoRef.current) videoRef.current.srcObject = stream;
+      } catch {
+        setError('เปิดกล้องไม่ได้ — อนุญาตการใช้กล้องในการตั้งค่า หรือใช้ "เลือกรูป" แทน');
+      }
+    })();
     return () => {
-      if (videoRef.current && videoRef.current.srcObject) {
-        videoRef.current.srcObject.getTracks().forEach((track) => track.stop());
-      }
+      cancelled = true;
+      streamRef.current?.getTracks().forEach((t) => t.stop());
     };
-  }, [isCameraActive]);
+  }, []);
 
-  const startCamera = async () => {
+  const shoot = async () => {
+    const video = videoRef.current;
+    if (!video || !video.videoWidth || busy) return;
+    setBusy(true);
+    setFlash((n) => n + 1);
     try {
-      setCameraError(null);
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: 'environment',
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
-        },
-      });
-
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-      }
-    } catch (err) {
-      setCameraError(
-        'Camera access denied. Please check permissions or use the photo picker.'
-      );
-      setIsCameraActive(false);
+      const canvas = document.createElement('canvas');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      canvas.getContext('2d').drawImage(video, 0, 0);
+      const blob = await new Promise((r) => canvas.toBlob(r, 'image/jpeg', 0.92));
+      onCapture(await compressToDataURL(blob));
+    } catch {
+      setError('ถ่ายรูปไม่สำเร็จ ลองอีกครั้ง');
+    } finally {
+      setBusy(false);
     }
   };
 
-  const capturePhoto = async () => {
-    if (!videoRef.current || !canvasRef.current) return;
-
-    setIsProcessing(true);
-    try {
-      const context = canvasRef.current.getContext('2d');
-      canvasRef.current.width = videoRef.current.videoWidth;
-      canvasRef.current.height = videoRef.current.videoHeight;
-      context.drawImage(videoRef.current, 0, 0);
-
-      canvasRef.current.toBlob(async (blob) => {
-        try {
-          // Compress the image
-          new Compressor(new File([blob], 'page.jpg', { type: 'image/jpeg' }), {
-            quality: 0.85,
-            maxWidth: 1280,
-            maxHeight: 1920,
-            success: async (compressedFile) => {
-              const reader = new FileReader();
-              reader.onload = (e) => {
-                setPreviewImage(e.target.result);
-                setIsProcessing(false);
-              };
-              reader.readAsDataURL(compressedFile);
-            },
-            error: () => {
-              setCameraError('Failed to compress image');
-              setIsProcessing(false);
-            },
-          });
-        } catch (err) {
-          setCameraError('Failed to process image');
-          setIsProcessing(false);
-        }
-      }, 'image/jpeg', 0.85);
-    } catch (err) {
-      setCameraError('Failed to capture photo');
-      setIsProcessing(false);
-    }
-  };
-
-  const handlePhotoPickerChange = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setIsProcessing(true);
-    new Compressor(file, {
-      quality: 0.85,
-      maxWidth: 1280,
-      maxHeight: 1920,
-      success: (compressedFile) => {
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          setPreviewImage(event.target.result);
-          setIsProcessing(false);
-        };
-        reader.readAsDataURL(compressedFile);
-      },
-      error: () => {
-        setCameraError('Failed to process selected image');
-        setIsProcessing(false);
-      },
-    });
-  };
-
-  const confirmCapture = () => {
-    if (previewImage) {
-      onCapture(previewImage);
-      setPreviewImage(null);
-      setCameraError(null);
-    }
-  };
-
-  const retakePhoto = () => {
-    setPreviewImage(null);
-  };
-
-  // Preview mode
-  if (previewImage) {
-    return (
-      <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-50">
-        <div className="bg-white rounded-lg max-w-md w-full overflow-hidden">
-          <div className="relative bg-black aspect-video flex items-center justify-center">
-            <img src={previewImage} alt="Preview" className="max-h-full max-w-full" />
-          </div>
-
-          <div className="p-4 space-y-3">
-            <p className="text-sm text-gray-600 text-center">
-              {isProcessing ? 'Processing image...' : 'Is this correct?'}
-            </p>
-
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                onClick={retakePhoto}
-                disabled={isProcessing}
-                className="px-4 py-2 bg-gray-200 hover:bg-gray-300 disabled:bg-gray-300 text-gray-800 font-medium rounded-lg transition"
-              >
-                Retake
-              </button>
-              <button
-                onClick={confirmCapture}
-                disabled={isProcessing}
-                className="px-4 py-2 bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 text-white font-medium rounded-lg transition"
-              >
-                {isProcessing ? 'Processing...' : 'Add Page'}
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Camera/Photo picker mode
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg max-w-md w-full overflow-hidden">
-        {/* Camera View */}
-        {isCameraActive && !cameraError && (
-          <div className="relative bg-black aspect-video">
-            <video
-              ref={videoRef}
-              autoPlay
-              playsInline
-              className="w-full h-full object-cover"
-            />
-            <canvas ref={canvasRef} className="hidden" />
-          </div>
+    <div className="fixed inset-0 z-50 bg-black text-white flex flex-col font-mono">
+      <div className="flex items-center justify-between px-4 pt-[max(0.75rem,env(safe-area-inset-top))] h-16 shrink-0">
+        <button onClick={onClose} className="font-menu min-h-[44px] px-2 text-sm">‹ เสร็จ</button>
+        <span className="font-pixel text-xs uppercase tracking-wider">{shots} page{shots === 1 ? '' : 's'}</span>
+      </div>
+
+      <div className="relative flex-1 min-h-0 mx-3 overflow-hidden rounded-[3px] bg-neutral-900">
+        {!error && (
+          <video
+            ref={videoRef}
+            autoPlay
+            playsInline
+            muted
+            onLoadedMetadata={() => setReady(true)}
+            className="absolute inset-0 w-full h-full object-cover"
+          />
         )}
-
-        {/* Error State */}
-        {cameraError && (
-          <div className="bg-red-50 p-4 text-red-700 text-sm text-center">
-            {cameraError}
-          </div>
-        )}
-
-        {/* Not Active State */}
-        {!isCameraActive && !cameraError && (
-          <div className="aspect-video bg-gradient-to-br from-blue-100 to-blue-50 flex items-center justify-center">
-            <div className="text-center">
-              <div className="text-5xl mb-2">📱</div>
-              <p className="text-gray-600 text-sm">Ready to capture</p>
-            </div>
-          </div>
-        )}
-
-        {/* Controls */}
-        <div className="p-6 space-y-3">
-          {!isCameraActive ? (
-            <div className="space-y-3">
-              <button
-                onClick={() => setIsCameraActive(true)}
-                className="w-full px-6 py-4 bg-black hover:bg-gray-900 text-white font-bold text-lg rounded-xl transition-all shadow-md hover:shadow-lg"
-              >
-                📷 Open Camera
-              </button>
-
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                className="w-full px-6 py-4 bg-black hover:bg-gray-900 text-white font-bold text-lg rounded-xl transition-all shadow-md hover:shadow-lg"
-              >
-                📁 Choose Photo
-              </button>
-
-              <button
-                onClick={onCancel}
-                className="w-full px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium rounded-xl transition"
-              >
-                Cancel
-              </button>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              <button
-                onClick={capturePhoto}
-                disabled={isProcessing}
-                className="w-full px-6 py-4 bg-black hover:bg-gray-900 disabled:bg-gray-500 text-white font-bold text-lg rounded-xl transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2"
-              >
-                {isProcessing ? (
-                  <>
-                    <span className="animate-spin">⏳</span> Processing...
-                  </>
-                ) : (
-                  <>📸 Capture Photo</>
-                )}
-              </button>
-
-              <button
-                onClick={() => setIsCameraActive(false)}
-                className="w-full px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium rounded-xl transition"
-              >
-                Close Camera
-              </button>
-            </div>
-          )}
+        <div className="viewfinder absolute inset-[6%] text-[#e2782a] pointer-events-none">
+          <i /><i /><i /><i />
         </div>
+        {!ready && !error && (
+          <p className="absolute inset-0 grid place-items-center text-sm text-white/60">กำลังเปิดกล้อง...</p>
+        )}
+        {error && <p className="absolute inset-0 grid place-items-center text-center p-8 text-sm text-white/80">{error}</p>}
+        {flash > 0 && <div key={flash} className="flash absolute inset-0 pointer-events-none" />}
+        <p className="absolute bottom-3 inset-x-0 text-center text-xs text-white/60">วางเอกสารให้อยู่ในกรอบ แสงสว่างพอ</p>
+      </div>
 
-        {/* Hidden File Input */}
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          capture="environment"
-          onChange={handlePhotoPickerChange}
-          className="hidden"
-        />
+      <div className="h-32 shrink-0 grid place-items-center pb-[env(safe-area-inset-bottom)]">
+        <button
+          onClick={shoot}
+          disabled={!ready || busy}
+          aria-label="Take photo"
+          className="w-20 h-20 rounded-full border-4 border-white grid place-items-center disabled:opacity-40 active:scale-95 transition"
+        >
+          <span className="w-16 h-16 rounded-full bg-white" />
+        </button>
       </div>
     </div>
   );
