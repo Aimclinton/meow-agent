@@ -74,7 +74,10 @@
 2. ช่อง **Create your Access Key** ใส่อีเมล **aimisplayinggg@gmail.com** → กดส่ง
 3. เปิดอีเมลนั้น จะมีอีเมลจาก Web3Forms แนบ **Access Key** มาให้ → คัดลอก
 4. Vercel → Environment Variables → Key: `VITE_WEB3FORMS_KEY` Value: วางคีย์ → Save
-   (คีย์นี้ออกแบบมาให้เปิดเผยได้ ใช้ `VITE_` ได้ไม่เป็นไร)
+   - ตั้งเป็นตัวแปรแบบธรรมดา (visibility: **config**) **ห้ามตั้งเป็น secret / Sensitive**
+     เพราะตัวแปรที่ขึ้นต้นด้วย `VITE_` จะถูกฝังลงในหน้าเว็บตอน build อยู่แล้ว Vercel จึงไม่ยอมให้ตั้งเป็น secret
+   - คีย์ Web3Forms ออกแบบมาให้เปิดเผยได้ ใช้ `VITE_` ได้ไม่เป็นไร
+   - ส่วน `GEMINI_API_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `VAULT_SECRET` (ไม่มี `VITE_`) ตั้งเป็น secret / Sensitive ได้ และควรตั้ง
 
 ข้อความที่คนกดส่งจะเข้าอีเมล aimisplayinggg@gmail.com ทันที (อีเมลผูกกับคีย์ตอนสร้าง ไม่ต้องตั้งในโค้ด)
 
