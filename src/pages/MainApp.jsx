@@ -39,94 +39,116 @@ export default function MainApp() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-white to-gray-100">
+    <div className="min-h-screen bg-gradient-to-br from-white to-gray-50">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-gray-900">🐱 MEOW Agent</h1>
+      <header className="bg-white border-b border-gray-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+          <h1 className="text-xl font-bold text-gray-900">🐱 MEOW Agent</h1>
           <button
             onClick={logout}
-            className="px-4 py-2 text-sm font-medium text-gray-600 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors"
+            className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
           >
             Logout
           </button>
         </div>
       </header>
 
+      {/* Hero Section */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
+        <div className="grid md:grid-cols-2 gap-12 items-center">
+          {/* Left Content */}
+          <div>
+            <h2 className="text-5xl md:text-6xl font-black text-gray-900 mb-6 leading-tight">
+              Document<br />Scanning<br />Made Easy
+            </h2>
+            <p className="text-lg text-gray-600 mb-8">
+              Capture handwritten documents, extract text with AI, and export instantly.
+            </p>
+            <button
+              onClick={() => setCurrentPage('workflow')}
+              className="px-8 py-4 bg-black hover:bg-gray-900 text-white font-bold text-lg rounded-xl transition-all shadow-lg hover:shadow-xl"
+            >
+              📸 Start Scanning
+            </button>
+          </div>
+
+          {/* Right Cat Mascot */}
+          <div className="text-center">
+            <div className="text-9xl animate-bounce" style={{animationDuration: '3s'}}>
+              🐱
+            </div>
+            <p className="text-gray-500 mt-6 text-sm">Your AI Document Assistant</p>
+          </div>
+        </div>
+      </div>
+
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {currentPage === 'dashboard' && (
           <div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+            {/* Quick Actions */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
               {/* New Document */}
-              <div className="bg-white rounded-xl border border-gray-200 p-8 cursor-pointer hover:shadow-lg hover:border-gray-300 transition-all">
-                <div className="text-5xl mb-6">📄</div>
-                <h2 className="text-xl font-bold text-gray-900 mb-2">New Document</h2>
-                <p className="text-gray-600 text-sm mb-6">Start scanning a new case report</p>
-                <button
-                  onClick={() => setCurrentPage('workflow')}
-                  className="w-full bg-black hover:bg-gray-800 text-white font-medium py-3 px-4 rounded-lg transition-colors"
-                >
-                  Start Scanning
-                </button>
-              </div>
-
-              {/* Recent Documents */}
-              {documents.slice(-2).map((doc) => (
-                <div key={doc.id} className="bg-white rounded-xl border border-gray-200 p-8 cursor-pointer hover:shadow-lg hover:border-gray-300 transition-all">
-                  <div className="text-5xl mb-6">📋</div>
-                  <h2 className="text-xl font-bold text-gray-900 mb-2 truncate">{doc.title}</h2>
-                  <p className="text-gray-600 text-sm mb-2">{doc.pages.length} pages</p>
-                  <p className="text-gray-500 text-xs mb-6">
-                    Updated: {new Date(doc.updatedAt).toLocaleDateString()}
-                  </p>
-                  <button className="w-full bg-gray-100 hover:bg-gray-200 text-gray-900 font-medium py-3 px-4 rounded-lg text-sm transition-colors">
-                    Continue
-                  </button>
-                </div>
-              ))}
+              <button
+                onClick={() => setCurrentPage('workflow')}
+                className="bg-white rounded-xl border border-gray-200 p-6 text-left hover:shadow-lg hover:border-gray-300 transition-all group"
+              >
+                <div className="text-4xl mb-4 group-hover:scale-110 transition-transform">📄</div>
+                <h3 className="font-bold text-gray-900 mb-1">New Document</h3>
+                <p className="text-gray-600 text-sm">Start scanning</p>
+              </button>
 
               {/* Document History */}
-              <div className="bg-white rounded-xl border border-gray-200 p-8 cursor-pointer hover:shadow-lg hover:border-gray-300 transition-all">
-                <div className="text-5xl mb-6">📚</div>
-                <h2 className="text-xl font-bold text-gray-900 mb-2">Document History</h2>
-                <p className="text-gray-600 text-sm mb-6">View & export past 7 days</p>
-                <button
-                  onClick={() => setCurrentPage('history')}
-                  className="w-full bg-gray-100 hover:bg-gray-200 text-gray-900 font-medium py-3 px-4 rounded-lg transition-colors"
-                >
-                  View History
-                </button>
-              </div>
+              <button
+                onClick={() => setCurrentPage('history')}
+                className="bg-white rounded-xl border border-gray-200 p-6 text-left hover:shadow-lg hover:border-gray-300 transition-all group"
+              >
+                <div className="text-4xl mb-4 group-hover:scale-110 transition-transform">📚</div>
+                <h3 className="font-bold text-gray-900 mb-1">History</h3>
+                <p className="text-gray-600 text-sm">Past 7 days</p>
+              </button>
 
               {/* Create Slides */}
-              <div className="bg-white rounded-xl border border-gray-200 p-8 cursor-pointer hover:shadow-lg hover:border-gray-300 transition-all">
-                <div className="text-5xl mb-6">🎬</div>
-                <h2 className="text-xl font-bold text-gray-900 mb-2">Create Slides</h2>
-                <p className="text-gray-600 text-sm mb-6">Export to AI presentation tool</p>
-                <button className="w-full bg-gray-100 hover:bg-gray-200 text-gray-900 font-medium py-3 px-4 rounded-lg transition-colors">
-                  Learn More
-                </button>
+              <button className="bg-white rounded-xl border border-gray-200 p-6 text-left hover:shadow-lg hover:border-gray-300 transition-all group">
+                <div className="text-4xl mb-4 group-hover:scale-110 transition-transform">🎬</div>
+                <h3 className="font-bold text-gray-900 mb-1">AI Slides</h3>
+                <p className="text-gray-600 text-sm">Export to AI</p>
+              </button>
+
+              {/* Stats */}
+              <div className="bg-white rounded-xl border border-gray-200 p-6 text-center">
+                <div className="text-3xl font-bold text-gray-900 mb-2">{documents.length}</div>
+                <p className="text-gray-600 text-sm">Documents</p>
+                <div className="mt-3 text-2xl font-bold text-gray-900">{documents.reduce((sum, doc) => sum + doc.pages.length, 0)}</div>
+                <p className="text-gray-600 text-sm">Pages</p>
               </div>
             </div>
 
-            {/* Quick Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-8 border-t border-gray-200">
-              <div className="p-6 text-center">
-                <div className="text-4xl font-bold text-gray-900 mb-2">{documents.length}</div>
-                <p className="text-gray-600 text-sm">Total Documents</p>
-              </div>
-              <div className="p-6 text-center">
-                <div className="text-4xl font-bold text-gray-900 mb-2">
-                  {documents.reduce((sum, doc) => sum + doc.pages.length, 0)}
+            {/* Recent Documents */}
+            {documents.length > 0 && (
+              <div className="mb-12">
+                <h3 className="text-2xl font-bold text-gray-900 mb-6">Recent Documents</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {documents.slice(-3).map((doc) => (
+                    <div key={doc.id} className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-lg hover:border-gray-300 transition-all">
+                      <div className="flex items-start justify-between mb-4">
+                        <div>
+                          <h3 className="font-bold text-gray-900 truncate">{doc.title}</h3>
+                          <p className="text-sm text-gray-500 mt-1">{doc.pages.length} pages</p>
+                        </div>
+                        <div className="text-2xl">📄</div>
+                      </div>
+                      <p className="text-xs text-gray-500 mb-4">
+                        Updated: {new Date(doc.updatedAt).toLocaleDateString()}
+                      </p>
+                      <button className="w-full px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-900 font-medium rounded-lg text-sm transition-colors">
+                        Open
+                      </button>
+                    </div>
+                  ))}
                 </div>
-                <p className="text-gray-600 text-sm">Total Pages</p>
               </div>
-              <div className="p-6 text-center">
-                <div className="text-4xl font-bold text-gray-900 mb-2">📱</div>
-                <p className="text-gray-600 text-sm">Mobile Optimized</p>
-              </div>
-            </div>
+            )}
           </div>
         )}
       </main>
