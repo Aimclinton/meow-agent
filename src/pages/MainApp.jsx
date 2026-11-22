@@ -16,7 +16,7 @@ export default function MainApp() {
       {/* Header */}
       <header className="bg-white shadow">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-gray-900">📱 Document Scanner</h1>
+          <h1 className="text-2xl font-bold text-gray-900">🐱 MEOW Agent</h1>
           <button
             onClick={logout}
             className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
