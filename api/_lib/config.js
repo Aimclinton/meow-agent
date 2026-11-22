@@ -1,6 +1,6 @@
 // Server-side configuration (all overridable with Vercel environment variables).
 export const PRIMARY_MODEL = process.env.GEMINI_MODEL || 'gemini-3.1-flash-lite-preview';
-export const FALLBACK_MODELS = (process.env.GEMINI_FALLBACK_MODELS || 'gemini-3-flash-preview,gemini-2.5-flash')
+export const FALLBACK_MODELS = (process.env.GEMINI_FALLBACK_MODELS || 'gemini-3-flash-preview,gemini-flash-latest')
   .split(',').map((s) => s.trim()).filter(Boolean);
 export const DETAILED_MODEL = process.env.GEMINI_DETAILED_MODEL || 'gemini-3-flash-preview';
 // Shared free allowance per day (Gemini free tier RPD of the primary model).

@@ -31,7 +31,7 @@
 | Key | ค่าเริ่มต้น | ความหมาย |
 |---|---|---|
 | `GEMINI_MODEL` | `gemini-3.1-flash-lite-preview` | โมเดลหลัก |
-| `GEMINI_FALLBACK_MODELS` | `gemini-3-flash-preview,gemini-2.5-flash` | โมเดลสำรอง ถ้าตัวหลักติดลิมิต |
+| `GEMINI_FALLBACK_MODELS` | `gemini-3-flash-preview,gemini-flash-latest` | โมเดลสำรอง ถ้าตัวหลักติดลิมิต |
 | `GEMINI_DETAILED_MODEL` | `gemini-3-flash-preview` | ใช้ตอนกด “สแกนหน้านี้ใหม่แบบละเอียด” |
 | `DAILY_LIMIT` | `500` | ตัวเลขในแถบ “จ๋องเลียตอนนี้ จ๋องทำให้ได้อีก xxx รูป” (รวมทั้งทีมต่อวัน) |
 

@@ -21,6 +21,14 @@ const paragraph = (runs, align) => ({
   content: textNodes(runs),
 });
 
+// The model sometimes returns list items as rows/cells or a single runs array.
+function listItems(b) {
+  if (b.items?.length) return b.items;
+  if (b.rows?.length) return b.rows.map((r) => ({ runs: (r.cells || []).flatMap((c) => c.runs || []) }));
+  if (b.runs?.length) return [{ runs: b.runs }];
+  return [];
+}
+
 export function structuredToContent(page) {
   const out = [];
   for (const b of page?.blocks || []) {
@@ -28,7 +36,7 @@ export function structuredToContent(page) {
       const level = Math.min(3, Math.max(1, b.level || 2));
       out.push({ type: 'heading', attrs: { level, ...(ALIGNS.includes(b.align) ? { textAlign: b.align } : {}) }, content: textNodes(b.runs) });
     } else if (b.type === 'list') {
-      const items = (b.items || []).filter((it) => it?.runs?.length);
+      const items = listItems(b).filter((it) => it?.runs?.length);
       if (!items.length) continue;
       out.push({
         type: b.ordered ? 'orderedList' : 'bulletList',
@@ -61,7 +69,7 @@ export function structuredToText(page) {
   const lines = [];
   if (page?.header) lines.push(page.header);
   for (const b of page?.blocks || []) {
-    if (b.type === 'list') (b.items || []).forEach((it, i) => lines.push(`${b.ordered ? `${i + 1}.` : '•'} ${runsText(it.runs)}`));
+    if (b.type === 'list') listItems(b).forEach((it, i) => lines.push(`${b.ordered ? `${i + 1}.` : '•'} ${runsText(it.runs)}`));
     else if (b.type === 'table') (b.rows || []).forEach((r) => lines.push(r.cells.map((c) => runsText(c.runs)).join('\t')));
     else lines.push(runsText(b.runs));
   }
