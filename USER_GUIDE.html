@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>📖 คู่มือการใช้งาน - Document Scanner</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      overflow: hidden;
+    }
+
+    header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 40px;
+      text-align: center;
+    }
+
+    header h1 {
+      font-size: 2.5em;
+      margin-bottom: 10px;
+    }
+
+    header p {
+      font-size: 1.1em;
+      opacity: 0.9;
+    }
+
+    .content {
+      padding: 40px;
+    }
+
+    .step {
+      margin-bottom: 40px;
+      padding: 25px;
+      background: #f8f9fa;
+      border-left: 5px solid #667eea;
+      border-radius: 8px;
+    }
+
+    .step-number {
+      display: inline-block;
+      width: 40px;
+      height: 40px;
+      background: #667eea;
+      color: white;
+      border-radius: 50%;
+      text-align: center;
+      line-height: 40px;
+      font-weight: bold;
+      margin-right: 15px;
+      font-size: 1.2em;
+    }
+
+    .step h2 {
+      display: inline-block;
+      font-size: 1.5em;
+      margin-bottom: 15px;
+      color: #333;
+    }
+
+    .step-content {
+      margin-left: 55px;
+      margin-top: 10px;
+    }
+
+    .instruction {
+      background: white;
+      padding: 15px;
+      margin: 10px 0;
+      border-radius: 6px;
+      border-left: 3px solid #764ba2;
+    }
+
+    .instruction strong {
+      color: #667eea;
+    }
+
+    .tip {
+      background: #fff3cd;
+      border-left: 4px solid #ffc107;
+      padding: 15px;
+      margin: 15px 0;
+      border-radius: 6px;
+      font-size: 0.95em;
+    }
+
+    .warning {
+      background: #f8d7da;
+      border-left: 4px solid #dc3545;
+      padding: 15px;
+      margin: 15px 0;
+      border-radius: 6px;
+      font-size: 0.95em;
+    }
+
+    .success {
+      background: #d4edda;
+      border-left: 4px solid #28a745;
+      padding: 15px;
+      margin: 15px 0;
+      border-radius: 6px;
+      font-size: 0.95em;
+    }
+
+    .screen-mockup {
+      background: #000;
+      color: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      margin: 15px 0;
+      font-family: monospace;
+      text-align: center;
+      font-size: 3em;
+      line-height: 1.4;
+    }
+
+    .keyboard-key {
+      background: #333;
+      color: #fff;
+      padding: 5px 10px;
+      border-radius: 4px;
+      font-family: monospace;
+      display: inline-block;
+      margin: 0 5px;
+    }
+
+    .timeline {
+      display: flex;
+      justify-content: space-between;
+      margin: 30px 0;
+      position: relative;
+    }
+
+    .timeline::before {
+      content: '';
+      position: absolute;
+      top: 20px;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: #667eea;
+      z-index: 0;
+    }
+
+    .timeline-item {
+      text-align: center;
+      position: relative;
+      z-index: 1;
+      flex: 1;
+    }
+
+    .timeline-dot {
+      width: 40px;
+      height: 40px;
+      background: #667eea;
+      border-radius: 50%;
+      margin: 0 auto 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+      font-size: 1.2em;
+    }
+
+    .timeline-label {
+      font-size: 0.9em;
+      font-weight: bold;
+      color: #333;
+    }
+
+    .faq {
+      background: #f0f4ff;
+      padding: 20px;
+      border-radius: 8px;
+      margin: 20px 0;
+    }
+
+    .faq-item {
+      margin-bottom: 15px;
+    }
+
+    .faq-q {
+      font-weight: bold;
+      color: #667eea;
+      cursor: pointer;
+      user-select: none;
+      display: flex;
+      align-items: center;
+    }
+
+    .faq-q::before {
+      content: '▶ ';
+      margin-right: 10px;
+      display: inline-block;
+      transition: transform 0.3s;
+    }
+
+    .faq-a {
+      display: none;
+      margin-top: 10px;
+      padding: 10px;
+      background: white;
+      border-left: 3px solid #764ba2;
+      border-radius: 4px;
+    }
+
+    footer {
+      background: #f8f9fa;
+      border-top: 1px solid #ddd;
+      padding: 20px;
+      text-align: center;
+      color: #666;
+    }
+
+    .emoji {
+      font-size: 1.5em;
+      margin: 0 5px;
+    }
+
+    @media (max-width: 768px) {
+      header h1 {
+        font-size: 1.8em;
+      }
+
+      .timeline {
+        flex-direction: column;
+      }
+
+      .timeline::before {
+        display: none;
+      }
+
+      .step {
+        padding: 15px;
+      }
+
+      .content {
+        padding: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>📱 Document Scanner</h1>
+      <p>คู่มือการใช้งานแบบง่ายๆ 📖</p>
+    </header>
+
+    <div class="content">
+      <!-- ขั้นตอนหลัก -->
+      <section>
+        <h2 style="font-size: 1.8em; margin-bottom: 20px; text-align: center;">
+          <span class="emoji">🚀</span> กระบวนการ 3 ขั้นตอน
+        </h2>
+
+        <div class="timeline">
+          <div class="timeline-item">
+            <div class="timeline-dot">📸</div>
+            <div class="timeline-label">ถ่ายรูป</div>
+          </div>
+          <div class="timeline-item">
+            <div class="timeline-dot">👁️</div>
+            <div class="timeline-label">ตรวจสอบ</div>
+          </div>
+          <div class="timeline-item">
+            <div class="timeline-dot">📥</div>
+            <div class="timeline-label">ส่งออก</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Step 1 -->
+      <div class="step">
+        <div>
+          <span class="step-number">1</span>
+          <h2>เปิด Website</h2>
+        </div>
+        <div class="step-content">
+          <div class="instruction">
+            <strong>🌐 ที่คอมพิวเตอร์:</strong> ไปที่ <code style="background: #f0f0f0; padding: 5px;">doc-scanner.vercel.app</code> (จะแสดงในอีเมล)
+          </div>
+          <div class="instruction">
+            <strong>📱 ที่มือถือ:</strong> เปิด Link ที่ทีมส่งให้ จะขึ้นแบบนี้
+          </div>
+          <div class="screen-mockup">
+            📱<br>
+            🔒 Password<br>
+            สร้างรหัสผ่านครั้งแรก
+          </div>
+          <div class="tip">
+            💡 <strong>สถานการณ์แรก:</strong> เมื่อเข้าครั้งแรก ต้องสร้างรหัสผ่านเพื่อปกป้องเอกสารของคุณ
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 2 -->
+      <div class="step">
+        <div>
+          <span class="step-number">2</span>
+          <h2>สร้างรหัสผ่านเพียงครั้งเดียว</h2>
+        </div>
+        <div class="step-content">
+          <div class="instruction">
+            ✏️ พิมพ์รหัสผ่านที่คุณจะจำได้ (อย่างน้อย 4 ตัว)
+          </div>
+          <div class="instruction">
+            ✏️ พิมพ์อีกครั้งเพื่อยืนยัน
+          </div>
+          <div class="instruction">
+            ✅ กดปุ่ม "Set Password"
+          </div>
+          <div class="warning">
+            ⚠️ <strong>จำเป็นต้องจำไว้:</strong> หากลืมรหัสผ่าน ต้องลบข้อมูลและสตาร์ทใหม่
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 3 -->
+      <div class="step">
+        <div>
+          <span class="step-number">3</span>
+          <h2>ล็อกอิน (ทุกครั้ง)</h2>
+        </div>
+        <div class="step-content">
+          <div class="instruction">
+            🔑 แต่ละครั้งที่เข้ามา ให้พิมพ์รหัสผ่าน
+          </div>
+          <div class="instruction">
+            ✅ กดปุ่ม "Login"
+          </div>
+          <div class="tip">
+            💡 <strong>ทำไมต้องล็อกอิน?</strong> เพื่อเก็บเอกสารต่างคนแยกกัน และปกป้องส่วนตัว
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 4 -->
+      <div class="step">
+        <div>
+          <span class="step-number">4</span>
+          <h2>หน้าหลัก - เลือกสิ่งที่จะทำ</h2>
+        </div>
+        <div class="step-content">
+          <div class="screen-mockup">
+            📄 New Document<br>
+            📋 Recent Docs<br>
+            🎬 Create Slides
+          </div>
+          <div class="instruction">
+            <strong>📄 New Document:</strong> ถ่ายรูปเอกสารใหม่
+          </div>
+          <div class="instruction">
+            <strong>📋 Recent Docs:</strong> ดูเอกสารที่เคยสร้าง
+          </div>
+          <div class="instruction">
+            <strong>🎬 Create Slides:</strong> สร้าง PowerPoint ด้วย AI
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 5 -->
+      <div class="step">
+        <div>
+          <span class="step-number">5</span>
+          <h2>ถ่ายรูปเอกสาร 📸</h2>
+        </div>
+        <div class="step-content">
+          <div class="instruction">
+            <strong>เลือก 1 ใน 2 วิธี:</strong>
+          </div>
+          <div class="instruction">
+            📷 <strong>เปิดกล้อง:</strong> ใช้กล้องของมือถือถ่ายรูป
+          </div>
+          <div class="instruction">
+            📁 <strong>เลือกรูปภาพ:</strong> ใช้รูปภาพที่เก็บในโฟลเดอร์
+          </div>
+          <div class="tip">
+            💡 <strong>เคล็ดลับสำคัญ:</strong> ให้แสงสว่างดี และเอกสารชัดเจนเพื่อให้ AI อ่านได้ถูกต้อง
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 6 -->
+      <div class="step">
+        <div>
+          <span class="step-number">6</span>
+          <h2>ตรวจสอบรูป 👁️</h2>
+        </div>
+        <div class="step-content">
+          <div class="instruction">
+            ✅ <strong>ถูกต้อง?</strong> กดปุ่ม "Add Page" เพื่อบันทึก
+          </div>
+          <div class="instruction">
+            ❌ <strong>ไม่ชัด?</strong> กดปุ่ม "Retake" เพื่อถ่ายใหม่
+          </div>
+          <div class="instruction">
+            ➕ <strong>เพิ่มหน้า:</strong> กดปุ่ม "Add More Pages" เพื่อถ่ายรูปต่อ
+          </div>
+          <div class="success">
+            ✓ <strong>AI กำลังอ่าน:</strong> ระบบจะอ่านข้อความจากรูปโดยอัตโนมัติ (ใช้เวลา 15-30 วินาทีต่อหน้า)
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 7 -->
+      <div class="step">
+        <div>
+          <span class="step-number">7</span>
+          <h2>ตรวจสอบและแก้ไข 📋</h2>
+        </div>
+        <div class="step-content">
+          <div class="instruction">
+            📝 <strong>เปลี่ยนชื่อ:</strong> แก้ไขชื่อเอกสาร
+          </div>
+          <div class="instruction">
+            🔀 <strong>เรียงลำดับ:</strong> ลากหน้าเพื่อเปลี่ยนลำดับ
+          </div>
+          <div class="instruction">
+            🗑️ <strong>ลบหน้า:</strong> กดไอคอน "🗑️" เพื่อลบหน้าที่ไม่ต้อง
+          </div>
+          <div class="instruction">
+            ✓ <strong>พอใจ?</strong> กดปุ่ม "Continue to Export"
+          </div>
+          <div class="tip">
+            💡 <strong>ดูรายละเอียด:</strong> คลิกที่รูปเพื่อดูข้อความที่ AI อ่านได้
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 8 -->
+      <div class="step">
+        <div>
+          <span class="step-number">8</span>
+          <h2>เลือกรูปแบบไฟล์ 📥</h2>
+        </div>
+        <div class="step-content">
+          <div class="instruction">
+            <strong>เลือก 1 ใน 2 รูปแบบ:</strong>
+          </div>
+          <div class="instruction">
+            📄 <strong>Word (.docx):</strong> ไฟล์ที่เปิดได้ด้วย Microsoft Word หรือ Google Docs<br>
+            <small style="margin-left: 25px;">ใช้เมื่อ: ต้องเขียนหรือแก้ไขข้อความ</small>
+          </div>
+          <div class="instruction">
+            📊 <strong>Excel (.xlsx):</strong> ไฟล์ที่เปิดได้ด้วย Microsoft Excel หรือ Google Sheets<br>
+            <small style="margin-left: 25px;">ใช้เมื่อ: ข้อมูลเป็นตาราง หรือต้องวิเคราะห์ข้อมูล</small>
+          </div>
+          <div class="instruction">
+            ✅ กดปุ่มเพื่อโหลดไฟล์
+          </div>
+          <div class="success">
+            ✓ <strong>เสร็จแล้ว!</strong> ไฟล์จะถูกบันทึกลงมือถือหรือคอมพิวเตอร์ของคุณ
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 9 -->
+      <div class="step">
+        <div>
+          <span class="step-number">9</span>
+          <h2>โบนัส: สร้าง PowerPoint ด้วย AI 🎬</h2>
+        </div>
+        <div class="step-content">
+          <div class="instruction">
+            <strong>ต้องการสรุปเป็น Presentation?</strong> ทำตามนี้:
+          </div>
+          <div class="instruction">
+            1️⃣ กดปุ่ม "🎬 Slides" ขณะอยู่หน้าตรวจสอบ
+          </div>
+          <div class="instruction">
+            2️⃣ **Copy Prompt** (คำสั่ง AI) ที่มีในช่อง
+          </div>
+          <div class="instruction">
+            3️⃣ ไปที่ <strong>claude.ai</strong> หรือ <strong>ChatGPT.com</strong>
+          </div>
+          <div class="instruction">
+            4️⃣ **Paste Prompt** (วางคำสั่ง) และลองแล้ว
+          </div>
+          <div class="instruction">
+            5️⃣ AI จะสร้าง PowerPoint outline ให้คุณ
+          </div>
+          <div class="tip">
+            💡 <strong>ประโยชน์:</strong> ไม่ต้องพิมพ์เอง AI ทำให้เร็ว!
+          </div>
+        </div>
+      </div>
+
+      <!-- FAQ -->
+      <section style="margin-top: 40px;">
+        <h2 style="font-size: 1.5em; margin-bottom: 20px;">❓ คำถามที่ถูกถาม</h2>
+
+        <div class="faq">
+          <div class="faq-item">
+            <div class="faq-q" onclick="this.parentElement.querySelector('.faq-a').style.display = this.parentElement.querySelector('.faq-a').style.display === 'none' ? 'block' : 'none'">
+              🤔 "ถ้าลืมรหัสผ่านจะทำไง?"
+            </div>
+            <div class="faq-a">
+              ต้องลบข้อมูลและสตาร์ทใหม่ ดังนั้นจึงสำคัญที่ต้องจำรหัสผ่านหรือจดไว้ที่ปลอดภัย
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <div class="faq-q" onclick="this.parentElement.querySelector('.faq-a').style.display = this.parentElement.querySelector('.faq-a').style.display === 'none' ? 'block' : 'none'">
+              💾 "เอกสารจะเก็บไว้ที่ไหน?"
+            </div>
+            <div class="faq-a">
+              ในมือถือ/คอมพิวเตอร์ของคุณเท่านั้น (ไม่ส่งให้ใครอื่น) เนื่องจาก 100% client-side
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <div class="faq-q" onclick="this.parentElement.querySelector('.faq-a').style.display = this.parentElement.querySelector('.faq-a').style.display === 'none' ? 'block' : 'none'">
+              ⏱️ "AI อ่านข้อความช้ามากเพราะ?"
+            </div>
+            <div class="faq-a">
+              ปกติ 15-30 วินาทีต่อหน้า เพราะทำงานในมือถือของคุณ ไม่ใช้เซิร์ฟเวอร์ (ทำให้ปลอดภัย)
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <div class="faq-q" onclick="this.parentElement.querySelector('.faq-a').style.display = this.parentElement.querySelector('.faq-a').style.display === 'none' ? 'block' : 'none'">
+              🔍 "AI อ่านผิดบ้าง?"
+            </div>
+            <div class="faq-a">
+              มีความแม่นยำ 85-90% ถ้าลายมือชัด/พิมพ์ชัด ก็จะดีขึ้น ถ้าผิด ให้แก้ไขโดยตรงในไฟล์ Word
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <div class="faq-q" onclick="this.parentElement.querySelector('.faq-a').style.display = this.parentElement.querySelector('.faq-a').style.display === 'none' ? 'block' : 'none'">
+              📱 "ต้องแอปเพิ่มเติมไหม?"
+            </div>
+            <div class="faq-a">
+              ไม่! เพียงเปิด Browser (Chrome, Safari) แล้วเข้าลิงก์ก็ใช้ได้ทันที
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <div class="faq-q" onclick="this.parentElement.querySelector('.faq-a').style.display = this.parentElement.querySelector('.faq-a').style.display === 'none' ? 'block' : 'none'">
+              💰 "ต้องจ่ายเงินไหม?"
+            </div>
+            <div class="faq-a">
+              ไม่มี! 100% ฟรี ตลอดไป ไม่มีค่าใช้พิเศษ
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Tips -->
+      <section style="margin-top: 40px;">
+        <h2 style="font-size: 1.5em; margin-bottom: 20px;">💡 เคล็ดลับเพื่อความสำเร็จ</h2>
+
+        <div class="tip" style="background: #d1ecf1; border-left-color: #17a2b8;">
+          <strong>📸 ถ่ายรูปที่ดี:</strong>
+          <ul style="margin-left: 20px; margin-top: 10px;">
+            <li>✓ ให้แสงสว่างพอ (ไม่มืด ไม่เงา)</li>
+            <li>✓ วางเอกสารแบน (ไม่เอียง)</li>
+            <li>✓ ขอบของเอกสารต้องเห็นในรูป</li>
+            <li>✓ เลขหน้าต่างๆ ต้องเรียงตามลำดับ</li>
+          </ul>
+        </div>
+
+        <div class="tip" style="background: #fff3cd; border-left-color: #ffc107;">
+          <strong>🧠 AI อ่านได้ดีขึ้น:</strong>
+          <ul style="margin-left: 20px; margin-top: 10px;">
+            <li>✓ ลายมือต้องชัดเจน (ไม่ลงเลย)</li>
+            <li>✓ หลีกเลี่ยงการเขียนทับ</li>
+            <li>✓ ใช้ปากกาสีเข้มหรือดินสอ</li>
+            <li>✓ ระยะห่างระหว่างบรรทัดให้พอ</li>
+          </ul>
+        </div>
+
+        <div class="tip" style="background: #d4edda; border-left-color: #28a745;">
+          <strong>⚡ ใช้งานอย่างไร?</strong>
+          <ul style="margin-left: 20px; margin-top: 10px;">
+            <li>✓ ใช้ Wi-Fi หรือ 4G เพื่อความเร็ว</li>
+            <li>✓ ทำทีละเอกสาร (อย่าขึ้นแอป)</li>
+            <li>✓ ระบบจะเก็บประวัติ 7 วัน</li>
+            <li>✓ ลบเอกสารเก่าเพื่อเก็บที่</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- Contact -->
+      <section style="margin-top: 40px; text-align: center; padding: 20px; background: #f0f4ff; border-radius: 8px;">
+        <h2 style="font-size: 1.3em; margin-bottom: 15px;">❓ ยังไม่เข้าใจ?</h2>
+        <p>ติดต่อทีมของคุณเพื่อขอความช่วยเหลือ</p>
+        <p style="margin-top: 10px; color: #667eea; font-size: 1.1em;">📧 ส่งอีเมลให้ทีม 📞 โทรศัพท์ 💬 Line</p>
+      </section>
+    </div>
+
+    <footer>
+      <p>📖 <strong>Document Scanner User Guide</strong> - คู่มือฉบับเต็ม</p>
+      <p style="margin-top: 10px; font-size: 0.9em;">สร้างโดย ✨ AI Assistant | ทำให้การทำเอกสารง่ายขึ้น</p>
+    </footer>
+  </div>
+
+  <script>
+    // ทำให้ FAQ สะดวกขึ้น
+    document.querySelectorAll('.faq-q').forEach(item => {
+      item.style.cursor = 'pointer';
+      item.addEventListener('click', function() {
+        const answer = this.nextElementSibling;
+        const isVisible = answer.style.display !== 'none';
+        answer.style.display = isVisible ? 'none' : 'block';
+
+        // เปลี่ยนสัญลักษณ์
+        this.style.transform = isVisible ? 'none' : 'none';
+      });
+    });
+  </script>
+</body>
+</html>
