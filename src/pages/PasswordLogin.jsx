@@ -1,7 +1,7 @@
 import { t } from '../i18n';
 import { useEffect, useState } from 'react';
 import { useDocumentStore, verifyPassword, hasRecoveryCode, generateRecoveryCode } from '../store/documentStore';
-import { openVault, recoverVault, cloudEnabled, wasLinked } from '../services/vault';
+import { openVault, recoverVault, cloudEnabled, wasLinked, rememberPassword } from '../services/vault';
 import AuthShell, { Field, ErrorNote, RecoveryCodeCard } from './auth/AuthShell';
 
 export default function PasswordLogin() {
@@ -50,6 +50,7 @@ export default function PasswordLogin() {
           // Older device that never synced: create its cloud history now.
           await openVault(password, { create: true }).catch(() => {});
         }
+        await rememberPassword(password);
         enter();
         return;
       }
@@ -58,6 +59,7 @@ export default function PasswordLogin() {
       if (remote.exists) {
         await wipeLocalDocs();
         await adoptPassword(password);
+        await rememberPassword(password);
         enter();
         return;
       }

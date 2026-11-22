@@ -1,7 +1,7 @@
 import { t } from '../i18n';
 import { useState } from 'react';
 import { useDocumentStore, generateRecoveryCode } from '../store/documentStore';
-import { openVault } from '../services/vault';
+import { openVault, rememberPassword } from '../services/vault';
 import AuthShell, { Field, ErrorNote, RecoveryCodeCard } from './auth/AuthShell';
 
 export default function PasswordSetup() {
@@ -23,6 +23,7 @@ export default function PasswordSetup() {
       const existing = await openVault(password).catch(() => ({ enabled: false }));
       if (existing.exists) {
         await adoptPassword(password);
+        await rememberPassword(password);
         finishAuth();
         syncFromCloud();
         return;
@@ -30,6 +31,7 @@ export default function PasswordSetup() {
       const newCode = generateRecoveryCode();
       if (existing.enabled) await openVault(password, { create: true, recoveryCode: newCode }).catch((err) => console.warn('Cloud vault not created', err));
       setCode(await setPassword(password, newCode));
+      await rememberPassword(password);
     } catch (err) {
       console.error('Password setup failed', err);
       setError(`${t('บันทึกรหัสผ่านไม่สำเร็จ ลองใหม่อีกครั้ง')} (${err?.message || err})`);

@@ -157,6 +157,7 @@ const EN = {
   'อยากได้อะไรเพิ่ม': 'What would you like?',
   'อย่างน้อย 4 ตัว': 'At least 4 characters',
   'ออกจากระบบแล้วเข้าใหม่อีกครั้งนะ (จ๋องจำรหัสไม่ได้)': 'Please log out and in again (Jong forgot your password)',
+  'กด Logout แล้วเข้าใหม่ด้วยรหัสเดิม 1 ครั้ง จ๋องจะเชื่อมประวัติกับคลาวด์ให้': 'Tap Logout, then log in again with the same password once — Jong will link your history to the cloud',
   'อ่านลายมือเก่งนะ': 'I read handwriting well!',
   'อ่านแบบออฟไลน์': 'read offline',
   'ฮึ่ม... ลายมือหมอ?': "Hmm... doctor's handwriting?",

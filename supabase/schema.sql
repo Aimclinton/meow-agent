@@ -52,7 +52,14 @@ create table if not exists public.templates (
 );
 alter table public.templates enable row level security;
 
--- 4) Private bucket for page images: <vault_id>/<doc_id>/<page_id>.jpg
+-- 4) Privileges for the server key. New Supabase projects don't grant these
+--    automatically ("permission denied ... TO service_role" without them).
+grant usage on schema public to service_role;
+grant select, insert, update, delete on public.meow_usage, public.meow_vaults,
+  public.meow_vault_documents, public.templates to service_role;
+grant execute on function public.meow_increment_usage(text, integer) to service_role;
+
+-- 5) Private bucket for page images: <vault_id>/<doc_id>/<page_id>.jpg
 insert into storage.buckets (id, name, public) values ('meow-pages', 'meow-pages', false)
 on conflict (id) do nothing;
 

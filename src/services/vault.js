@@ -39,6 +39,21 @@ const markLinked = () => { try { localStorage.setItem(LINK_KEY, '1'); } catch { 
 export const wasLinked = () => { try { return localStorage.getItem(LINK_KEY) === '1'; } catch { return false; } };
 
 export const getVaultToken = () => token;
+
+// Keep the password-derived token in memory after any successful login, even
+// before the cloud is ready, so the device can link itself later.
+export async function rememberPassword(password) {
+  token = await tokenFor(password);
+}
+
+// Create the cloud history for the remembered password if it doesn't exist yet.
+// Not for devices whose password was changed elsewhere (that would fork history).
+export async function ensureVault() {
+  if (!token || wasLinked() || !(await cloudEnabled())) return false;
+  const res = await post({ action: 'open', token, create: true });
+  if (res.exists) markLinked();
+  return !!res.exists;
+}
 export const setVaultToken = (t) => { token = t; };
 
 // Does a vault exist for this password? With create=true, make it (needs a recovery code).

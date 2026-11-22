@@ -1,5 +1,5 @@
 import { DAILY_LIMIT, DETAILED_MODEL, FALLBACK_MODELS, PRIMARY_MODEL, quotaDay, readJSON, sendJSON, supabaseEnabled } from './_lib/config.js';
-import { addUsage, findVault, getUsage } from './_lib/supabase.js';
+import { addUsage, dbReady, findVault, getUsage } from './_lib/supabase.js';
 import { transcribePage } from './_lib/gemini.js';
 
 
@@ -10,11 +10,12 @@ export default async function handler(req, res) {
   // With Supabase configured, only people logged in with a team password may use the shared key.
   const userKey = (req.headers['x-user-gemini-key'] || '').trim();
   if (supabaseEnabled() && !userKey) {
-    // If the database itself is unreachable, don't lock everyone out of scanning.
-    let vault = null;
-    let dbDown = false;
-    try { vault = await findVault(req.headers['x-meow-vault']); } catch { dbDown = true; }
-    if (!vault && !dbDown) return sendJSON(res, 401, { error: 'unauthorized' });
+    // Only enforce once the database is really usable; a half-configured
+    // Supabase must never lock everyone out of scanning.
+    if ((await dbReady()).ok) {
+      const vault = await findVault(req.headers['x-meow-vault']).catch(() => 'db_error');
+      if (!vault) return sendJSON(res, 401, { error: 'unauthorized' });
+    }
   }
 
   const apiKey = userKey || process.env.GEMINI_API_KEY;

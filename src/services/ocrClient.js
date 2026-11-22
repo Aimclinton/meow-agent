@@ -1,6 +1,6 @@
 import { t } from '../i18n';
 import { useSettings } from '../store/settingsStore';
-import { getVaultToken } from './vault';
+import { getVaultToken, ensureVault } from './vault';
 import { localOCR } from './localOcr';
 import { structuredToContent, structuredToText } from '../utils/structure';
 import { ocrPagesToDoc } from '../utils/ocrToDoc';
@@ -48,7 +48,8 @@ export async function scanPage(imageData, { detailed = false, onStage, template 
         usage: res.body.usage || null,
       };
     }
-    if (res.status === 401) throw new ScanError(t('ออกจากระบบแล้วเข้าใหม่อีกครั้งนะ (จ๋องจำรหัสไม่ได้)'));
+    if (res.status === 401 && attempt === 0 && (await ensureVault().catch(() => false))) continue; // linked now → retry
+    if (res.status === 401) throw new ScanError(t('กด Logout แล้วเข้าใหม่ด้วยรหัสเดิม 1 ครั้ง จ๋องจะเชื่อมประวัติกับคลาวด์ให้'));
     if (res.status === 429 && res.body.error === 'quota_exhausted') { fallbackReason = 'quota'; break; }
     if ([404, 405, 503].includes(res.status) || !Object.keys(res.body).length) { fallbackReason = 'no-api'; break; }
     if (res.status === 400) throw new ScanError(t('รูปนี้ส่งไม่ได้ ลองถ่ายใหม่'));
