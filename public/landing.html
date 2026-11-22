@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MEOW Agent - Document Scanner</title>
+  <title>MEOW Agent - Magical Document Scanner</title>
   <style>
     * {
       margin: 0;
@@ -12,107 +12,181 @@
     }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      background: #f5f5f5;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, sans-serif;
+      background: #f8f8f8;
+      color: #1a1a1a;
+      line-height: 1.6;
+    }
+
+    /* Navigation */
+    nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      padding: 20px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 1000;
+      border-bottom: 1px solid #eee;
+    }
+
+    nav .logo {
+      font-size: 24px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    nav ul {
+      display: flex;
+      list-style: none;
+      gap: 40px;
+    }
+
+    nav a {
+      text-decoration: none;
+      color: #666;
+      font-size: 14px;
+      font-weight: 500;
+      transition: color 0.3s;
+    }
+
+    nav a:hover {
       color: #000;
     }
 
+    /* Hero Section */
     .hero {
       min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 60px 80px;
-      background: linear-gradient(135deg, #fff9f0 0%, #fff5e6 100%);
+      padding: 120px 60px 60px;
+      background: linear-gradient(135deg, #fafafa 0%, #f0f0f0 100%);
+      margin-top: 60px;
     }
 
     .hero-content {
       flex: 1;
-      max-width: 500px;
+      max-width: 550px;
     }
 
-    h1 {
-      font-size: 3.5em;
+    .hero h1 {
+      font-size: 4em;
       font-weight: 900;
-      line-height: 1.1;
-      margin-bottom: 20px;
-    }
-
-    .highlight {
-      background: linear-gradient(120deg, #ff6b35, #f7931e);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-
-    p {
-      font-size: 1.1em;
-      color: #666;
+      line-height: 1;
       margin-bottom: 30px;
-      line-height: 1.6;
+      word-spacing: 100vw;
     }
 
-    .cta {
+    .hero .tagline {
+      font-size: 1.2em;
+      color: #666;
+      margin-bottom: 40px;
+      line-height: 1.8;
+    }
+
+    .cta-button {
+      display: inline-block;
       background: #000;
       color: white;
-      padding: 15px 40px;
-      border: none;
+      padding: 16px 36px;
       border-radius: 8px;
-      font-size: 1em;
-      font-weight: 600;
-      cursor: pointer;
       text-decoration: none;
-      display: inline-block;
-      transition: all 0.3s;
+      font-weight: 600;
+      font-size: 15px;
+      transition: all 0.3s ease;
+      border: 2px solid #000;
+      cursor: pointer;
     }
 
-    .cta:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    .cta-button:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+    }
+
+    .cta-secondary {
+      display: inline-block;
+      margin-left: 20px;
+      background: transparent;
+      color: #000;
+      padding: 14px 32px;
+      border: 2px solid #000;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 15px;
+      transition: all 0.3s ease;
+    }
+
+    .cta-secondary:hover {
+      background: #f5f5f5;
     }
 
     .hero-visual {
       flex: 1;
-      text-align: center;
-      font-size: 300px;
-      animation: bounce 3s ease-in-out infinite;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      height: 500px;
     }
 
-    @keyframes bounce {
-      0%, 100% { transform: translateY(0); }
+    .cat-ascii {
+      font-size: 200px;
+      animation: float 3s ease-in-out infinite;
+      text-align: center;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
       50% { transform: translateY(-30px); }
     }
 
+    /* Features Section */
     .features {
-      padding: 100px 80px;
+      padding: 100px 60px;
       background: white;
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 50px;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 60px;
+    }
+
+    .feature {
+      text-align: left;
+    }
+
+    .feature-icon {
+      font-size: 3em;
+      margin-bottom: 20px;
+      display: inline-block;
     }
 
     .feature h3 {
       font-size: 1.3em;
-      margin: 20px 0 10px;
+      margin-bottom: 12px;
       font-weight: 700;
     }
 
     .feature p {
-      color: #999;
+      color: #777;
       font-size: 0.95em;
+      line-height: 1.7;
     }
 
-    .feature-icon {
-      font-size: 2.5em;
-    }
-
+    /* Stats Section */
     .stats {
-      padding: 100px 80px;
-      background: #000;
+      padding: 80px 60px;
+      background: #1a1a1a;
       color: white;
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 40px;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 50px;
       text-align: center;
     }
 
@@ -122,92 +196,168 @@
       margin-bottom: 10px;
     }
 
+    .stat p {
+      font-size: 0.9em;
+      color: #aaa;
+    }
+
+    /* Footer */
+    footer {
+      background: #000;
+      color: white;
+      padding: 40px 60px;
+      text-align: center;
+      font-size: 0.9em;
+      border-top: 1px solid #333;
+    }
+
+    /* Mobile Responsive */
     @media (max-width: 768px) {
+      nav {
+        padding: 15px 20px;
+      }
+
+      nav ul {
+        gap: 20px;
+        font-size: 12px;
+      }
+
       .hero {
         flex-direction: column;
-        padding: 40px;
+        padding: 100px 20px 40px;
+        margin-top: 50px;
       }
 
-      h1 {
-        font-size: 2em;
+      .hero h1 {
+        font-size: 2.5em;
       }
 
-      .features {
-        grid-template-columns: 1fr;
-        padding: 40px;
+      .hero .tagline {
+        font-size: 1em;
       }
 
-      .stats {
-        grid-template-columns: repeat(2, 1fr);
-        padding: 40px;
+      .cta-button, .cta-secondary {
+        padding: 12px 24px;
+        font-size: 14px;
+        display: block;
+        width: 100%;
+        text-align: center;
+        margin-bottom: 12px;
+      }
+
+      .cta-secondary {
+        margin-left: 0;
       }
 
       .hero-visual {
-        font-size: 150px;
+        height: 300px;
+        margin-top: 40px;
+      }
+
+      .cat-ascii {
+        font-size: 100px;
+      }
+
+      .features {
+        padding: 60px 20px;
+        gap: 40px;
+      }
+
+      .stats {
+        padding: 60px 20px;
+        gap: 30px;
+      }
+
+      footer {
+        padding: 30px 20px;
       }
     }
   </style>
 </head>
 <body>
+  <!-- Navigation -->
+  <nav>
+    <div class="logo">🐱 MEOW</div>
+    <ul>
+      <li><a href="#features">Features</a></li>
+      <li><a href="#how">How It Works</a></li>
+      <li><a href="#pricing">Pricing</a></li>
+      <li><a href="#about">About</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+  </nav>
+
+  <!-- Hero Section -->
   <section class="hero">
     <div class="hero-content">
-      <h1>🐱 MEOW<br><span class="highlight">AGENT</span></h1>
-      <p>Your intelligent document scanner. Capture handwritten docs, extract text with AI, and export instantly.</p>
-      <a href="./app.html" class="cta">Get Started →</a>
+      <h1>MEOW<br>AI AGENT</h1>
+      <p class="tagline">Your personal AI assistant, helping you manage tasks and make smarter decisions.</p>
+      <a href="./app.html" class="cta-button">Get Started</a>
+      <a href="#features" class="cta-secondary">See How It Works ></a>
     </div>
-    <div class="hero-visual">🐱</div>
+    <div class="hero-visual">
+      <div class="cat-ascii">🐱</div>
+    </div>
   </section>
 
-  <section class="features">
+  <!-- Features Section -->
+  <section class="features" id="features">
     <div class="feature">
       <div class="feature-icon">📸</div>
       <h3>Smart Capture</h3>
-      <p>Snap photos with any device camera.</p>
+      <p>Snap photos with your phone camera. No special equipment needed.</p>
     </div>
     <div class="feature">
       <div class="feature-icon">🧠</div>
       <h3>AI Recognition</h3>
-      <p>90% accurate handwriting extraction.</p>
+      <p>90% accurate handwriting extraction using advanced OCR.</p>
     </div>
     <div class="feature">
       <div class="feature-icon">📄</div>
       <h3>Instant Export</h3>
-      <p>DOCX, XLSX, or email in seconds.</p>
+      <p>Download as DOCX, XLSX, or share via email instantly.</p>
     </div>
     <div class="feature">
       <div class="feature-icon">🔐</div>
       <h3>100% Private</h3>
-      <p>All processing happens locally.</p>
+      <p>All processing happens in your browser. Zero cloud uploads.</p>
     </div>
     <div class="feature">
       <div class="feature-icon">📱</div>
       <h3>Mobile First</h3>
-      <p>Works everywhere, no app needed.</p>
+      <p>Optimized for phone and tablet. Works on any device.</p>
     </div>
     <div class="feature">
       <div class="feature-icon">💰</div>
       <h3>Forever Free</h3>
-      <p>No costs, no subscriptions ever.</p>
+      <p>No hidden costs, subscriptions, or paywalls ever.</p>
     </div>
   </section>
 
+  <!-- Stats Section -->
   <section class="stats">
     <div class="stat">
-      <h4>0ms</h4>
-      <p>Setup</p>
+      <h4>90%</h4>
+      <p>Accuracy</p>
     </div>
     <div class="stat">
       <h4>$0</h4>
       <p>Cost</p>
     </div>
     <div class="stat">
-      <h4>90%</h4>
-      <p>Accuracy</p>
+      <h4>∞</h4>
+      <p>Free Forever</p>
     </div>
     <div class="stat">
-      <h4>∞</h4>
-      <p>Free</p>
+      <h4>📱</h4>
+      <p>Mobile Ready</p>
     </div>
   </section>
+
+  <!-- Footer -->
+  <footer id="contact">
+    <p>🐱 MEOW Agent - Making document scanning magical.</p>
+    <p style="margin-top: 20px; color: #888;">Made with ❤️ for students and professionals | © 2026</p>
+  </footer>
 </body>
 </html>
