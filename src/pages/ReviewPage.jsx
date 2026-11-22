@@ -88,10 +88,10 @@ export default function ReviewPage({ documentId, onExport, onCancel }) {
         />
 
         {/* Action Buttons */}
-        <div className="mt-8 flex gap-4 flex-wrap">
+        <div className="mt-10 flex gap-4 flex-wrap">
           <button
             onClick={onCancel}
-            className="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium rounded-lg transition"
+            className="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium rounded-xl transition"
           >
             ← Back
           </button>
@@ -99,7 +99,7 @@ export default function ReviewPage({ documentId, onExport, onCancel }) {
           <button
             onClick={handleProceed}
             disabled={document.pages.length === 0}
-            className="px-6 py-3 bg-green-500 hover:bg-green-600 disabled:bg-green-300 text-white font-medium rounded-lg transition"
+            className="px-8 py-4 bg-black hover:bg-gray-900 disabled:bg-gray-500 text-white font-bold text-lg rounded-xl transition-all shadow-md hover:shadow-lg"
           >
             ✓ Continue to Export
           </button>

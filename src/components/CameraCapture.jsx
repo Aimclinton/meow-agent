@@ -191,36 +191,36 @@ export default function CameraCapture({ onCapture, onCancel }) {
         )}
 
         {/* Controls */}
-        <div className="p-4 space-y-3">
+        <div className="p-6 space-y-3">
           {!isCameraActive ? (
-            <div className="space-y-2">
+            <div className="space-y-3">
               <button
                 onClick={() => setIsCameraActive(true)}
-                className="w-full px-4 py-3 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg transition"
+                className="w-full px-6 py-4 bg-black hover:bg-gray-900 text-white font-bold text-lg rounded-xl transition-all shadow-md hover:shadow-lg"
               >
                 📷 Open Camera
               </button>
 
               <button
                 onClick={() => fileInputRef.current?.click()}
-                className="w-full px-4 py-3 bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium rounded-lg transition"
+                className="w-full px-6 py-4 bg-black hover:bg-gray-900 text-white font-bold text-lg rounded-xl transition-all shadow-md hover:shadow-lg"
               >
                 📁 Choose Photo
               </button>
 
               <button
                 onClick={onCancel}
-                className="w-full px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg transition"
+                className="w-full px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium rounded-xl transition"
               >
                 Cancel
               </button>
             </div>
           ) : (
-            <div className="space-y-2">
+            <div className="space-y-3">
               <button
                 onClick={capturePhoto}
                 disabled={isProcessing}
-                className="w-full px-4 py-3 bg-green-500 hover:bg-green-600 disabled:bg-green-300 text-white font-medium rounded-lg transition flex items-center justify-center gap-2"
+                className="w-full px-6 py-4 bg-black hover:bg-gray-900 disabled:bg-gray-500 text-white font-bold text-lg rounded-xl transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2"
               >
                 {isProcessing ? (
                   <>
@@ -233,7 +233,7 @@ export default function CameraCapture({ onCapture, onCancel }) {
 
               <button
                 onClick={() => setIsCameraActive(false)}
-                className="w-full px-4 py-3 bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium rounded-lg transition"
+                className="w-full px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium rounded-xl transition"
               >
                 Close Camera
               </button>
