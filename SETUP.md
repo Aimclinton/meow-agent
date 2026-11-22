@@ -50,8 +50,8 @@
 
 | Key ใน Vercel | เอามาจาก Supabase |
 |---|---|
-| `SUPABASE_URL` | **Project URL** (หน้าตาแบบ `https://xxxx.supabase.co`) |
-| `SUPABASE_SERVICE_ROLE_KEY` | คีย์ **service_role** (หรือ **secret key**) |
+| `SUPABASE_URL` | **Project URL** (หน้าตาแบบ `https://xxxx.supabase.co` ไม่ต้องมี `/rest/v1`) |
+| `SUPABASE_SERVICE_ROLE_KEY` | คีย์ **secret** (ขึ้นต้น `sb_secret_...`) หรือคีย์ **service_role** แบบเก่า — **ไม่ใช่** คีย์ anon / publishable (`sb_publishable_...`) |
 | `VAULT_SECRET` *(ไม่บังคับ แต่แนะนำ)* | ข้อความยาว ๆ อะไรก็ได้ที่สุ่มขึ้นมา เช่น จากเว็บสร้างรหัสผ่าน |
 
 > ⚠️ `SUPABASE_SERVICE_ROLE_KEY` เป็นกุญแจใหญ่ **ห้ามขึ้นต้นด้วย `VITE_` ห้ามแปะในแชท ห้ามส่งให้ใคร**
@@ -90,6 +90,8 @@ Vercel → แท็บ **Deployments** → ที่ deployment บนสุด
 
 เช็คว่าใช้ได้:
 - เปิด `https://meow-agent.vercel.app/api/quota` ต้องเห็น `"gemini": true` และ `"shared": true` (ถ้าใส่ Supabase แล้ว)
+- ถ้า `"shared": false` ให้ดูสาเหตุที่ `/api/vault` (ส่ง POST `{"action":"status"}`) ช่อง `reason`:
+  `wrong_key_use_service_role` = ใส่คีย์ผิด ต้องใช้ secret/service_role, `run_schema_sql` = ยังไม่ได้รัน schema.sql
 - ลองสแกน 1 หน้า ตัวเลขในแถบ “จ๋องเลีย” ต้องลดลง 1
 - ลองล็อกอินด้วยรหัสเดียวกันในอีกเครื่อง ต้องเห็นเอกสารเดียวกัน
 

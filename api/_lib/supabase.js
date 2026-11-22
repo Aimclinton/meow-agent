@@ -2,12 +2,12 @@ import { createHmac } from 'node:crypto';
 import { SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, supabaseEnabled } from './config.js';
 
 const BUCKET = 'meow-pages';
-const headers = (extra = {}) => ({
-  apikey: SUPABASE_SERVICE_ROLE_KEY,
-  Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
-  'Content-Type': 'application/json',
-  ...extra,
-});
+// New-style keys (sb_secret_...) go only in `apikey`; legacy JWT keys also need Authorization.
+const authHeaders = () => (SUPABASE_SERVICE_ROLE_KEY.startsWith('sb_')
+  ? { apikey: SUPABASE_SERVICE_ROLE_KEY }
+  : { apikey: SUPABASE_SERVICE_ROLE_KEY, Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}` });
+
+const headers = (extra = {}) => ({ ...authHeaders(), 'Content-Type': 'application/json', ...extra });
 
 async function rest(path, { method = 'GET', body, prefer } = {}) {
   const r = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
@@ -27,7 +27,9 @@ export async function dbReady() {
     await rest('meow_vaults?select=id&limit=1');
     return { ok: true };
   } catch (err) {
-    return { ok: false, reason: 'db_error', message: String(err.message || err).slice(0, 200) };
+    const msg = String(err.message || err);
+    const reason = /42501|permission denied|TO anon/i.test(msg) ? 'wrong_key_use_service_role' : /PGRST205|does not exist|schema cache/i.test(msg) ? 'run_schema_sql' : 'db_error';
+    return { ok: false, reason, message: msg.slice(0, 200) };
   }
 }
 
@@ -90,7 +92,7 @@ export const imagePath = (vaultId, docId, pageId) => `${vaultId}/${safe(docId)}/
 export async function uploadImage(path, bytes, contentType = 'image/jpeg') {
   const r = await fetch(`${SUPABASE_URL}/storage/v1/object/${BUCKET}/${path}`, {
     method: 'POST',
-    headers: { apikey: SUPABASE_SERVICE_ROLE_KEY, Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`, 'Content-Type': contentType, 'x-upsert': 'true' },
+    headers: { ...authHeaders(), 'Content-Type': contentType, 'x-upsert': 'true' },
     body: bytes,
   });
   if (!r.ok) throw new Error(`storage upload: ${r.status} ${(await r.text()).slice(0, 200)}`);
