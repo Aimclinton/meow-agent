@@ -3,6 +3,59 @@
 @tailwind utilities;
 
 :root {
-  color-scheme: light dark;
+  color-scheme: light;
 }
 
+html {
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  background: #eeeeec;
+  color: #111111;
+}
+
+/* Calico scanline cat */
+.calico-cat {
+  width: 100%;
+  height: auto;
+  display: block;
+  overflow: visible;
+}
+
+.calico-cat__body {
+  transform-origin: 50% 100%;
+  animation: cat-breathe 4s ease-in-out infinite;
+}
+
+.calico-cat .glitch-a { animation: cat-glitch-a 5s steps(1) infinite; }
+.calico-cat .glitch-b { animation: cat-glitch-b 7s steps(1) infinite; }
+
+@keyframes cat-breathe {
+  0%, 100% { transform: scaleY(1); }
+  50% { transform: scaleY(1.012); }
+}
+
+@keyframes cat-glitch-a {
+  0%, 88%, 100% { transform: translateX(0); }
+  90% { transform: translateX(1.2px); }
+  93% { transform: translateX(-0.8px); }
+}
+
+@keyframes cat-glitch-b {
+  0%, 70%, 100% { transform: translateX(0); }
+  72% { transform: translateX(-1.4px); }
+  75% { transform: translateX(0.6px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .calico-cat__body,
+  .calico-cat .glitch-a,
+  .calico-cat .glitch-b { animation: none; }
+}
+
+.safe-x {
+  padding-left: max(1.25rem, env(safe-area-inset-left));
+  padding-right: max(1.25rem, env(safe-area-inset-right));
+}

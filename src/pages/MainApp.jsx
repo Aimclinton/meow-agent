@@ -3,6 +3,7 @@ import { useDocumentStore } from '../store/documentStore';
 import DocumentWorkflow from './DocumentWorkflow';
 import HistoryPage from './HistoryPage';
 import ExportPage from './ExportPage';
+import CalicoCat from '../components/CalicoCat';
 
 export default function MainApp() {
   const [currentPage, setCurrentPage] = useState('dashboard');
@@ -38,120 +39,131 @@ export default function MainApp() {
     );
   }
 
+  const totalPages = documents.reduce((sum, doc) => sum + doc.pages.length, 0);
+
+  const actions = [
+    { n: '01', title: 'New Document', desc: 'Start scanning', onClick: () => setCurrentPage('workflow') },
+    { n: '02', title: 'History', desc: 'Past 7 days', onClick: () => setCurrentPage('history') },
+    { n: '03', title: 'AI Slides', desc: 'Export to AI' },
+  ];
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-white to-gray-50">
+    <div className="min-h-screen bg-paper text-ink font-mono overflow-x-hidden">
       {/* Header */}
-      <header className="bg-white border-b border-gray-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-          <h1 className="text-xl font-bold text-gray-900">🐱 MEOW Agent</h1>
-          <button
-            onClick={logout}
-            className="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
-          >
-            Logout
-          </button>
+      <header className="safe-x pt-[max(1.25rem,env(safe-area-inset-top))]">
+        <div className="max-w-6xl mx-auto flex items-center justify-between h-12">
+          <PixelLogo />
+          <nav className="flex items-center gap-1 sm:gap-4 text-[13px] md:text-sm">
+            <button onClick={() => setCurrentPage('workflow')} className="px-2 py-2 hover:underline underline-offset-4">Scan</button>
+            <button onClick={() => setCurrentPage('history')} className="px-2 py-2 hover:underline underline-offset-4">History</button>
+            <button onClick={logout} className="px-2 py-2 hover:underline underline-offset-4">Logout</button>
+          </nav>
         </div>
       </header>
 
-      {/* Hero Section */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
-        <div className="grid md:grid-cols-2 gap-12 items-center">
-          {/* Left Content */}
-          <div>
-            <h2 className="text-5xl md:text-6xl font-black text-gray-900 mb-6 leading-tight">
-              Document<br />Scanning<br />Made Easy
-            </h2>
-            <p className="text-lg text-gray-600 mb-8">
-              Capture handwritten documents, extract text with AI, and export instantly.
+      {/* Hero */}
+      <section className="safe-x">
+        <div className="relative max-w-6xl mx-auto pt-6 pb-10 md:pt-14 md:pb-16 md:min-h-[min(78vh,760px)] md:flex md:flex-col md:justify-between">
+          <h1 className="relative z-10 font-pixel font-bold uppercase leading-[0.95] tracking-tight text-[clamp(3.25rem,15vw,5.5rem)] md:text-[clamp(4rem,7.6vw,6.5rem)]">
+            Meow<br />AI Agent
+          </h1>
+
+          {/* Cat: stacked on phones, floating right on iPad / desktop */}
+          <div className="mx-auto w-[70%] max-w-[360px] my-5 md:my-0 md:absolute md:right-[-2%] md:bottom-6 md:w-[52%] md:max-w-[600px]">
+            <CalicoCat />
+          </div>
+
+          <div className="relative z-10 md:max-w-[40%]">
+            <p className="text-[15px] leading-relaxed mb-8 max-w-sm">
+              Your personal AI document assistant — capture handwriting, extract text and export instantly.
             </p>
-            <button
-              onClick={() => setCurrentPage('workflow')}
-              className="px-8 py-4 bg-black hover:bg-gray-900 text-white font-bold text-lg rounded-xl transition-all shadow-lg hover:shadow-xl"
-            >
-              📸 Start Scanning
-            </button>
-          </div>
-
-          {/* Right Cat Mascot */}
-          <div className="text-center">
-            <div className="text-9xl animate-bounce" style={{animationDuration: '3s'}}>
-              🐱
-            </div>
-            <p className="text-gray-500 mt-6 text-sm">Your AI Document Assistant</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {currentPage === 'dashboard' && (
-          <div>
-            {/* Quick Actions */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-              {/* New Document */}
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
               <button
                 onClick={() => setCurrentPage('workflow')}
-                className="bg-white rounded-xl border border-gray-200 p-6 text-left hover:shadow-lg hover:border-gray-300 transition-all group"
+                className="min-h-[48px] px-6 bg-ink text-paper text-sm rounded-[3px] hover:bg-neutral-700 active:scale-[0.98] transition"
               >
-                <div className="text-4xl mb-4 group-hover:scale-110 transition-transform">📄</div>
-                <h3 className="font-bold text-gray-900 mb-1">New Document</h3>
-                <p className="text-gray-600 text-sm">Start scanning</p>
+                Get Started
               </button>
-
-              {/* Document History */}
               <button
                 onClick={() => setCurrentPage('history')}
-                className="bg-white rounded-xl border border-gray-200 p-6 text-left hover:shadow-lg hover:border-gray-300 transition-all group"
+                className="min-h-[48px] text-sm inline-flex items-center gap-2 hover:underline underline-offset-4"
               >
-                <div className="text-4xl mb-4 group-hover:scale-110 transition-transform">📚</div>
-                <h3 className="font-bold text-gray-900 mb-1">History</h3>
-                <p className="text-gray-600 text-sm">Past 7 days</p>
+                See History <span aria-hidden="true">›</span>
               </button>
+            </div>
+          </div>
+        </div>
+      </section>
 
-              {/* Create Slides */}
-              <button className="bg-white rounded-xl border border-gray-200 p-6 text-left hover:shadow-lg hover:border-gray-300 transition-all group">
-                <div className="text-4xl mb-4 group-hover:scale-110 transition-transform">🎬</div>
-                <h3 className="font-bold text-gray-900 mb-1">AI Slides</h3>
-                <p className="text-gray-600 text-sm">Export to AI</p>
+      {/* Dashboard */}
+      <main className="safe-x pb-[max(2.5rem,env(safe-area-inset-bottom))]">
+        <div className="max-w-6xl mx-auto border-t border-ink/15 pt-8">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-12">
+            {actions.map((a) => (
+              <button
+                key={a.n}
+                onClick={a.onClick}
+                className="group text-left bg-white/60 border border-ink/15 rounded-[3px] p-4 md:p-5 min-h-[128px] flex flex-col justify-between hover:border-ink hover:bg-white active:bg-white transition"
+              >
+                <span className="text-xs text-ink/50">{a.n}</span>
+                <span>
+                  <span className="block font-pixel text-base md:text-lg uppercase leading-tight">{a.title}</span>
+                  <span className="block text-xs text-ink/60 mt-1">{a.desc} <span className="inline-block transition-transform group-hover:translate-x-1">›</span></span>
+                </span>
               </button>
+            ))}
 
-              {/* Stats */}
-              <div className="bg-white rounded-xl border border-gray-200 p-6 text-center">
-                <div className="text-3xl font-bold text-gray-900 mb-2">{documents.length}</div>
-                <p className="text-gray-600 text-sm">Documents</p>
-                <div className="mt-3 text-2xl font-bold text-gray-900">{documents.reduce((sum, doc) => sum + doc.pages.length, 0)}</div>
-                <p className="text-gray-600 text-sm">Pages</p>
+            <div className="bg-ink text-paper rounded-[3px] p-4 md:p-5 min-h-[128px] grid grid-cols-2 gap-2 content-between">
+              <span className="col-span-2 text-xs text-paper/50">04</span>
+              <div>
+                <div className="font-pixel text-3xl md:text-4xl">{documents.length}</div>
+                <div className="text-xs text-paper/60">Documents</div>
+              </div>
+              <div>
+                <div className="font-pixel text-3xl md:text-4xl">{totalPages}</div>
+                <div className="text-xs text-paper/60">Pages</div>
               </div>
             </div>
-
-            {/* Recent Documents */}
-            {documents.length > 0 && (
-              <div className="mb-12">
-                <h3 className="text-2xl font-bold text-gray-900 mb-6">Recent Documents</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {documents.slice(-3).map((doc) => (
-                    <div key={doc.id} className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-lg hover:border-gray-300 transition-all">
-                      <div className="flex items-start justify-between mb-4">
-                        <div>
-                          <h3 className="font-bold text-gray-900 truncate">{doc.title}</h3>
-                          <p className="text-sm text-gray-500 mt-1">{doc.pages.length} pages</p>
-                        </div>
-                        <div className="text-2xl">📄</div>
-                      </div>
-                      <p className="text-xs text-gray-500 mb-4">
-                        Updated: {new Date(doc.updatedAt).toLocaleDateString()}
-                      </p>
-                      <button className="w-full px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-900 font-medium rounded-lg text-sm transition-colors">
-                        Open
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
-        )}
+
+          {documents.length > 0 && (
+            <section>
+              <h2 className="font-pixel text-xl md:text-2xl uppercase mb-5">Recent Documents</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
+                {documents.slice(-3).reverse().map((doc) => (
+                  <div key={doc.id} className="bg-white/60 border border-ink/15 rounded-[3px] p-4 md:p-5">
+                    <div className="flex items-start justify-between gap-3 mb-3">
+                      <h3 className="font-medium truncate">{doc.title}</h3>
+                      <span className="text-xs text-ink/50 shrink-0">{doc.pages.length} pages</span>
+                    </div>
+                    <p className="text-xs text-ink/50 mb-4">
+                      Updated {new Date(doc.updatedAt).toLocaleDateString()}
+                    </p>
+                    <button
+                      onClick={() => {
+                        setSelectedDocForExport(doc);
+                        setCurrentPage('export');
+                      }}
+                      className="w-full min-h-[44px] border border-ink text-sm rounded-[3px] hover:bg-ink hover:text-paper transition"
+                    >
+                      Open
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+        </div>
       </main>
     </div>
+  );
+}
+
+function PixelLogo() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 7 7" aria-label="MEOW Agent" role="img" shapeRendering="crispEdges">
+      <path fill="#111" d="M0 0h3v3H0zM4 0h3v3H4zM0 4h3v3H0zM4 4h3v3H4z" />
+      <path fill="#eeeeec" d="M1 1h1v1H1zM5 1h1v1H5zM1 5h1v1H1zM5 5h1v1H5z" />
+    </svg>
   );
 }
