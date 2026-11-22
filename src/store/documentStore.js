@@ -263,11 +263,15 @@ export async function loadFromDB(db) {
 async function saveAuth(password, recoveryCode) {
   const salt = randomHex();
   const codeSalt = randomHex();
+  // Hash first: awaiting anything else while a transaction is open makes
+  // Safari/WebKit auto-commit it ("transaction is inactive or finished").
+  const passwordHash = await sha256(salt + password);
+  const recoveryHash = recoveryCode ? await sha256(codeSalt + normalizeCode(recoveryCode)) : null;
   const db = await openIndexedDB();
   const tx = db.transaction('auth', 'readwrite');
   const store = tx.objectStore('auth');
-  store.put({ type: 'password', salt, hash: await sha256(salt + password) });
-  if (recoveryCode) store.put({ type: 'recovery', salt: codeSalt, hash: await sha256(codeSalt + normalizeCode(recoveryCode)) });
+  store.put({ type: 'password', salt, hash: passwordHash });
+  if (recoveryHash) store.put({ type: 'recovery', salt: codeSalt, hash: recoveryHash });
   else store.delete('recovery');
   return txDone(tx);
 }
