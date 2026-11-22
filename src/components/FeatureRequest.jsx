@@ -1,3 +1,4 @@
+import { t } from '../i18n';
 import { useEffect, useRef, useState } from 'react';
 import { meow } from '../utils/sound';
 
@@ -22,9 +23,9 @@ export function WatchingEyes({ size = 44 }) {
     };
     window.addEventListener('pointermove', move);
     window.addEventListener('pointerdown', move);
-    let t;
+    let timer;
     const loop = () => {
-      t = setTimeout(() => {
+      timer = setTimeout(() => {
         setBlink(true);
         setTimeout(() => setBlink(false), 140);
         loop();
@@ -34,7 +35,7 @@ export function WatchingEyes({ size = 44 }) {
     return () => {
       window.removeEventListener('pointermove', move);
       window.removeEventListener('pointerdown', move);
-      clearTimeout(t);
+      clearTimeout(timer);
     };
   }, []);
 
@@ -63,8 +64,8 @@ export function FeatureRequestModal({ onClose, onSent }) {
 
   const send = async (e) => {
     e.preventDefault();
-    if (!idea.trim()) return setError('พิมพ์สิ่งที่อยากได้ก่อนน้า');
-    if (!WEB3FORMS_KEY) return setError('ยังไม่ได้ตั้งค่าช่องทางส่ง (VITE_WEB3FORMS_KEY) บอกแอดมินหน่อยนะ');
+    if (!idea.trim()) return setError(t('พิมพ์สิ่งที่อยากได้ก่อนน้า'));
+    if (!WEB3FORMS_KEY) return setError(t('ยังไม่ได้ตั้งค่าช่องทางส่ง (VITE_WEB3FORMS_KEY) บอกแอดมินหน่อยนะ'));
     setBusy(true);
     setError('');
     try {
@@ -82,11 +83,11 @@ export function FeatureRequestModal({ onClose, onSent }) {
         }),
       });
       const data = await r.json().catch(() => ({}));
-      if (!r.ok || data.success === false) throw new Error(data.message || `ส่งไม่สำเร็จ (${r.status})`);
+      if (!r.ok || data.success === false) throw new Error(data.message || t('ส่งไม่สำเร็จ ({status})', { status: r.status }));
       meow();
       onSent();
     } catch (err) {
-      setError(err.message || 'ส่งไม่สำเร็จ ลองใหม่อีกครั้ง');
+      setError(err.message || t('ส่งไม่สำเร็จ ลองใหม่อีกครั้ง'));
     } finally {
       setBusy(false);
     }
@@ -105,25 +106,25 @@ export function FeatureRequestModal({ onClose, onSent }) {
           <WatchingEyes size={64} />
           <div className="flex-1">
             <p className="text-xs uppercase tracking-wider text-ink/50 mb-1">Feature request</p>
-            <h2 className="font-menu font-bold text-xl">ข้าต้องการสิ่งนี้เพิ่ม</h2>
-            <p className="text-xs text-ink/60 mt-1">บอกมาได้เลย แมวจ้องอยู่ จะส่งตรงถึง Dev</p>
+            <h2 className="font-menu font-bold text-xl">{t("ข้าต้องการสิ่งนี้เพิ่ม")}</h2>
+            <p className="text-xs text-ink/60 mt-1">{t("บอกมาได้เลย แมวจ้องอยู่ จะส่งตรงถึง Dev")}</p>
           </div>
           <button type="button" onClick={onClose} aria-label="Close" className="w-11 h-11 grid place-items-center hover:bg-ink/5 shrink-0">✕</button>
         </div>
         <label className="block mb-4">
-          <span className="block text-xs uppercase tracking-wider text-ink/60 mb-2">อยากได้อะไรเพิ่ม</span>
+          <span className="block text-xs uppercase tracking-wider text-ink/60 mb-2">{t("อยากได้อะไรเพิ่ม")}</span>
           <textarea
             value={idea}
             onChange={(e) => { setIdea(e.target.value); setError(''); }}
             rows={5}
             maxLength={2000}
             autoFocus
-            placeholder="เช่น อยากให้ส่งออกเป็น PDF ได้ / อยากให้มีโหมดมืด"
+            placeholder={t("เช่น อยากให้ส่งออกเป็น PDF ได้ / อยากให้มีโหมดมืด")}
             className="w-full p-3 bg-white/70 border border-ink/20 rounded-[3px] outline-none focus:border-ink focus:bg-white text-sm leading-relaxed"
           />
         </label>
         <label className="block mb-4">
-          <span className="block text-xs uppercase tracking-wider text-ink/60 mb-2">ชื่อเล่น (ไม่ใส่ก็ได้)</span>
+          <span className="block text-xs uppercase tracking-wider text-ink/60 mb-2">{t("ชื่อเล่น (ไม่ใส่ก็ได้)")}</span>
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -134,7 +135,7 @@ export function FeatureRequestModal({ onClose, onSent }) {
         <input type="checkbox" name="botcheck" className="hidden" tabIndex={-1} autoComplete="off" />
         {error && <p className="text-sm text-red-700 border-l-2 border-red-700 pl-3 py-1 mb-4">{error}</p>}
         <button disabled={busy} className="font-menu font-medium w-full min-h-[52px] bg-ink text-paper rounded-[3px] hover:bg-neutral-700 disabled:opacity-40 transition">
-          {busy ? 'แมวกำลังวิ่งไปส่ง...' : 'ส่งให้แมว'}
+          {busy ? t('แมวกำลังวิ่งไปส่ง...') : t('ส่งให้แมว')}
         </button>
       </form>
     </div>
@@ -143,8 +144,8 @@ export function FeatureRequestModal({ onClose, onSent }) {
 
 export function Toast({ text, onDone }) {
   useEffect(() => {
-    const t = setTimeout(onDone, 3500);
-    return () => clearTimeout(t);
+    const timer = setTimeout(onDone, 3500);
+    return () => clearTimeout(timer);
   }, [onDone]);
   return (
     <div role="status" className="fixed left-1/2 -translate-x-1/2 bottom-[max(1.5rem,env(safe-area-inset-bottom))] z-[80] rise">
@@ -169,16 +170,16 @@ export default function FeatureRequest({ variant = 'floating' }) {
           className="fixed z-30 right-[max(1rem,env(safe-area-inset-right))] bottom-[max(1rem,env(safe-area-inset-bottom))] flex items-center gap-2 bg-paper border-2 border-ink rounded-full pl-2 pr-4 py-1.5 shadow-[3px_3px_0_#111] hover:-translate-y-0.5 active:translate-y-0 transition font-menu text-sm"
         >
           <WatchingEyes size={40} />
-          <span>ข้าต้องการสิ่งนี้เพิ่ม</span>
+          <span>{t("ข้าต้องการสิ่งนี้เพิ่ม")}</span>
         </button>
       ) : (
-        <button onClick={() => setOpen(true)} className="min-h-[44px] px-1 flex items-center gap-1 hover:underline underline-offset-4" aria-label="ข้าต้องการสิ่งนี้เพิ่ม">
+        <button onClick={() => setOpen(true)} className="min-h-[44px] px-1 flex items-center gap-1 hover:underline underline-offset-4" aria-label={t("ข้าต้องการสิ่งนี้เพิ่ม")}>
           <WatchingEyes size={30} />
-          <span className="hidden sm:inline">ขอฟีเจอร์</span>
+          <span className="hidden sm:inline">{t("ขอฟีเจอร์")}</span>
         </button>
       )}
       {open && <FeatureRequestModal onClose={() => setOpen(false)} onSent={() => { setOpen(false); setToast(true); }} />}
-      {toast && <Toast text="แมวรับเรื่องไว้แล้ว เดี๋ยวไปสะกิด Dev ให้นะ!" onDone={() => setToast(false)} />}
+      {toast && <Toast text={t('แมวรับเรื่องไว้แล้ว เดี๋ยวไปสะกิด Dev ให้นะ!')} onDone={() => setToast(false)} />}
     </>
   );
 }

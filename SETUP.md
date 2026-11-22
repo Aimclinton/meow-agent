@@ -1,90 +1,120 @@
-# MEOW Agent — Setup (Vercel Free + Gemini + Supabase)
+# MEOW Agent — คู่มือติดตั้ง (ฉบับภาษาไทย)
 
-## 1. Install & run locally
+ทุกอย่างในคู่มือนี้ **ใช้แผนฟรีทั้งหมด** ทั้งฝั่งคนทำ (dev) และคนใช้ (user) ไม่ต้องผูกบัตรเครดิต
+
+| บริการ | ใช้ทำอะไร | ค่าใช้จ่าย |
+|---|---|---|
+| **Vercel (Hobby)** | โฮสต์เว็บ + ฟังก์ชันหลังบ้าน (`/api`) + Environment Variables | ฟรี (สำหรับใช้งานส่วนตัว/ไม่เชิงพาณิชย์) |
+| **Google Gemini API** | ให้ AI อ่านเอกสาร | ฟรีตามโควตารายวันของ free tier |
+| **Supabase (Free)** | ซิงก์ประวัติข้ามเครื่อง, Template ของทีม, นับโควตารวม | ฟรี (DB 500MB, Storage 1GB) |
+| **Web3Forms (Free)** | ปุ่ม “ข้าต้องการสิ่งนี้เพิ่ม” ส่งเข้าอีเมล | ฟรี |
+
+> **Environment Variables บน Vercel ไม่เสียเงิน** ใช้ได้ในแผนฟรี เป็นแค่ช่องเก็บค่าตั้งค่า/คีย์ลับให้เว็บอ่าน
+>
+> ข้อควรรู้: Vercel Hobby ใช้ได้ฟรีสำหรับงานที่ไม่ใช่เชิงพาณิชย์ ถ้าวันหนึ่งจะเก็บเงินจากคนใช้ ต้องอัปเกรดเป็นแผน Pro
+
+ถ้ายังไม่ได้ใส่คีย์ใด ๆ เลย แอปก็ยังใช้ได้: สแกนแบบออฟไลน์ในเครื่อง (แม่นน้อยกว่า) และเก็บประวัติแยกแต่ละเครื่อง
+
+---
+
+## ขั้นที่ 1 — Gemini API Key (สำคัญที่สุด ให้ AI อ่านเอกสาร)
+
+1. เข้า <https://aistudio.google.com/app/apikey> แล้วล็อกอินด้วย Google
+2. กด **Create API key** → คัดลอกคีย์ (ขึ้นต้นด้วย `AIza...`)
+3. เข้า <https://vercel.com> → เลือกโปรเจกต์ **meow-agent** → **Settings** → **Environment Variables**
+4. ช่อง **Key** ใส่ `GEMINI_API_KEY` ช่อง **Value** วางคีย์ เลือก Environment: **Production** และ **Preview** → **Save**
+
+> ⚠️ ห้ามตั้งชื่อขึ้นต้นด้วย `VITE_` เพราะจะทำให้คีย์หลุดไปอยู่ในหน้าเว็บ
+
+ตัวเลือกเพิ่มเติม (ไม่ใส่ก็ได้):
+
+| Key | ค่าเริ่มต้น | ความหมาย |
+|---|---|---|
+| `GEMINI_MODEL` | `gemini-3.1-flash-lite-preview` | โมเดลหลัก |
+| `GEMINI_FALLBACK_MODELS` | `gemini-3-flash-preview,gemini-2.5-flash` | โมเดลสำรอง ถ้าตัวหลักติดลิมิต |
+| `GEMINI_DETAILED_MODEL` | `gemini-3-flash-preview` | ใช้ตอนกด “สแกนหน้านี้ใหม่แบบละเอียด” |
+| `DAILY_LIMIT` | `500` | ตัวเลขในแถบ “แมวเลียตอนนี้ แมวทำให้ได้อีก xxx รูป” (รวมทั้งทีมต่อวัน) |
+
+ลิมิตฟรีของ Gemini แต่ละโมเดลไม่เท่ากันและเปลี่ยนได้ ดูตัวเลขจริงได้ใน AI Studio → **Rate limits** แล้วแก้ `DAILY_LIMIT` ให้ตรง
+โควตารีเซ็ตทุกเที่ยงคืนเวลาแปซิฟิก (ประมาณ 14:00–15:00 น. เวลาไทย) และหน้าเว็บจะรีเฟรชเองตอนนั้น
+
+---
+
+## ขั้นที่ 2 — Supabase (ซิงก์ประวัติด้วยรหัสผ่านเดียวกัน + Template ของทีม)
+
+1. เข้า <https://supabase.com/dashboard> → เปิดโปรเจกต์ที่สมัครไว้
+2. เมนูซ้าย **SQL Editor** → **New query**
+3. เปิดไฟล์ [`supabase/schema.sql`](supabase/schema.sql) ในโปรเจกต์ คัดลอก **ทั้งไฟล์** ไปวาง → กด **Run**
+   (จะได้ตาราง `meow_usage`, `meow_vaults`, `meow_vault_documents`, `templates` และที่เก็บรูป `meow-pages`)
+4. เมนู **Project Settings** → **API** (หรือ **API Keys**) แล้วคัดลอก 2 ค่าไปใส่ใน Vercel → Environment Variables:
+
+| Key ใน Vercel | เอามาจาก Supabase |
+|---|---|
+| `SUPABASE_URL` | **Project URL** (หน้าตาแบบ `https://xxxx.supabase.co`) |
+| `SUPABASE_SERVICE_ROLE_KEY` | คีย์ **service_role** (หรือ **secret key**) |
+| `VAULT_SECRET` *(ไม่บังคับ แต่แนะนำ)* | ข้อความยาว ๆ อะไรก็ได้ที่สุ่มขึ้นมา เช่น จากเว็บสร้างรหัสผ่าน |
+
+> ⚠️ `SUPABASE_SERVICE_ROLE_KEY` เป็นกุญแจใหญ่ **ห้ามขึ้นต้นด้วย `VITE_` ห้ามแปะในแชท ห้ามส่งให้ใคร**
+
+ระบบทำงานยังไง:
+- **ใส่รหัสผ่านเดียวกัน = เห็นประวัติชุดเดียวกันทุกเครื่อง** (มือถือ / iPad / คอม)
+- เซิร์ฟเวอร์ไม่เก็บรหัสผ่านจริง เก็บแค่ค่าที่เข้ารหัสแล้ว (HMAC)
+- รหัสกู้คืนใช้ได้ข้ามเครื่อง ถ้าเปลี่ยนรหัสในเครื่องหนึ่ง เครื่องอื่นจะถูกบอกให้ใช้รหัสใหม่
+- คนนอกที่ไม่มีรหัสผ่านในระบบ จะเรียกใช้ AI ของทีมไม่ได้ (กันโควตาโดนขโมย)
+- Template ที่ใครบันทึก ทุกคนในทีมใช้ได้
+
+> ⚠️ **ใครรู้หรือเดารหัสผ่านถูก จะเห็นประวัติชุดนั้น** ถ้าสองคนบังเอิญตั้งรหัสเหมือนกันก็จะเห็นเอกสารกันและกัน
+> ให้ทีมตั้งรหัสยาว ๆ เดายาก เช่น วลีไทยสั้น ๆ + ตัวเลข (ไม่ใช่ 1234 หรือวันเกิด)
+
+---
+
+## ขั้นที่ 3 — Web3Forms (ปุ่ม “ข้าต้องการสิ่งนี้เพิ่ม”)
+
+1. เข้า <https://web3forms.com>
+2. ช่อง **Create your Access Key** ใส่อีเมล **aimisplayinggg@gmail.com** → กดส่ง
+3. เปิดอีเมลนั้น จะมีอีเมลจาก Web3Forms แนบ **Access Key** มาให้ → คัดลอก
+4. Vercel → Environment Variables → Key: `VITE_WEB3FORMS_KEY` Value: วางคีย์ → Save
+   (คีย์นี้ออกแบบมาให้เปิดเผยได้ ใช้ `VITE_` ได้ไม่เป็นไร)
+
+ข้อความที่คนกดส่งจะเข้าอีเมล aimisplayinggg@gmail.com ทันที (อีเมลผูกกับคีย์ตอนสร้าง ไม่ต้องตั้งในโค้ด)
+
+---
+
+## ขั้นที่ 4 — Deploy ใหม่ให้ค่าทั้งหมดมีผล
+
+Vercel → แท็บ **Deployments** → ที่ deployment บนสุด กด **⋯** → **Redeploy**
+(Environment Variables จะมีผลกับ deployment ใหม่เท่านั้น)
+
+เช็คว่าใช้ได้:
+- เปิด `https://meow-agent.vercel.app/api/quota` ต้องเห็น `"gemini": true` และ `"shared": true` (ถ้าใส่ Supabase แล้ว)
+- ลองสแกน 1 หน้า ตัวเลขในแถบ “แมวเลีย” ต้องลดลง 1
+- ลองล็อกอินด้วยรหัสเดียวกันในอีกเครื่อง ต้องเห็นเอกสารเดียวกัน
+
+---
+
+## สำหรับ Dev: รันในเครื่อง
 
 ```bash
 npm install
-npm run dev          # http://localhost:5173 (copies the offline OCR files first)
+npm run dev
 ```
 
-`npm run dev` serves only the frontend. With no `/api`, scans fall back to on-device OCR.
-To run the serverless functions locally too, use `vercel dev` (needs the Vercel CLI and a `.env` file, see `.env.example`).
+เปิด <http://localhost:5173> (คำสั่งจะคัดลอกไฟล์ OCR ออฟไลน์ให้อัตโนมัติ)
 
-Main packages (already in `package.json`):
+`npm run dev` รันแค่หน้าเว็บ ถ้าไม่มี `/api` การสแกนจะใช้โหมดออฟไลน์ ถ้าอยากรันฟังก์ชันหลังบ้านด้วย ใช้ `vercel dev` (ต้องติดตั้ง Vercel CLI และสร้างไฟล์ `.env` ตามตัวอย่างใน `.env.example`)
 
-| Package | Used for |
-|---|---|
-| `@tiptap/*` | Review editor (headings, bold/italic, tables with merged cells, lists) |
-| `docx`, `exceljs`, `file-saver` | Word / Excel export |
-| `tesseract.js` + `@tesseract.js-data/eng,tha` | Offline fallback OCR (self-hosted, no CDN) |
-
-## 2. Gemini API key (required for AI scanning)
-
-1. Get a free key: <https://aistudio.google.com/app/apikey>
-2. Vercel → your project → **Settings → Environment Variables** → add:
-   - `GEMINI_API_KEY` = your key (Production + Preview)
-3. **Redeploy** (Deployments → ⋯ → Redeploy). Environment variables only apply to new deployments.
-
-The key is read only by `api/ocr.js` on the server. It is never sent to the browser.
-
-Optional variables:
-
-| Name | Default | Meaning |
-|---|---|---|
-| `GEMINI_MODEL` | `gemini-3.1-flash-lite-preview` | Main model |
-| `GEMINI_FALLBACK_MODELS` | `gemini-3-flash-preview,gemini-2.5-flash` | Tried in order on 429/503 |
-| `GEMINI_DETAILED_MODEL` | `gemini-3-flash-preview` | For “สแกนหน้านี้ใหม่แบบละเอียด” |
-| `DAILY_LIMIT` | `500` | Number shown in the “แมวเลีย” bar (team-wide per day) |
-
-Gemini free-tier limits differ per model and change over time. Check the real numbers for your project in AI Studio → Rate limits.
-Daily quotas reset at midnight Pacific time (about 14:00–15:00 in Thailand). The app reloads itself at that moment.
-
-## 3. Supabase (same password = same history on every device, team templates, team quota)
-
-1. Supabase Dashboard → **SQL Editor** → **New query** → paste all of `supabase/schema.sql` → **Run**.
-   This creates the tables `meow_usage`, `meow_vaults`, `meow_vault_documents` and `templates`, plus the private storage bucket `meow-pages`.
-2. **Project Settings → API**. Copy two values into Vercel → Settings → Environment Variables:
-
-| Vercel variable | Supabase value |
-|---|---|
-| `SUPABASE_URL` | Project URL (`https://xxxx.supabase.co`) |
-| `SUPABASE_SERVICE_ROLE_KEY` | `service_role` / secret key, **never with a `VITE_` prefix and never in chat** |
-| `VAULT_SECRET` (optional) | any long random text, e.g. from a password generator |
-
-3. Redeploy.
-
-How it works:
-- The browser never talks to Supabase directly. Only the Vercel functions do, with the service key.
-- The password itself is never stored. The server keeps an HMAC of it, and every device that logs in with the **same password** opens the same 7-day history.
-- The recovery code also works across devices. After a reset, the other devices are told to use the new password.
-- `/api/ocr` only accepts people logged in with an existing password (or a personal BYOK key), so outsiders can't use the team quota.
-- Templates saved by anyone are shared with the whole team.
-- Without Supabase, everything still works on each device on its own, and templates are kept in that browser.
-
-> ⚠️ Anyone who knows (or guesses) a password can open that history. Ask the team to use long passwords
-> (e.g. a short Thai phrase plus numbers), not 1234 or birthdays.
-
-## 4. Web3Forms (the “ข้าต้องการสิ่งนี้เพิ่ม” button)
-
-1. Go to <https://web3forms.com>, enter **aimisplayinggg@gmail.com** under “Create your Access Key” and submit.
-2. Open that inbox and copy the **Access Key** from Web3Forms' email. The key is tied to that address, so every request lands there.
-3. Vercel → Environment Variables → add `VITE_WEB3FORMS_KEY` = the key → **Redeploy**.
-   (This key is meant to be public, so `VITE_` is fine. `NEXT_PUBLIC_WEB3FORMS_KEY` also works.)
-
-The form posts in the background (no mail app opens) and shows “แมวรับเรื่องไว้แล้ว เดี๋ยวไปสะกิด Dev ให้นะ!”.
-
-## 5. Files
+### โครงสร้างไฟล์สำคัญ
 
 ```
-api/ocr.js            Gemini OCR → structured JSON (retry, model fallback, 60 s budget)
-api/quota.js          Today's team usage
-api/vault.js          Password-based history sync (Supabase, server-side)
-api/templates.js      Shared form templates
-api/_lib/*            Config, Gemini schema & prompt, Supabase REST helpers
-vercel.json           maxDuration 60 for api/ocr.js, SPA rewrites
-supabase/schema.sql   Tables, RPC, RLS, storage bucket
-public/guide.html     Illustrated user guide
-src/services/         ocrClient (queue + fallback), localOcr (Tesseract), vault (sync)
-src/pages/ReviewPage  Split-screen review/editor, re-scan, page ordering
-src/pages/ExportPage  Fonts TH/EN, DOCX, XLSX, Export as Slide
+api/ocr.js            ส่งรูปให้ Gemini → ได้ JSON โครงสร้างเอกสาร (retry, สลับโมเดล, จำกัด 60 วินาที)
+api/quota.js          โควตาที่ใช้ไปวันนี้ของทั้งทีม
+api/vault.js          ซิงก์ประวัติด้วยรหัสผ่าน (คุยกับ Supabase ฝั่งเซิร์ฟเวอร์เท่านั้น)
+api/templates.js      คลัง Template ของทีม
+api/_lib/*            ค่าตั้งค่า, prompt/schema ของ Gemini, ตัวช่วยเรียก Supabase
+vercel.json           ตั้ง maxDuration 60 วินาทีให้ api/ocr.js และ rewrite หน้าเว็บ
+supabase/schema.sql   ตารางและที่เก็บรูปบน Supabase
+public/guide.html     คู่มือผู้ใช้ (ไทย/อังกฤษ)
+src/i18n.jsx          คำแปลหน้าเว็บ ไทย ↔ อังกฤษ
+src/services/         ocrClient (คิวสแกน + โหมดออฟไลน์), localOcr (Tesseract), vault (ซิงก์)
+src/pages/            หน้าต่าง ๆ: สแกน, ตรวจทาน, ส่งออก, ประวัติ, รหัสผ่าน
 ```

@@ -1,3 +1,4 @@
+import { t } from '../i18n';
 import { useEffect, useRef, useState } from 'react';
 import { compressToDataURL } from '../utils/image';
 
@@ -25,16 +26,16 @@ export default function CameraCapture({ onDone, onClose, onNativeCamera, already
           video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 } },
           audio: false,
         });
-        if (cancelled) return stream.getTracks().forEach((t) => t.stop());
+        if (cancelled) return stream.getTracks().forEach((track) => track.stop());
         streamRef.current = stream;
         if (videoRef.current) videoRef.current.srcObject = stream;
       } catch {
-        setError('เปิดกล้องสดไม่ได้ — อนุญาตการใช้กล้องในการตั้งค่า หรือใช้กล้องของเครื่องแทน');
+        setError(t('เปิดกล้องสดไม่ได้ — อนุญาตการใช้กล้องในการตั้งค่า หรือใช้กล้องของเครื่องแทน'));
       }
     })();
     return () => {
       cancelled = true;
-      streamRef.current?.getTracks().forEach((t) => t.stop());
+      streamRef.current?.getTracks().forEach((track) => track.stop());
     };
   }, []);
 
@@ -55,9 +56,9 @@ export default function CameraCapture({ onDone, onClose, onNativeCamera, already
     canvas.toBlob(async (blob) => {
       try {
         const dataURL = await compressToDataURL(blob);
-        setTray((t) => [...t, { id: `shot-${Date.now()}-${nextId++}`, dataURL }]);
+        setTray((list) => [...list, { id: `shot-${Date.now()}-${nextId++}`, dataURL }]);
       } catch {
-        setError('บันทึกรูปไม่สำเร็จ ลองอีกครั้ง');
+        setError(t('บันทึกรูปไม่สำเร็จ ลองอีกครั้ง'));
       } finally {
         setSaving((n) => n - 1);
       }
@@ -65,21 +66,21 @@ export default function CameraCapture({ onDone, onClose, onNativeCamera, already
   };
 
   const remove = (id) => {
-    setTray((t) => t.filter((x) => x.id !== id));
+    setTray((list) => list.filter((x) => x.id !== id));
     setPreview(null);
   };
 
   const close = () => {
-    if (tray.length && !window.confirm(`ทิ้งรูปที่ถ่ายไว้ ${tray.length} รูป?`)) return;
+    if (tray.length && !window.confirm(t('ทิ้งรูปที่ถ่ายไว้ {n} รูป?', { n: tray.length }))) return;
     onClose();
   };
 
-  const finish = () => onDone(tray.map((t) => t.dataURL));
+  const finish = () => onDone(tray.map((shot) => shot.dataURL));
 
   return (
     <div className="fixed inset-0 z-50 bg-black text-white flex flex-col font-mono">
       <div className="flex items-center justify-between px-4 pt-[max(0.5rem,env(safe-area-inset-top))] min-h-14 shrink-0">
-        <button onClick={close} className="font-menu min-h-[44px] px-2 text-sm">‹ ยกเลิก</button>
+        <button onClick={close} className="font-menu min-h-[44px] px-2 text-sm">{t("‹ ยกเลิก")}</button>
         <span className="font-pixel text-xs uppercase tracking-wider">
           {tray.length} shot{tray.length === 1 ? '' : 's'}{alreadyQueued ? ` · +${alreadyQueued} in queue` : ''}
         </span>
@@ -99,33 +100,33 @@ export default function CameraCapture({ onDone, onClose, onNativeCamera, already
         <div className="viewfinder absolute inset-[6%] text-[#e2782a] pointer-events-none">
           <i /><i /><i /><i />
         </div>
-        {!ready && !error && <p className="absolute inset-0 grid place-items-center text-sm text-white/60">กำลังเปิดกล้อง...</p>}
+        {!ready && !error && <p className="absolute inset-0 grid place-items-center text-sm text-white/60">{t("กำลังเปิดกล้อง...")}</p>}
         {error && (
           <div className="absolute inset-0 grid place-items-center text-center p-8">
             <div>
               <p className="text-sm text-white/80 mb-4">{error}</p>
               {onNativeCamera && (
                 <button onClick={onNativeCamera} className="font-menu min-h-[48px] px-5 bg-white text-black rounded-[3px] text-sm">
-                  ใช้กล้องของเครื่องแทน
+                  {t("ใช้กล้องของเครื่องแทน")}
                 </button>
               )}
             </div>
           </div>
         )}
         {flash > 0 && <div key={flash} className="flash absolute inset-0 pointer-events-none" />}
-        <p className="absolute bottom-3 inset-x-0 text-center text-xs text-white/60">กดถ่ายรัวได้เลย ไม่ต้องยืนยันทีละรูป</p>
+        <p className="absolute bottom-3 inset-x-0 text-center text-xs text-white/60">{t("กดถ่ายรัวได้เลย ไม่ต้องยืนยันทีละรูป")}</p>
       </div>
 
       {/* Thumbnail tray */}
-      <div ref={trayRef} className="h-20 shrink-0 mx-3 mt-2 flex items-center gap-2 overflow-x-auto" aria-label="ถาดรูปที่ถ่ายแล้ว">
-        {tray.length === 0 && saving === 0 && <p className="text-xs text-white/40 mx-auto">รูปที่ถ่ายจะมาอยู่ตรงนี้</p>}
-        {tray.map((t, i) => (
-          <div key={t.id} className="relative shrink-0 w-14 h-[72px] rise">
-            <button onClick={() => setPreview(t)} className="w-full h-full rounded-[3px] overflow-hidden border border-white/30" aria-label={`ดูรูปที่ ${i + 1}`}>
-              <img src={t.dataURL} alt="" className="w-full h-full object-cover" />
+      <div ref={trayRef} className="h-20 shrink-0 mx-3 mt-2 flex items-center gap-2 overflow-x-auto" aria-label={t("ถาดรูปที่ถ่ายแล้ว")}>
+        {tray.length === 0 && saving === 0 && <p className="text-xs text-white/40 mx-auto">{t("รูปที่ถ่ายจะมาอยู่ตรงนี้")}</p>}
+        {tray.map((shot, i) => (
+          <div key={shot.id} className="relative shrink-0 w-14 h-[72px] rise">
+            <button onClick={() => setPreview(shot)} className="w-full h-full rounded-[3px] overflow-hidden border border-white/30" aria-label={t('ดูรูปที่ {n}', { n: i + 1 })}>
+              <img src={shot.dataURL} alt="" className="w-full h-full object-cover" />
             </button>
             <span className="absolute bottom-0.5 left-0.5 bg-black/70 text-[10px] px-1 font-pixel">{i + 1}</span>
-            <button onClick={() => remove(t.id)} aria-label={`ลบรูปที่ ${i + 1}`} className="absolute -top-1.5 -right-1.5 w-6 h-6 rounded-full bg-white text-black text-xs grid place-items-center">✕</button>
+            <button onClick={() => remove(shot.id)} aria-label={t('ลบรูปที่ {n}', { n: i + 1 })} className="absolute -top-1.5 -right-1.5 w-6 h-6 rounded-full bg-white text-black text-xs grid place-items-center">✕</button>
           </div>
         ))}
         {saving > 0 && <div className="shrink-0 w-14 h-[72px] rounded-[3px] border border-dashed border-white/40 grid place-items-center text-xs text-white/50">...</div>}
@@ -136,7 +137,7 @@ export default function CameraCapture({ onDone, onClose, onNativeCamera, already
         <button
           onClick={shoot}
           disabled={!ready}
-          aria-label="ถ่ายรูป"
+          aria-label={t("ถ่ายรูป")}
           className="w-[72px] h-[72px] rounded-full border-4 border-white grid place-items-center disabled:opacity-40 active:scale-90 transition"
         >
           <span className="w-14 h-14 rounded-full bg-white" />
@@ -147,7 +148,7 @@ export default function CameraCapture({ onDone, onClose, onNativeCamera, already
           disabled={!tray.length || saving > 0}
           className="col-span-3 font-menu font-medium min-h-[52px] rounded-[3px] bg-[#e2782a] text-white disabled:opacity-30 transition active:scale-[0.98]"
         >
-          ให้แมวอ่านทั้งหมดทีเดียว{tray.length ? ` (${tray.length})` : ''}
+          {t('ให้แมวอ่านทั้งหมดทีเดียว')}{tray.length ? ` (${tray.length})` : ''}
         </button>
       </div>
 
@@ -157,8 +158,8 @@ export default function CameraCapture({ onDone, onClose, onNativeCamera, already
             <img src={preview.dataURL} alt="" className="max-w-full max-h-full object-contain" />
           </div>
           <div className="grid grid-cols-2 gap-3 p-4 pb-[max(1rem,env(safe-area-inset-bottom))]" onClick={(e) => e.stopPropagation()}>
-            <button onClick={() => setPreview(null)} className="font-menu min-h-[52px] rounded-[3px] border border-white/40">ใช้รูปนี้</button>
-            <button onClick={() => remove(preview.id)} className="font-menu min-h-[52px] rounded-[3px] bg-red-600">ลบรูปนี้ (เบลอ)</button>
+            <button onClick={() => setPreview(null)} className="font-menu min-h-[52px] rounded-[3px] border border-white/40">{t("ใช้รูปนี้")}</button>
+            <button onClick={() => remove(preview.id)} className="font-menu min-h-[52px] rounded-[3px] bg-red-600">{t("ลบรูปนี้ (เบลอ)")}</button>
           </div>
         </div>
       )}

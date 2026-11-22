@@ -1,10 +1,10 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useDocumentStore } from '../store/documentStore';
 import CapturePage from './CapturePage';
 import ReviewPage from './ReviewPage';
 import ExportPage from './ExportPage';
 import CreateSlidesModal from '../components/CreateSlidesModal';
-import { AppHeader, StepBar } from '../components/ui';
+import { AppHeader, PageTransition, StepBar } from '../components/ui';
 import FeatureRequest from '../components/FeatureRequest';
 
 export default function DocumentWorkflow({ onExit, initialDocId = null }) {
@@ -13,6 +13,10 @@ export default function DocumentWorkflow({ onExit, initialDocId = null }) {
   const [showSlides, setShowSlides] = useState(false);
   const { documents, createDocument } = useDocumentStore();
   const document = documents.find((d) => d.id === docId);
+  const ORDER = ['capture', 'review', 'export'];
+  const prevStep = useRef(step);
+  const dir = ORDER.indexOf(step) >= ORDER.indexOf(prevStep.current) ? 'next' : 'prev';
+  prevStep.current = step;
 
   const back = () => {
     if (step === 'export') setStep('review');
@@ -37,6 +41,7 @@ export default function DocumentWorkflow({ onExit, initialDocId = null }) {
         <StepBar step={step} />
       </AppHeader>
 
+      <PageTransition k={step} dir={dir}>
       {step === 'capture' && (
         <CapturePage
           onCapture={(pages, title) => {
@@ -52,6 +57,7 @@ export default function DocumentWorkflow({ onExit, initialDocId = null }) {
       )}
 
       {step === 'export' && document && <ExportPage document={document} onDone={onExit} embedded />}
+      </PageTransition>
 
       {showSlides && document && <CreateSlidesModal document={document} onClose={() => setShowSlides(false)} />}
     </div>

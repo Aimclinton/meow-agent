@@ -4,7 +4,8 @@ import {
 } from 'docx';
 import { saveAs } from 'file-saver';
 import { pageContents } from '../utils/docContent';
-import { fontSizeFor } from '../utils/fonts';
+import { docFont, docFontSize } from '../utils/fonts';
+import { t } from '../i18n';
 
 
 function dataURLToBytes(dataURL) {
@@ -129,11 +130,10 @@ export function useDocxExport() {
         references: doc.references || [],
         pageNumbers: doc.pageNumbers !== false,
       };
-      const th = doc.fonts?.th || 'Sarabun';
-      const en = doc.fonts?.en || 'Google Sans';
-      // Latin text uses ascii/hAnsi, Thai uses the complex-script (cs) font.
-      const FONT = { ascii: en, hAnsi: en, cs: th, eastAsia: th };
-      const SIZE = fontSizeFor(th) * 2;
+      const name = docFont(doc);
+      // One font for everything: Latin (ascii/hAnsi) and Thai (complex script).
+      const FONT = { ascii: name, hAnsi: name, cs: name, eastAsia: name };
+      const SIZE = docFontSize(doc) * 2;
 
       const children = [];
       pageContents(doc).forEach((content, i) => {
@@ -143,7 +143,7 @@ export function useDocxExport() {
 
       const refs = (rich.references || []).filter((r) => r.trim());
       if (refs.length) {
-        children.push(new Paragraph({ heading: HeadingLevel.HEADING_2, children: [new TextRun('เอกสารอ้างอิง')] }));
+        children.push(new Paragraph({ heading: HeadingLevel.HEADING_2, children: [new TextRun(t('เอกสารอ้างอิง'))] }));
         refs.forEach((r, i) => children.push(new Paragraph({
           indent: { left: 720, hanging: 720 },
           children: [new TextRun(`[${i + 1}]\t${r}`)],
@@ -157,7 +157,7 @@ export function useDocxExport() {
           const { w, h } = await imageSize(page.imageData);
           const width = 450;
           children.push(new Paragraph({ children: [new PageBreak()] }));
-          children.push(new Paragraph({ heading: HeadingLevel.HEADING_3, children: [new TextRun(`ภาพต้นฉบับ หน้า ${i + 1}`)] }));
+          children.push(new Paragraph({ heading: HeadingLevel.HEADING_3, children: [new TextRun(t('ภาพต้นฉบับ หน้า {n}', { n: i + 1 }))] }));
           children.push(new Paragraph({
             alignment: AlignmentType.CENTER,
             children: [new ImageRun({
@@ -177,7 +177,7 @@ export function useDocxExport() {
       if (rich.footer?.trim()) footerRuns.push(new TextRun({ text: rich.footer, color: '777777', size: Math.round(SIZE * 0.75), sizeComplexScript: Math.round(SIZE * 0.75) }));
       if (rich.pageNumbers !== false) {
         if (footerRuns.length) footerRuns.push(new TextRun({ text: '    ', size: 24 }));
-        footerRuns.push(new TextRun({ children: ['หน้า ', PageNumber.CURRENT, ' / ', PageNumber.TOTAL_PAGES], color: '777777', size: Math.round(SIZE * 0.75), sizeComplexScript: Math.round(SIZE * 0.75) }));
+        footerRuns.push(new TextRun({ children: [`${t('หน้า')} `, PageNumber.CURRENT, ' / ', PageNumber.TOTAL_PAGES], color: '777777', size: Math.round(SIZE * 0.75), sizeComplexScript: Math.round(SIZE * 0.75) }));
       }
       const footers = footerRuns.length
         ? { default: new Footer({ children: [new Paragraph({ alignment: AlignmentType.CENTER, children: footerRuns })] }) }

@@ -1,3 +1,4 @@
+import { t } from '../i18n';
 import { useState } from 'react';
 import { useDocumentStore, generateRecoveryCode } from '../store/documentStore';
 import { openVault } from '../services/vault';
@@ -14,8 +15,8 @@ export default function PasswordSetup() {
 
   const submit = async (e) => {
     e.preventDefault();
-    if (password.length < 4) return setError('รหัสผ่านต้องมีอย่างน้อย 4 ตัวอักษร');
-    if (password !== confirm) return setError('รหัสผ่านสองช่องไม่ตรงกัน');
+    if (password.length < 4) return setError(t('รหัสผ่านต้องมีอย่างน้อย 4 ตัวอักษร'));
+    if (password !== confirm) return setError(t('รหัสผ่านสองช่องไม่ตรงกัน'));
     setBusy(true);
     try {
       // Same password used on another device? Join that history instead.
@@ -30,7 +31,7 @@ export default function PasswordSetup() {
       if (existing.enabled) await openVault(password, { create: true, recoveryCode: newCode });
       setCode(await setPassword(password, newCode));
     } catch {
-      setError('บันทึกรหัสผ่านไม่สำเร็จ ลองใหม่อีกครั้ง');
+      setError(t('บันทึกรหัสผ่านไม่สำเร็จ ลองใหม่อีกครั้ง'));
     } finally {
       setBusy(false);
     }
@@ -49,8 +50,8 @@ export default function PasswordSetup() {
       <form onSubmit={submit} className="space-y-5">
         <div>
           <p className="text-xs uppercase tracking-wider text-ink/50 mb-2">First time</p>
-          <h1 className="font-pixel text-3xl uppercase leading-tight">ตั้งรหัสผ่าน</h1>
-          <p className="text-sm text-ink/60 mt-2">ใช้ล็อกเอกสารและประวัติ 7 วัน ใส่รหัสเดียวกันในเครื่องอื่นแล้วประวัติจะตามไปด้วย (แมวจะไม่แอบดู)</p>
+          <h1 className="font-pixel text-3xl uppercase leading-tight">{t("ตั้งรหัสผ่าน")}</h1>
+          <p className="text-sm text-ink/60 mt-2">{t("ใช้ล็อกเอกสารและประวัติ 7 วัน ใส่รหัสเดียวกันในเครื่องอื่นแล้วประวัติจะตามไปด้วย (แมวจะไม่แอบดู)")}</p>
         </div>
         <Field
           label="Password"
@@ -60,7 +61,7 @@ export default function PasswordSetup() {
           onFocus={() => setTyping(true)}
           onBlur={() => setTyping(false)}
           onChange={(e) => { setPasswordInput(e.target.value); setError(''); }}
-          placeholder="อย่างน้อย 4 ตัว"
+          placeholder={t("อย่างน้อย 4 ตัว")}
         />
         <Field
           label="Confirm"
@@ -70,11 +71,11 @@ export default function PasswordSetup() {
           onFocus={() => setTyping(true)}
           onBlur={() => setTyping(false)}
           onChange={(e) => { setConfirm(e.target.value); setError(''); }}
-          placeholder="พิมพ์อีกครั้ง"
+          placeholder={t("พิมพ์อีกครั้ง")}
         />
         <ErrorNote>{error}</ErrorNote>
         <button disabled={busy} className="font-menu font-medium w-full min-h-[52px] bg-ink text-paper rounded-[3px] hover:bg-neutral-700 disabled:opacity-50 transition">
-          {busy ? 'กำลังบันทึก...' : 'ตั้งรหัสผ่าน'}
+          {busy ? t('กำลังบันทึก...') : t('ตั้งรหัสผ่าน')}
         </button>
       </form>
     </AuthShell>

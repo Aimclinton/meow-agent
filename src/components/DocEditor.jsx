@@ -1,3 +1,4 @@
+import { t } from '../i18n';
 import { useRef } from 'react';
 import { useEditor, useEditorState, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -59,49 +60,49 @@ function Toolbar({ editor, onCite }) {
         <Tool label="Undo" on={() => c().undo().run()} disabled={!s.undo}>↶</Tool>
         <Tool label="Redo" on={() => c().redo().run()} disabled={!s.redo}>↷</Tool>
         <Sep />
-        <Tool label="หัวข้อใหญ่" active={s.h1} on={() => c().toggleHeading({ level: 1 }).run()}><b>H1</b></Tool>
-        <Tool label="หัวข้อ" active={s.h2} on={() => c().toggleHeading({ level: 2 }).run()}><b>H2</b></Tool>
-        <Tool label="หัวข้อย่อย" active={s.h3} on={() => c().toggleHeading({ level: 3 }).run()}><b>H3</b></Tool>
+        <Tool label={t("หัวข้อใหญ่")} active={s.h1} on={() => c().toggleHeading({ level: 1 }).run()}><b>H1</b></Tool>
+        <Tool label={t("หัวข้อ")} active={s.h2} on={() => c().toggleHeading({ level: 2 }).run()}><b>H2</b></Tool>
+        <Tool label={t("หัวข้อย่อย")} active={s.h3} on={() => c().toggleHeading({ level: 3 }).run()}><b>H3</b></Tool>
         <Sep />
-        <Tool label="ตัวหนา" active={s.bold} on={() => c().toggleBold().run()}><b>B</b></Tool>
-        <Tool label="ตัวเอียง" active={s.italic} on={() => c().toggleItalic().run()}><i className="font-serif">I</i></Tool>
-        <Tool label="ขีดเส้นใต้" active={s.underline} on={() => c().toggleUnderline().run()}><u>U</u></Tool>
-        <Tool label="ขีดฆ่า" active={s.strike} on={() => c().toggleStrike().run()}><s>S</s></Tool>
+        <Tool label={t("ตัวหนา")} active={s.bold} on={() => c().toggleBold().run()}><b>B</b></Tool>
+        <Tool label={t("ตัวเอียง")} active={s.italic} on={() => c().toggleItalic().run()}><i className="font-serif">I</i></Tool>
+        <Tool label={t("ขีดเส้นใต้")} active={s.underline} on={() => c().toggleUnderline().run()}><u>U</u></Tool>
+        <Tool label={t("ขีดฆ่า")} active={s.strike} on={() => c().toggleStrike().run()}><s>S</s></Tool>
         <Sep />
-        <Tool label="ชิดซ้าย" active={s.left} on={() => c().setTextAlign('left').run()}>⇤</Tool>
-        <Tool label="กึ่งกลาง" active={s.center} on={() => c().setTextAlign('center').run()}>↔</Tool>
-        <Tool label="ชิดขวา" active={s.right} on={() => c().setTextAlign('right').run()}>⇥</Tool>
+        <Tool label={t("ชิดซ้าย")} active={s.left} on={() => c().setTextAlign('left').run()}>⇤</Tool>
+        <Tool label={t("กึ่งกลาง")} active={s.center} on={() => c().setTextAlign('center').run()}>↔</Tool>
+        <Tool label={t("ชิดขวา")} active={s.right} on={() => c().setTextAlign('right').run()}>⇥</Tool>
         <Sep />
-        <Tool label="รายการจุด" active={s.bullet} on={() => c().toggleBulletList().run()}>•≡</Tool>
-        <Tool label="รายการตัวเลข" active={s.ordered} on={() => c().toggleOrderedList().run()}>1≡</Tool>
-        <Tool label="ข้อความอ้างคำพูด" active={s.quote} on={() => c().toggleBlockquote().run()}>❝</Tool>
-        <Tool label="เส้นคั่น" on={() => c().setHorizontalRule().run()}>—</Tool>
+        <Tool label={t("รายการจุด")} active={s.bullet} on={() => c().toggleBulletList().run()}>•≡</Tool>
+        <Tool label={t("รายการตัวเลข")} active={s.ordered} on={() => c().toggleOrderedList().run()}>1≡</Tool>
+        <Tool label={t("ข้อความอ้างคำพูด")} active={s.quote} on={() => c().toggleBlockquote().run()}>❝</Tool>
+        <Tool label={t("เส้นคั่น")} on={() => c().setHorizontalRule().run()}>—</Tool>
         <Sep />
-        <Tool wide label="แทรกตาราง" active={s.table} on={() => c().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}>⊞ ตาราง</Tool>
+        <Tool wide label={t("แทรกตาราง")} active={s.table} on={() => c().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}>{t("⊞ ตาราง")}</Tool>
         {s.table && (
           <>
-            <Tool wide label="เพิ่มแถว" on={() => c().addRowAfter().run()}>+แถว</Tool>
-            <Tool wide label="เพิ่มคอลัมน์" on={() => c().addColumnAfter().run()}>+คอลัมน์</Tool>
-            <Tool wide label="ลบแถว" on={() => c().deleteRow().run()}>−แถว</Tool>
-            <Tool wide label="ลบคอลัมน์" on={() => c().deleteColumn().run()}>−คอลัมน์</Tool>
-            <Tool wide label="ลบตาราง" on={() => c().deleteTable().run()}>✕ตาราง</Tool>
+            <Tool wide label={t("เพิ่มแถว")} on={() => c().addRowAfter().run()}>{t("+แถว")}</Tool>
+            <Tool wide label={t("เพิ่มคอลัมน์")} on={() => c().addColumnAfter().run()}>{t("+คอลัมน์")}</Tool>
+            <Tool wide label={t("ลบแถว")} on={() => c().deleteRow().run()}>{t("−แถว")}</Tool>
+            <Tool wide label={t("ลบคอลัมน์")} on={() => c().deleteColumn().run()}>{t("−คอลัมน์")}</Tool>
+            <Tool wide label={t("ลบตาราง")} on={() => c().deleteTable().run()}>{t("✕ตาราง")}</Tool>
           </>
         )}
         <Sep />
-        <Tool wide label="แทรกอ้างอิง" on={onCite}>[1] อ้างอิง</Tool>
+        <Tool wide label={t("แทรกอ้างอิง")} on={onCite}>{t("[1] อ้างอิง")}</Tool>
         {s.unclear.length > 0 && (
           <>
             <Sep />
             <Tool
               wide
-              label="ไปยังจุดที่ไม่ชัดเจนถัดไป"
+              label={t("ไปยังจุดที่ไม่ชัดเจนถัดไป")}
               on={() => {
                 const sel = editor.state.selection.to;
                 const next = s.unclear.find((h) => h.from >= sel) || s.unclear[0];
                 editor.chain().focus().setTextSelection(next).scrollIntoView().run();
               }}
             >
-              <span className="bg-yellow-300 text-ink px-1.5 rounded-[2px]">ไม่ชัดเจน {s.unclear.length}</span> ›
+              <span className="bg-yellow-300 text-ink px-1.5 rounded-[2px]">{t('ไม่ชัดเจน {n}', { n: s.unclear.length })}</span> ›
             </Tool>
           </>
         )}
@@ -128,7 +129,7 @@ export default function DocEditor({ value, onChange }) {
       TableKit.configure({ table: { resizable: false } }),
       TextAlign.configure({ types: ['heading', 'paragraph'] }),
       Superscript,
-      Placeholder.configure({ placeholder: 'เริ่มพิมพ์เอกสารที่นี่...' }),
+      Placeholder.configure({ placeholder: t('เริ่มพิมพ์เอกสารที่นี่...') }),
       UnclearHighlight,
     ],
     content: value.content,
@@ -157,7 +158,7 @@ export default function DocEditor({ value, onChange }) {
         <input
           value={value.header || ''}
           onChange={(e) => emit({ header: e.target.value })}
-          placeholder="หัวกระดาษ (Header) — เช่น ชื่อหน่วยงาน"
+          placeholder={t("หัวกระดาษ (Header) — เช่น ชื่อหน่วยงาน")}
           className={`${inputCls} mb-6`}
         />
 
@@ -165,7 +166,7 @@ export default function DocEditor({ value, onChange }) {
 
         {refs.length > 0 && (
           <div className="mt-10 pt-4 border-t border-ink/15">
-            <p className="font-bold text-sm mb-2">เอกสารอ้างอิง</p>
+            <p className="font-bold text-sm mb-2">{t("เอกสารอ้างอิง")}</p>
             <ol className="space-y-1">
               {refs.map((r, i) => (
                 <li key={i} className="flex items-center gap-2 text-sm">
@@ -174,13 +175,13 @@ export default function DocEditor({ value, onChange }) {
                     id={`ref-${i}`}
                     value={r}
                     onChange={(e) => emit({ references: refs.map((x, j) => (j === i ? e.target.value : x)) })}
-                    placeholder="ผู้แต่ง. (ปี). ชื่อเรื่อง. แหล่งที่มา"
+                    placeholder={t("ผู้แต่ง. (ปี). ชื่อเรื่อง. แหล่งที่มา")}
                     className="flex-1 min-w-0 bg-transparent outline-none border-b border-dashed border-ink/15 focus:border-ink/40 py-1"
                   />
                   <button
                     type="button"
                     onClick={() => emit({ references: refs.filter((_, j) => j !== i) })}
-                    aria-label="ลบอ้างอิง"
+                    aria-label={t("ลบอ้างอิง")}
                     className="w-9 h-9 grid place-items-center text-ink/40 hover:text-red-700"
                   >
                     ✕
@@ -195,7 +196,7 @@ export default function DocEditor({ value, onChange }) {
           <input
             value={value.footer || ''}
             onChange={(e) => emit({ footer: e.target.value })}
-            placeholder="ท้ายกระดาษ (Footer)"
+            placeholder={t("ท้ายกระดาษ (Footer)")}
             className={inputCls}
           />
           <label className="flex items-center gap-2 text-xs text-ink/60 whitespace-nowrap cursor-pointer min-h-[44px]">
@@ -205,7 +206,7 @@ export default function DocEditor({ value, onChange }) {
               onChange={(e) => emit({ pageNumbers: e.target.checked })}
               className="w-4 h-4 accent-[#111]"
             />
-            เลขหน้า
+            {t("เลขหน้า")}
           </label>
         </div>
       </div>

@@ -1,10 +1,11 @@
+import { t } from '../i18n';
 import { useEffect, useRef, useState } from 'react';
 import { useDocumentStore } from '../store/documentStore';
 import { useQuota } from '../store/quotaStore';
 import DocEditor from '../components/DocEditor';
 import ZoomImage from '../components/ZoomImage';
 import CalicoCat from '../components/CalicoCat';
-import { Button, Card, PageTitle, PixelProgress } from '../components/ui';
+import { Button, Card, HowTo, PageTitle, PageTransition, PixelProgress } from '../components/ui';
 import { ocrPagesToDoc } from '../utils/ocrToDoc';
 import { scanPage } from '../services/ocrClient';
 import { meow } from '../utils/sound';
@@ -32,13 +33,13 @@ function PageOrder({ pages, onMove, onDelete, onOpen }) {
             <img src={p.imageData} alt="" className="w-full h-full object-cover object-top" />
           </button>
           <button onClick={() => onOpen(i)} className="flex-1 min-w-0 text-left">
-            <span className="font-pixel text-sm">หน้า {String(i + 1).padStart(2, '0')}</span>
-            <span className="block text-xs text-ink/50 truncate">{(p.ocrText || '').slice(0, 80) || '(ไม่พบข้อความ)'}</span>
+            <span className="font-pixel text-sm">{t('หน้า {n}', { n: String(i + 1).padStart(2, '0') })}</span>
+            <span className="block text-xs text-ink/50 truncate">{(p.ocrText || '').slice(0, 80) || t('(ไม่พบข้อความ)')}</span>
           </button>
           <div className="flex shrink-0">
-            <button disabled={i === 0} onClick={() => onMove(i, i - 1)} aria-label="เลื่อนขึ้น" className="w-10 h-10 hover:bg-ink/5 disabled:opacity-25">↑</button>
-            <button disabled={i === pages.length - 1} onClick={() => onMove(i, i + 1)} aria-label="เลื่อนลง" className="w-10 h-10 hover:bg-ink/5 disabled:opacity-25">↓</button>
-            <button onClick={() => onDelete(i)} aria-label="ลบหน้า" className="w-10 h-10 text-red-700 hover:bg-red-50">✕</button>
+            <button disabled={i === 0} onClick={() => onMove(i, i - 1)} aria-label={t("เลื่อนขึ้น")} className="w-10 h-10 hover:bg-ink/5 disabled:opacity-25">↑</button>
+            <button disabled={i === pages.length - 1} onClick={() => onMove(i, i + 1)} aria-label={t("เลื่อนลง")} className="w-10 h-10 hover:bg-ink/5 disabled:opacity-25">↓</button>
+            <button onClick={() => onDelete(i)} aria-label={t("ลบหน้า")} className="w-10 h-10 text-red-700 hover:bg-red-50">✕</button>
           </div>
         </li>
       ))}
@@ -61,6 +62,9 @@ export default function ReviewPage({ document, onExport }) {
   const pending = useRef({ pages: {}, meta: {} });
   const pages = document.pages;
   const page = pages[Math.min(index, pages.length - 1)];
+  const prevIndex = useRef(index);
+  const pageDir = index >= prevIndex.current ? 'next' : 'prev';
+  prevIndex.current = index;
 
   // Write queued edits to the store (and IndexedDB).
   const flush = () => {
@@ -80,7 +84,7 @@ export default function ReviewPage({ document, onExport }) {
   };
 
   if (!page) {
-    return <p className="text-center text-sm text-ink/60 py-20">ไม่มีหน้าแล้ว — กลับไปสแกนเพิ่มได้</p>;
+    return <p className="text-center text-sm text-ink/60 py-20">{t("ไม่มีหน้าแล้ว — กลับไปสแกนเพิ่มได้")}</p>;
   }
 
   const value = {
@@ -100,7 +104,7 @@ export default function ReviewPage({ document, onExport }) {
   };
 
   const rescanDetailed = async () => {
-    if (!window.confirm('สแกนหน้านี้ใหม่แบบละเอียด? ข้อความที่แก้ในหน้านี้จะถูกแทนที่')) return;
+    if (!window.confirm(t('สแกนหน้านี้ใหม่แบบละเอียด? ข้อความที่แก้ในหน้านี้จะถูกแทนที่'))) return;
     flush();
     delete pending.current.pages[page.id];
     setRescan({ progress: 10 });
@@ -123,25 +127,36 @@ export default function ReviewPage({ document, onExport }) {
       if (Object.keys(meta).length) updateMeta(document.id, meta);
       setEditorKey((k) => k + 1);
       meow();
-      if (res.engine === 'tesseract') setRescanError('ตอนนี้ใช้ AI ไม่ได้ เลยสแกนแบบออฟไลน์ให้แทน');
+      if (res.engine === 'tesseract') setRescanError(t('ตอนนี้ใช้ AI ไม่ได้ เลยสแกนแบบออฟไลน์ให้แทน'));
     } catch (err) {
-      setRescanError(err.message || 'สแกนใหม่ไม่สำเร็จ');
+      setRescanError(err.message || t('สแกนใหม่ไม่สำเร็จ'));
     } finally {
       setRescan(null);
     }
   };
 
   const tabs = [
-    ['edit', 'แก้ไข'],
-    ['order', `จัดเรียงหน้า (${pages.length})`],
+    ['edit', t('แก้ไข')],
+    ['order', t('จัดเรียงหน้า ({n})', { n: pages.length })],
   ];
 
   return (
     <div className="safe-x pb-32">
       <div className="max-w-7xl mx-auto pt-8">
         <PageTitle kicker="Step 02" title="Review">
-          เทียบกับต้นฉบับแล้วแก้ได้ทุกจุด — หัวข้อ ย่อหน้า ตาราง หัว/ท้ายกระดาษ และอ้างอิง จุดสีเหลืองคือที่แมวอ่านไม่ชัด
+          {t("เทียบกับต้นฉบับแล้วแก้ได้ทุกจุด — หัวข้อ ย่อหน้า ตาราง หัว/ท้ายกระดาษ และอ้างอิง จุดสีเหลืองคือที่แมวอ่านไม่ชัด")}
         </PageTitle>
+
+        <HowTo
+          id="review"
+          items={[
+            ['‹ ›', 'กดลูกศร ‹ › หรือเลือกจากเมนู “หน้า 1 / 3” เพื่อเปลี่ยนหน้า'],
+            ['🔍', 'รูปต้นฉบับ: จีบนิ้วหรือกด + − เพื่อซูม ดับเบิลแตะเพื่อซูมเร็ว'],
+            ['✎', 'แตะข้อความเพื่อแก้ แถบเครื่องมือด้านบนปัดซ้าย-ขวาเพื่อดูปุ่มเพิ่ม (ตัวหนา ตาราง อ้างอิง)'],
+            ['🟨', 'คำสีเหลือง [ไม่ชัดเจน] คือจุดที่แมวอ่านไม่ออก แก้ให้ถูกก่อนส่งออก'],
+            ['↑ ↓', 'แท็บ “จัดเรียงหน้า” ลากวาง หรือกดลูกศรเพื่อสลับหน้า'],
+          ]}
+        />
 
         <label className="block max-w-md mb-6">
           <span className="block text-xs uppercase tracking-wider text-ink/60 mb-2">Document title</span>
@@ -166,12 +181,12 @@ export default function ReviewPage({ document, onExport }) {
 
         {tab === 'order' && (
           <div className="max-w-2xl">
-            <p className="text-xs text-ink/50 mb-3">ลากวาง หรือกด ↑ ↓ เพื่อเรียงลำดับหน้าก่อนส่งออก</p>
+            <p className="text-xs text-ink/50 mb-3">{t("ลากวาง หรือกด ↑ ↓ เพื่อเรียงลำดับหน้าก่อนส่งออก")}</p>
             <PageOrder
               pages={pages}
               onMove={(a, b) => { flush(); reorderPages(document.id, a, b); setIndex(b); }}
               onDelete={(i) => {
-                if (!window.confirm(`ลบหน้า ${i + 1}?`)) return;
+                if (!window.confirm(t('ลบหน้า {n}?', { n: i + 1 }))) return;
                 flush();
                 deletePage(document.id, i);
                 setIndex(0);
@@ -186,31 +201,31 @@ export default function ReviewPage({ document, onExport }) {
             {/* Page switcher */}
             <div className="flex flex-wrap items-center gap-2 mb-4">
               <div className="flex items-center border border-ink/20 rounded-[3px] font-menu">
-                <button disabled={index === 0} onClick={() => { flush(); setIndex(index - 1); }} className="w-11 h-11 disabled:opacity-25" aria-label="หน้าก่อนหน้า">‹</button>
+                <button disabled={index === 0} onClick={() => { flush(); setIndex(index - 1); }} className="w-11 h-11 disabled:opacity-25" aria-label={t("หน้าก่อนหน้า")}>‹</button>
                 <select
                   value={index}
                   onChange={(e) => { flush(); setIndex(Number(e.target.value)); }}
                   className="h-11 bg-transparent text-sm px-1 outline-none"
-                  aria-label="เลือกหน้า"
+                  aria-label={t("เลือกหน้า")}
                 >
-                  {pages.map((p, i) => <option key={p.id} value={i}>หน้า {i + 1} / {pages.length}</option>)}
+                  {pages.map((p, i) => <option key={p.id} value={i}>{t('หน้า {i} / {n}', { i: i + 1, n: pages.length })}</option>)}
                 </select>
-                <button disabled={index >= pages.length - 1} onClick={() => { flush(); setIndex(index + 1); }} className="w-11 h-11 disabled:opacity-25" aria-label="หน้าถัดไป">›</button>
+                <button disabled={index >= pages.length - 1} onClick={() => { flush(); setIndex(index + 1); }} className="w-11 h-11 disabled:opacity-25" aria-label={t("หน้าถัดไป")}>›</button>
               </div>
               <button onClick={() => setShowImage((v) => !v)} className="md:hidden font-menu text-sm min-h-[44px] px-3 underline underline-offset-4 text-ink/70">
-                {showImage ? 'ซ่อนต้นฉบับ' : 'ดูต้นฉบับ'}
+                {showImage ? t('ซ่อนต้นฉบับ') : t('ดูต้นฉบับ')}
               </button>
               <div className="ml-auto flex flex-wrap gap-2">
                 <Button
                   variant="ghost"
                   onClick={() => { flush(); setSaveTpl(true); }}
                   disabled={!(pending.current.pages[page.id] || value.content)?.content?.some((n) => n.type === 'table')}
-                  title="ต้องมีตารางในหน้านี้"
+                  title={t("ต้องมีตารางในหน้านี้")}
                 >
-                  💾 บันทึกโครงสร้างนี้เป็น Template
+                  {t("💾 บันทึกโครงสร้างนี้เป็น Template")}
                 </Button>
                 <Button variant="ghost" onClick={rescanDetailed} disabled={!!rescan}>
-                  🔍 สแกนหน้านี้ใหม่แบบละเอียด
+                  {t("🔍 สแกนหน้านี้ใหม่แบบละเอียด")}
                 </Button>
               </div>
             </div>
@@ -219,24 +234,26 @@ export default function ReviewPage({ document, onExport }) {
               <Card className="p-3 mb-4 flex items-center gap-3">
                 <div className="w-10 shrink-0"><CalicoCat backdrop={false} blink={false} mood={rescan ? 'open' : 'closed'} /></div>
                 {rescan ? (
-                  <div className="flex-1"><p className="text-xs mb-2">แมวกำลังอ่านหน้า {index + 1} อย่างละเอียด...</p><PixelProgress value={rescan.progress} /></div>
+                  <div className="flex-1"><p className="text-xs mb-2">{t('แมวกำลังอ่านหน้า {n} อย่างละเอียด...', { n: index + 1 })}</p><PixelProgress value={rescan.progress} /></div>
                 ) : (
                   <p className="text-sm text-[#c9661d]">{rescanError}</p>
                 )}
               </Card>
             )}
 
+            <PageTransition k={`${page.id}-${tab}`} dir={pageDir} paws={false}>
             <div className="grid md:grid-cols-2 gap-4 items-start">
               <div className={`${showImage ? '' : 'hidden'} md:block md:sticky md:top-[calc(env(safe-area-inset-top)+6rem)]`}>
-                <ZoomImage key={page.id} src={page.imageData} alt={`ต้นฉบับหน้า ${index + 1}`} className="h-[42vh] md:h-[calc(100vh-8rem)]" />
+                <ZoomImage key={page.id} src={page.imageData} alt={t('ต้นฉบับหน้า {n}', { n: index + 1 })} className="h-[42vh] md:h-[calc(100vh-8rem)]" />
                 <p className="text-[11px] text-ink/40 mt-1">
-                  ต้นฉบับ · {page.engine === 'tesseract' ? 'อ่านแบบออฟไลน์' : page.engine ? `อ่านโดย ${page.engine}` : ''} · ดับเบิลแตะหรือจีบนิ้วเพื่อซูม
+                  {t('ต้นฉบับ')} · {page.engine === 'tesseract' ? t('อ่านแบบออฟไลน์') : page.engine ? t('อ่านโดย {engine}', { engine: page.engine }) : ''} · {t('ดับเบิลแตะหรือจีบนิ้วเพื่อซูม')}
                 </p>
               </div>
               <div className="min-w-0">
                 <DocEditor key={`${page.id}-${editorKey}`} value={value} onChange={onChange} />
               </div>
             </div>
+            </PageTransition>
           </>
         )}
       </div>
@@ -246,7 +263,7 @@ export default function ReviewPage({ document, onExport }) {
           content={value.content}
           defaultName={document.title}
           onClose={() => setSaveTpl(false)}
-          onSaved={(t) => { setSaveTpl(false); setToast(`บันทึก Template “${t.name}” แล้ว ใช้ได้ตอนสแกนครั้งหน้า`); }}
+          onSaved={(tpl) => { setSaveTpl(false); setToast(t('บันทึก Template “{name}” แล้ว ใช้ได้ตอนสแกนครั้งหน้า', { name: tpl.name })); }}
         />
       )}
       {toast && <Toast text={toast} onDone={() => setToast('')} />}
@@ -260,7 +277,7 @@ export default function ReviewPage({ document, onExport }) {
             }}
             className="w-full sm:w-auto sm:px-10"
           >
-            ส่งออก ›
+            {t("ส่งออก ›")}
           </Button>
         </div>
       </div>

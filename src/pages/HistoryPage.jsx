@@ -1,6 +1,7 @@
+import { t } from '../i18n';
 import { useState } from 'react';
 import { useDocumentStore } from '../store/documentStore';
-import { AppHeader, Button, Card, PageTitle } from '../components/ui';
+import { AppHeader, Button, Card, HowTo, PageTitle } from '../components/ui';
 import CalicoCat from '../components/CalicoCat';
 import FeatureRequest from '../components/FeatureRequest';
 
@@ -8,9 +9,9 @@ const DAY = 24 * 60 * 60 * 1000;
 
 function ago(date) {
   const days = Math.floor((Date.now() - new Date(date)) / DAY);
-  if (days <= 0) return 'วันนี้';
-  if (days === 1) return 'เมื่อวาน';
-  return `${days} วันก่อน`;
+  if (days <= 0) return t('วันนี้');
+  if (days === 1) return t('เมื่อวาน');
+  return t('{n} วันก่อน', { n: days });
 }
 
 export default function HistoryPage({ onBack, onSelect, onExport, onNew }) {
@@ -33,13 +34,23 @@ export default function HistoryPage({ onBack, onSelect, onExport, onNew }) {
       <div className="safe-x pb-28">
         <div className="max-w-6xl mx-auto pt-8">
           <PageTitle kicker="Last 7 days" title="History">
-            เอกสารเก็บไว้ในเครื่องนี้ 7 วัน แล้วลบอัตโนมัติ
+            {t("เอกสารเก็บไว้ในเครื่องนี้ 7 วัน แล้วลบอัตโนมัติ")}
           </PageTitle>
+
+          <HowTo
+            id="history"
+            items={[
+              ['🔍', 'พิมพ์ในช่องค้นหา หาได้ทั้งชื่อเอกสารและข้อความข้างใน'],
+              ['✎', 'แก้ไข = กลับไปหน้าตรวจทาน, ส่งออก = ดาวน์โหลดไฟล์อีกครั้ง'],
+              ['▮▮', 'แถบสีใต้การ์ดคือจำนวนวันที่เหลือก่อนลบอัตโนมัติ (สีส้ม = ใกล้หมด)'],
+              ['🔄', 'ใส่รหัสเดียวกันในเครื่องอื่น ประวัตินี้จะตามไปด้วย'],
+            ]}
+          />
 
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="🔍 ค้นหาชื่อหรือข้อความในเอกสาร"
+            placeholder={t("🔍 ค้นหาชื่อหรือข้อความในเอกสาร")}
             className="w-full max-w-md min-h-[52px] px-4 mb-8 bg-white/70 border border-ink/20 rounded-[3px] outline-none focus:border-ink focus:bg-white transition"
           />
 
@@ -47,8 +58,8 @@ export default function HistoryPage({ onBack, onSelect, onExport, onNew }) {
             <div className="text-center py-12">
               <div className="w-32 mx-auto mb-6"><CalicoCat mood="closed" backdrop={false} blink={false} /></div>
               <p className="font-pixel text-lg uppercase mb-2">{query ? 'Not found' : 'Zzz... empty'}</p>
-              <p className="text-sm text-ink/60 mb-6">{query ? 'ไม่พบเอกสารที่ตรงกับคำค้น' : 'ยังไม่มีเอกสาร แมวเลยนอนรอ'}</p>
-              {!query && <Button onClick={onNew}>เริ่มสแกน</Button>}
+              <p className="text-sm text-ink/60 mb-6">{query ? t('ไม่พบเอกสารที่ตรงกับคำค้น') : t('ยังไม่มีเอกสาร แมวเลยนอนรอ')}</p>
+              {!query && <Button onClick={onNew}>{t("เริ่มสแกน")}</Button>}
             </div>
           ) : (
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
@@ -65,7 +76,7 @@ export default function HistoryPage({ onBack, onSelect, onExport, onNew }) {
                       </div>
                       <div className="p-4">
                         <h3 className="font-medium truncate">{doc.title}</h3>
-                        <p className="text-xs text-ink/50 mt-1">อัปเดต{ago(doc.updatedAt)}</p>
+                        <p className="text-xs text-ink/50 mt-1">{t('อัปเดต{when}', { when: ago(doc.updatedAt) })}</p>
                       </div>
                     </button>
                     {/* days-left meter */}
@@ -75,18 +86,18 @@ export default function HistoryPage({ onBack, onSelect, onExport, onNew }) {
                           <span key={i} className={`h-1.5 flex-1 ${i < left ? (left <= 2 ? 'bg-[#e2782a]' : 'bg-ink') : 'bg-ink/10'}`} />
                         ))}
                       </div>
-                      <span className="text-[11px] text-ink/50 whitespace-nowrap">เหลือ {left} วัน</span>
+                      <span className="text-[11px] text-ink/50 whitespace-nowrap">{t('เหลือ {n} วัน', { n: left })}</span>
                     </div>
                     <div className="p-3 flex gap-2 mt-auto">
                       {confirmId === doc.id ? (
                         <>
-                          <Button variant="danger" className="flex-1" onClick={() => { deleteDocument(doc.id); setConfirmId(null); }}>ยืนยันลบ</Button>
-                          <Button variant="soft" onClick={() => setConfirmId(null)}>ยกเลิก</Button>
+                          <Button variant="danger" className="flex-1" onClick={() => { deleteDocument(doc.id); setConfirmId(null); }}>{t("ยืนยันลบ")}</Button>
+                          <Button variant="soft" onClick={() => setConfirmId(null)}>{t("ยกเลิก")}</Button>
                         </>
                       ) : (
                         <>
-                          <Button className="flex-1" onClick={() => onSelect(doc)}>✎ แก้ไข</Button>
-                          <Button variant="ghost" onClick={() => onExport(doc)}>ส่งออก</Button>
+                          <Button className="flex-1" onClick={() => onSelect(doc)}>{t("✎ แก้ไข")}</Button>
+                          <Button variant="ghost" onClick={() => onExport(doc)}>{t("ส่งออก")}</Button>
                           <Button variant="soft" aria-label="Delete" onClick={() => setConfirmId(doc.id)}>🗑</Button>
                         </>
                       )}

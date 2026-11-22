@@ -1,3 +1,4 @@
+import { t } from '../i18n';
 import { useRef, useState } from 'react';
 
 // Zoomable original page: buttons, ctrl/⌘ + wheel, and two-finger pinch.
@@ -46,9 +47,9 @@ export default function ZoomImage({ src, alt = '', className = '' }) {
         <img src={src} alt={alt} draggable={false} style={{ width: `${zoom * 100}%`, maxWidth: 'none' }} className="block select-none" />
       </div>
       <div className="absolute bottom-2 right-2 flex bg-ink text-paper rounded-[3px] font-menu text-sm overflow-hidden">
-        <button onClick={() => setZoom((z) => clamp(z - 0.5))} className="w-10 h-10" aria-label="ซูมออก">−</button>
-        <button onClick={() => setZoom(1)} className="px-2 h-10 text-xs tabular-nums" aria-label="รีเซ็ตซูม">{Math.round(zoom * 100)}%</button>
-        <button onClick={() => setZoom((z) => clamp(z + 0.5))} className="w-10 h-10" aria-label="ซูมเข้า">+</button>
+        <button onClick={() => setZoom((z) => clamp(z - 0.5))} className="w-10 h-10" aria-label={t("ซูมออก")}>−</button>
+        <button onClick={() => setZoom(1)} className="px-2 h-10 text-xs tabular-nums" aria-label={t("รีเซ็ตซูม")}>{Math.round(zoom * 100)}%</button>
+        <button onClick={() => setZoom((z) => clamp(z + 0.5))} className="w-10 h-10" aria-label={t("ซูมเข้า")}>+</button>
       </div>
     </div>
   );

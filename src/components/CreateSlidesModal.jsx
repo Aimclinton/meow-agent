@@ -1,3 +1,4 @@
+import { t } from '../i18n';
 import { useMemo, useState } from 'react';
 import { documentToMarkdown } from '../utils/docContent';
 
@@ -158,27 +159,27 @@ export default function CreateSlidesModal({ document, onClose }) {
           <div>
             <p className="text-xs uppercase tracking-wider text-[#7C3AED] mb-2">Export as Slide</p>
             <h2 className="font-menu font-bold text-xl md:text-2xl leading-snug">
-              ว้ายยยยยย ยังไม่เปิด แต่ว่าสามารถเอา prompt นี้ไปให้ AI สร้างสไลด์ให้ได้เลยนะ
+              {t("ว้ายยยยยย ยังไม่เปิด แต่ว่าสามารถเอา prompt นี้ไปให้ AI สร้างสไลด์ให้ได้เลยนะ")}
             </h2>
           </div>
           <button onClick={onClose} aria-label="Close" className="w-11 h-11 grid place-items-center hover:bg-ink/5 shrink-0">✕</button>
         </div>
 
-        <p className="text-xs uppercase tracking-wider text-ink/50 mb-3">เลือกสไตล์สไลด์</p>
+        <p className="text-xs uppercase tracking-wider text-ink/50 mb-3">{t("เลือกสไตล์สไลด์")}</p>
         <div className="grid sm:grid-cols-3 gap-3 mb-6">
           {STYLES.map((s) => (
             <button key={s.id} onClick={() => setStyleId(s.id)} aria-pressed={s.id === styleId} className="text-left group">
               <Mockup style={s} active={s.id === styleId} />
               <span className="block font-menu font-medium text-sm mt-2">{s.name}</span>
-              <span className="block text-xs text-ink/60">{s.th}</span>
-              <span className="block text-[11px] text-ink/40">{s.use}</span>
+              <span className="block text-xs text-ink/60">{t(s.th)}</span>
+              <span className="block text-[11px] text-ink/40">{t(s.use)}</span>
             </button>
           ))}
         </div>
 
         <div className="flex items-center justify-between mb-2">
           <p className="text-xs uppercase tracking-wider text-ink/50">Prompt · {style.name}</p>
-          <span className="text-[11px] text-ink/40">{prompt.length.toLocaleString()} ตัวอักษร</span>
+          <span className="text-[11px] text-ink/40">{t('{n} ตัวอักษร', { n: prompt.length.toLocaleString() })}</span>
         </div>
         <textarea
           readOnly
@@ -192,10 +193,10 @@ export default function CreateSlidesModal({ document, onClose }) {
           className="font-menu font-medium w-full min-h-[52px] rounded-[3px] text-white transition mb-5"
           style={{ background: copied ? '#16a34a' : 'linear-gradient(135deg,#5B21B6,#7C3AED)' }}
         >
-          {copied ? '✓ คัดลอกแล้ว' : 'Copy Prompt'}
+          {copied ? t('✓ คัดลอกแล้ว') : 'Copy Prompt'}
         </button>
 
-        <p className="text-xs uppercase tracking-wider text-ink/50 mb-3">แล้ววางใน</p>
+        <p className="text-xs uppercase tracking-wider text-ink/50 mb-3">{t("แล้ววางใน")}</p>
         <div className="grid grid-cols-3 gap-2">
           {[['Gemini', 'https://gemini.google.com/app'], ['Claude', 'https://claude.ai/new'], ['ChatGPT', 'https://chatgpt.com/']].map(([name, url]) => (
             <a key={name} href={url} target="_blank" rel="noreferrer" className="font-menu min-h-[48px] grid place-items-center border border-ink rounded-[3px] text-sm hover:bg-ink hover:text-paper transition">

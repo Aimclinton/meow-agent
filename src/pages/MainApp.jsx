@@ -1,3 +1,4 @@
+import { t } from '../i18n';
 import { useState } from 'react';
 import { useDocumentStore } from '../store/documentStore';
 import DocumentWorkflow from './DocumentWorkflow';
@@ -6,7 +7,7 @@ import ExportPage from './ExportPage';
 import CreateSlidesModal from '../components/CreateSlidesModal';
 import SettingsModal from '../components/SettingsModal';
 import FeatureRequest from '../components/FeatureRequest';
-import { CatMascot, PixelLogo } from '../components/ui';
+import { CatMascot, HowTo, PageTransition, PixelLogo } from '../components/ui';
 
 export default function MainApp() {
   const [currentPage, setCurrentPage] = useState('dashboard');
@@ -18,11 +19,12 @@ export default function MainApp() {
 
   // Handle page routing
   if (currentPage === 'workflow') {
-    return <DocumentWorkflow initialDocId={editDocId} onExit={() => { setEditDocId(null); setCurrentPage('dashboard'); }} />;
+    return <PageTransition k="workflow"><DocumentWorkflow initialDocId={editDocId} onExit={() => { setEditDocId(null); setCurrentPage('dashboard'); }} /></PageTransition>;
   }
 
   if (currentPage === 'history') {
     return (
+      <PageTransition k="history">
       <HistoryPage
         onBack={() => setCurrentPage('dashboard')}
         onNew={() => setCurrentPage('workflow')}
@@ -35,11 +37,13 @@ export default function MainApp() {
           setCurrentPage('export');
         }}
       />
+      </PageTransition>
     );
   }
 
   if (currentPage === 'export' && selectedDocForExport) {
     return (
+      <PageTransition k="export">
       <ExportPage
         document={documents.find((d) => d.id === selectedDocForExport.id) || selectedDocForExport}
         onBack={() => {
@@ -56,6 +60,7 @@ export default function MainApp() {
           setCurrentPage('workflow');
         }}
       />
+      </PageTransition>
     );
   }
 
@@ -68,6 +73,7 @@ export default function MainApp() {
   ];
 
   return (
+    <PageTransition k="dashboard" paws={false}>
     <div className="min-h-screen bg-paper text-ink font-mono overflow-x-hidden">
       {/* Header */}
       <header className="safe-x pt-5">
@@ -77,7 +83,7 @@ export default function MainApp() {
             <button onClick={() => setCurrentPage('workflow')} className="px-2 py-2 hover:underline underline-offset-4">Scan</button>
             <button onClick={() => setCurrentPage('history')} className="px-2 py-2 hover:underline underline-offset-4">History</button>
             <a href="/guide.html" className="hidden sm:inline px-2 py-2 hover:underline underline-offset-4">Guide</a>
-            <button onClick={() => setSettings(true)} aria-label="ตั้งค่า" className="px-2 py-2 hover:underline underline-offset-4">⚙</button>
+            <button onClick={() => setSettings(true)} aria-label={t("ตั้งค่า")} className="px-2 py-2 hover:underline underline-offset-4">⚙</button>
             <button onClick={logout} className="px-2 py-2 hover:underline underline-offset-4">Logout</button>
           </nav>
         </div>
@@ -120,6 +126,16 @@ export default function MainApp() {
       {/* Dashboard */}
       <main className="safe-x pb-28">
         <div className="max-w-6xl mx-auto border-t border-ink/15 pt-8">
+          <HowTo
+            id="home"
+            items={[
+              ['▶', 'กด Get Started เพื่อเริ่มสแกน หรือ See History เพื่อดูเอกสาร 7 วันล่าสุด'],
+              ['🐱', 'แถบดำด้านบน: จำนวนรูปที่แมวทำให้ได้วันนี้ + ปุ่ม TH/EN เปลี่ยนภาษา + ลำโพงเปิดเสียงแมว'],
+              ['⚙', 'ตั้งค่า: ใส่ API key ส่วนตัว และซิงก์ประวัติ'],
+              ['👀', 'ปุ่มแมวจ้องตา = ขอฟีเจอร์ใหม่จากทีม Dev'],
+              ['🐾', 'แตะแมวตัวใหญ่ดูสิ'],
+            ]}
+          />
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-12">
             {actions.map((a) => (
               <button
@@ -182,6 +198,7 @@ export default function MainApp() {
       {settings && <SettingsModal onClose={() => setSettings(false)} />}
       {slidesDoc && <CreateSlidesModal document={slidesDoc} onClose={() => setSlidesDoc(null)} />}
     </div>
+    </PageTransition>
   );
 }
 

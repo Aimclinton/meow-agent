@@ -2,6 +2,8 @@ import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
 import { safeFileName } from './useDocxExport';
 import { pageContents } from '../utils/docContent';
+import { docFont } from '../utils/fonts';
+import { t } from '../i18n';
 
 // Inline TipTap nodes → Excel rich text (keeps bold / italic / underline).
 function rich(nodes = [], font, extra = {}) {
@@ -25,14 +27,14 @@ export function useXlsxExport() {
     try {
       const wb = new ExcelJS.Workbook();
       wb.creator = 'MEOW AI Agent';
-      const fontName = doc.fonts?.th || 'Sarabun';
+      const fontName = docFont(doc);
       const base = { name: fontName, size: 12 };
       const ws = wb.addWorksheet('Document', {
         pageSetup: { paperSize: 9, orientation: 'portrait', fitToPage: true, fitToWidth: 1, fitToHeight: 0 },
       });
       ws.headerFooter.oddHeader = doc.header ? `&C${doc.header.replace(/&/g, '&&')}` : '';
       const footer = doc.footer ? `&L${doc.footer.replace(/&/g, '&&')}` : '';
-      ws.headerFooter.oddFooter = `${footer}${doc.pageNumbers !== false ? '&Rหน้า &P / &N' : ''}`;
+      ws.headerFooter.oddFooter = `${footer}${doc.pageNumbers !== false ? `&R${t('หน้า')} &P / &N` : ''}`;
 
       const contents = pageContents(doc);
       // Column count = widest table (min 1).
@@ -102,7 +104,7 @@ export function useXlsxExport() {
       const refs = (doc.references || []).filter((r) => r.trim());
       if (refs.length) {
         row++;
-        full('เอกสารอ้างอิง', { ...base, size: 14, bold: true });
+        full(t('เอกสารอ้างอิง'), { ...base, size: 14, bold: true });
         refs.forEach((r, i) => full(`[${i + 1}] ${r}`, base));
       }
 

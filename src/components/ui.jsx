@@ -1,3 +1,4 @@
+import { t, LangToggle } from '../i18n';
 import { useEffect, useRef, useState } from 'react';
 import CalicoCat from './CalicoCat';
 import { useQuota } from '../store/quotaStore';
@@ -135,7 +136,7 @@ export function CatMascot({ className = '', mood: moodProp, backdrop = true, phr
       </button>
       {say && (
         <div key={say} className="speech absolute left-[8%] top-[2%] font-menu text-sm bg-ink text-paper px-3 py-2 rounded-[3px] whitespace-nowrap pointer-events-none">
-          {say}
+          {t(say)}
         </div>
       )}
     </div>
@@ -201,14 +202,14 @@ export function QuotaBar() {
   return (
     <div className="sticky top-0 z-40 bg-ink text-paper safe-x pt-[env(safe-area-inset-top)]">
       <div className="max-w-6xl mx-auto h-7 flex items-center gap-2 sm:gap-3 text-[11px] sm:text-xs">
-        <span className="shrink-0 -mb-1" title={mood === 'playful' ? 'แมวคึกคัก' : mood === 'sleepy' ? 'แมวเริ่มง่วง' : 'แมวหลับ'}>
+        <span className="shrink-0 -mb-1" title={mood === 'playful' ? t('แมวคึกคัก') : mood === 'sleepy' ? t('แมวเริ่มง่วง') : t('แมวหลับ')}>
           <MoodCat mood={mood} size={30} />
         </span>
         <span className="truncate">
           {left > 0 ? (
-            <>แมวเลียตอนนี้ แมวทำให้ได้อีก <b className={`font-pixel ${low ? 'text-[#e2782a]' : ''}`}>{left.toLocaleString()}</b> รูป</>
+            <>{t("แมวเลียตอนนี้ แมวทำให้ได้อีก")} <b className={`font-pixel ${low ? 'text-[#e2782a]' : ''}`}>{left.toLocaleString()}</b> {t("รูป")}</>
           ) : (
-            <>รอเติมแมวเลียพรุ่งนี้น้า</>
+            <>{t("รอเติมแมวเลียพรุ่งนี้น้า")}</>
           )}
         </span>
         <span className="ml-auto hidden sm:flex gap-[2px] w-24" aria-hidden="true">
@@ -216,11 +217,12 @@ export function QuotaBar() {
             <span key={i} className={`h-2 flex-1 ${i < Math.ceil(pct / 10) ? (low ? 'bg-[#e2782a]' : 'bg-paper') : 'bg-paper/20'}`} />
           ))}
         </span>
+        <LangToggle className="ml-auto sm:ml-0" />
         <button
           onClick={toggleSound}
-          aria-label={soundOn ? 'ปิดเสียงแมว' : 'เปิดเสียงแมว'}
+          aria-label={soundOn ? t('ปิดเสียงแมว') : t('เปิดเสียงแมว')}
           aria-pressed={soundOn}
-          className="ml-auto sm:ml-0 w-7 h-7 -mr-1 grid place-items-center shrink-0 hover:bg-paper/10 rounded-[3px]"
+          className="w-7 h-7 -mr-1 grid place-items-center shrink-0 hover:bg-paper/10 rounded-[3px]"
         >
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
             <path d="M2 6h3l4-3v10l-4-3H2z" fill="currentColor" stroke="none" />
@@ -232,6 +234,55 @@ export function QuotaBar() {
           </svg>
         </button>
       </div>
+    </div>
+  );
+}
+
+// Collapsible "how to use this page" box. Remembers when it was closed.
+export function HowTo({ id, items }) {
+  const key = `meow-howto-${id}`;
+  const [open, setOpen] = useState(() => {
+    try { return localStorage.getItem(key) !== 'closed'; } catch { return true; }
+  });
+  const set = (v) => {
+    setOpen(v);
+    try { localStorage.setItem(key, v ? 'open' : 'closed'); } catch { /* ignore */ }
+  };
+  if (!open) {
+    return (
+      <button onClick={() => set(true)} className="font-menu text-xs mb-6 inline-flex items-center gap-1.5 min-h-[36px] px-3 rounded-full border border-ink/20 bg-white/60 hover:border-ink">
+        💡 {t('วิธีใช้หน้านี้')}
+      </button>
+    );
+  }
+  return (
+    <aside className="rise relative mb-6 rounded-[3px] border border-dashed border-ink/30 bg-[#fffbeb] p-4 pr-12 text-sm" aria-label={t('วิธีใช้หน้านี้')}>
+      <p className="font-menu font-bold mb-2">💡 {t('วิธีใช้หน้านี้')}</p>
+      <ul className="space-y-1.5">
+        {items.map(([icon, text]) => (
+          <li key={text} className="flex gap-2.5">
+            <span className="shrink-0 w-7 h-6 grid place-items-center rounded-[3px] bg-ink text-paper text-[11px] font-menu">{icon}</span>
+            <span className="text-ink/75">{t(text)}</span>
+          </li>
+        ))}
+      </ul>
+      <button onClick={() => set(false)} className="absolute top-2 right-2 font-menu text-xs px-2 min-h-[32px] text-ink/60 hover:text-ink underline underline-offset-4">
+        {t('เข้าใจแล้ว')}
+      </button>
+    </aside>
+  );
+}
+
+// Cute enter animation whenever `k` changes (page, step or tab switch).
+export function PageTransition({ k, dir = 'up', children, paws = true }) {
+  return (
+    <div key={k} className={`page-in page-${dir}`}>
+      {paws && (
+        <div className="paw-trail" aria-hidden="true">
+          <span>🐾</span><span>🐾</span><span>🐾</span>
+        </div>
+      )}
+      {children}
     </div>
   );
 }

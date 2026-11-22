@@ -53,7 +53,7 @@ export const useDocumentStore = create((set, get) => ({
       footer: first('footer'),
       references,
       pageNumbers: true,
-      fonts: { th: 'Sarabun', en: 'Google Sans' },
+      font: 'Sarabun',
       createdAt: now,
       updatedAt: now,
     };

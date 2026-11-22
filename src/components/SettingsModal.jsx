@@ -1,3 +1,4 @@
+import { t } from '../i18n';
 import { useEffect, useState } from 'react';
 import { cloudEnabled } from '../services/vault';
 import { useDocumentStore } from '../store/documentStore';
@@ -36,29 +37,29 @@ export default function SettingsModal({ onClose }) {
         <div className="flex items-start justify-between gap-4 mb-6">
           <div>
             <p className="text-xs uppercase tracking-wider text-ink/50 mb-2">Settings</p>
-            <h2 className="font-pixel text-2xl uppercase">ตั้งค่า</h2>
+            <h2 className="font-pixel text-2xl uppercase">{t("ตั้งค่า")}</h2>
           </div>
           <button onClick={onClose} aria-label="Close" className="w-11 h-11 grid place-items-center hover:bg-ink/5 shrink-0">✕</button>
         </div>
 
         {cloud && (
           <section className="mb-6 pb-6 border-b border-ink/10">
-            <p className="font-menu font-medium mb-1">ซิงก์ประวัติ</p>
-            <p className="text-sm text-ink/60 mb-3">เครื่องไหนใส่รหัสผ่านเดียวกัน จะเห็นประวัติ 7 วันชุดเดียวกัน</p>
+            <p className="font-menu font-medium mb-1">{t("ซิงก์ประวัติ")}</p>
+            <p className="text-sm text-ink/60 mb-3">{t("เครื่องไหนใส่รหัสผ่านเดียวกัน จะเห็นประวัติ 7 วันชุดเดียวกัน")}</p>
             <Button
               variant="ghost"
               disabled={syncing}
               onClick={async () => { setSyncing(true); await syncFromCloud(); setSyncing(false); }}
             >
-              {syncing ? 'กำลังซิงก์...' : '↻ ซิงก์ตอนนี้'}
+              {syncing ? t('กำลังซิงก์...') : t('↻ ซิงก์ตอนนี้')}
             </Button>
           </section>
         )}
 
         <section className="mb-6">
-          <p className="font-menu font-medium mb-1">Gemini API Key ส่วนตัว (ไม่บังคับ)</p>
+          <p className="font-menu font-medium mb-1">{t("Gemini API Key ส่วนตัว (ไม่บังคับ)")}</p>
           <p className="text-xs text-ink/60 mb-3">
-            ใส่คีย์ของตัวเองเพื่อแยกโควตาจากทีม คีย์เก็บในเครื่องนี้เท่านั้น และส่งผ่านเซิร์ฟเวอร์ของเราไปที่ Google ตอนสแกน
+            {t("ใส่คีย์ของตัวเองเพื่อแยกโควตาจากทีม คีย์เก็บในเครื่องนี้เท่านั้น และส่งผ่านเซิร์ฟเวอร์ของเราไปที่ Google ตอนสแกน")}
           </p>
           <div className="flex gap-2 mb-3">
             <input
@@ -70,20 +71,20 @@ export default function SettingsModal({ onClose }) {
               spellCheck={false}
               className="flex-1 min-w-0 min-h-[48px] px-3 bg-white/70 border border-ink/20 rounded-[3px] outline-none focus:border-ink"
             />
-            <button onClick={() => setShow((v) => !v)} className="font-menu text-sm px-3 border border-ink/20 rounded-[3px]">{show ? 'ซ่อน' : 'ดู'}</button>
+            <button onClick={() => setShow((v) => !v)} className="font-menu text-sm px-3 border border-ink/20 rounded-[3px]">{show ? t('ซ่อน') : t('ดู')}</button>
           </div>
           <div className="flex gap-2">
-            <Button onClick={save} className="flex-1">{saved ? '✓ บันทึกแล้ว' : 'บันทึก'}</Button>
-            {geminiKey && <Button variant="danger" onClick={() => { setDraft(''); setGeminiKey(''); }}>ลบคีย์</Button>}
+            <Button onClick={save} className="flex-1">{saved ? t('✓ บันทึกแล้ว') : t('บันทึก')}</Button>
+            {geminiKey && <Button variant="danger" onClick={() => { setDraft(''); setGeminiKey(''); }}>{t("ลบคีย์")}</Button>}
           </div>
           <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer" className="inline-block mt-3 text-xs underline underline-offset-4 text-ink/60">
-            ขอคีย์ฟรีที่ Google AI Studio ↗
+            {t("ขอคีย์ฟรีที่ Google AI Studio ↗")}
           </a>
         </section>
 
         <section className="text-xs text-ink/60 border-t border-ink/10 pt-4">
-          <p>โควตาวันนี้: ใช้ไป {used.toLocaleString()} / {limit.toLocaleString()} รูป ({geminiKey ? 'คีย์ส่วนตัว' : shared ? 'รวมทั้งทีม' : 'นับในเครื่องนี้'})</p>
-          <p className="mt-1">รีเซ็ตทุกเที่ยงคืนตามเวลาแปซิฟิก (ประมาณ 14:00–15:00 น. เวลาไทย)</p>
+          <p>{t('โควตาวันนี้: ใช้ไป {used} / {limit} รูป ({mode})', { used: used.toLocaleString(), limit: limit.toLocaleString(), mode: geminiKey ? t('คีย์ส่วนตัว') : shared ? t('รวมทั้งทีม') : t('นับในเครื่องนี้') })}</p>
+          <p className="mt-1">{t("รีเซ็ตทุกเที่ยงคืนตามเวลาแปซิฟิก (ประมาณ 14:00–15:00 น. เวลาไทย)")}</p>
         </section>
       </div>
     </div>

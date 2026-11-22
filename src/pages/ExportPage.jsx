@@ -3,29 +3,52 @@ import { useDocxExport } from '../hooks/useDocxExport';
 import { useXlsxExport } from '../hooks/useXlsxExport';
 import { useDocumentStore } from '../store/documentStore';
 import { documentToMarkdown } from '../utils/docContent';
-import { TH_FONTS, EN_FONTS, cssFont, fontSizeFor } from '../utils/fonts';
+import { useEffect } from 'react';
+import { REPORT_FONTS, docFont, docFontSize, fontInfo, loadPreviewFonts } from '../utils/fonts';
+import { t, useLang } from '../i18n';
 import CreateSlidesModal from '../components/CreateSlidesModal';
 import FeatureRequest from '../components/FeatureRequest';
 import { meow } from '../utils/sound';
-import { AppHeader, Button, Card, CatMascot, PageTitle, PawBurst } from '../components/ui';
+import { AppHeader, Button, Card, CatMascot, HowTo, PageTitle, PawBurst } from '../components/ui';
 
 const DONE_PHRASES = ['เสร็จแล้ว! เมี้ยว~', 'ขอแมวเลียเป็นค่าจ้าง', 'Purrfect!', 'งานไวเหมือนแมววิ่ง'];
 
-function FontSelect({ label, list, value, onChange }) {
+// Report font picker: one font for Thai + English, each tile previews itself.
+function FontPicker({ value, size, onChange, onSize }) {
+  const lang = useLang((st) => st.lang);
+  useEffect(() => { loadPreviewFonts(); }, []);
+  const current = fontInfo(value);
   return (
-    <label className="block">
-      <span className="block text-xs uppercase tracking-wider text-ink/60 mb-2">{label}</span>
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="w-full min-h-[48px] px-3 bg-white/70 border border-ink/20 rounded-[3px] outline-none focus:border-ink"
-        style={{ fontFamily: cssFont(list, value) }}
-      >
-        {list.map((f) => (
-          <option key={f.name} value={f.name}>{f.name}{f.note ? ` — ${f.note}` : ''}</option>
+    <>
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 mb-4" role="radiogroup" aria-label={t('ฟอนต์')}>
+        {REPORT_FONTS.map((f) => (
+          <button
+            key={f.name}
+            role="radio"
+            aria-checked={f.name === value}
+            onClick={() => onChange(f.name)}
+            className={`text-left rounded-[3px] border p-3 transition ${f.name === value ? 'border-ink bg-white shadow-[2px_2px_0_#111]' : 'border-ink/15 bg-white/50 hover:border-ink/50'}`}
+          >
+            <span className="block text-lg leading-snug truncate" style={{ fontFamily: `${f.css}, sans-serif` }}>รายงาน Report ๑๒๓</span>
+            <span className="block font-menu text-xs font-medium mt-1 truncate">{f.name}</span>
+            <span className="block text-[11px] text-ink/50 truncate">{lang === 'en' ? f.noteEn : f.note}</span>
+          </button>
         ))}
-      </select>
-    </label>
+      </div>
+      <div className="bg-white border border-ink/10 rounded-[3px] p-4 leading-relaxed" style={{ fontFamily: `${current.css}, sans-serif`, fontSize: `${Math.round(size * 1.35)}px` }} aria-label={t('ตัวอย่างฟอนต์')}>
+        <b>บันทึกการรักษา Case Report</b><br />
+        ฟันกรามซี่ที่ ๖ มีรอยผุ ผู้ป่วยปวดเสียวเมื่อดื่มน้ำเย็น — <i>Lower first molar, deep caries</i>, probing 4 mm.
+      </div>
+      <div className="flex flex-wrap items-center gap-3 mt-3 text-xs text-ink/60">
+        <label className="flex items-center gap-2">
+          {t('ขนาดตัวอักษร')}
+          <select value={size} onChange={(e) => onSize(Number(e.target.value))} className="min-h-[40px] px-2 bg-white/70 border border-ink/20 rounded-[3px]">
+            {[10, 11, 12, 14, 16, 18, 20].map((n) => <option key={n} value={n}>{n} pt</option>)}
+          </select>
+        </label>
+        <span>{t('ถ้าเครื่องที่เปิดไฟล์ไม่มีฟอนต์นี้ Word จะใช้ฟอนต์ใกล้เคียงแทน')}</span>
+      </div>
+    </>
   );
 }
 
@@ -40,8 +63,8 @@ export default function ExportPage({ document, onDone, onBack, onEdit, embedded 
   const updateMeta = useDocumentStore((s) => s.updateMeta);
   const { generateDocx } = useDocxExport();
   const { generateXlsx } = useXlsxExport();
-  const fonts = { th: 'Sarabun', en: 'Google Sans', ...(document.fonts || {}) };
-  const setFont = (k, v) => updateMeta(document.id, { fonts: { ...fonts, [k]: v } });
+  const font = docFont(document);
+  const fontSize = docFontSize(document);
 
   const run = async (kind, fn) => {
     setBusy(kind);
@@ -49,11 +72,11 @@ export default function ExportPage({ document, onDone, onBack, onEdit, embedded 
     try {
       const res = await fn();
       if (res?.success === false) throw new Error(res.error);
-      setMessage({ ok: true, text: res?.fileName ? `บันทึก ${res.fileName} แล้ว` : 'เรียบร้อย!' });
+      setMessage({ ok: true, text: res?.fileName ? `บันทึก ${res.fileName} แล้ว` : t('เรียบร้อย!') });
       setBurst((n) => n + 1);
       if (kind === 'docx' || kind === 'xlsx') meow();
     } catch (err) {
-      setMessage({ ok: false, text: `ไม่สำเร็จ: ${err.message}` });
+      setMessage({ ok: false, text: t('ไม่สำเร็จ: {msg}', { msg: err.message }) });
     } finally {
       setBusy(null);
     }
@@ -70,8 +93,8 @@ export default function ExportPage({ document, onDone, onBack, onEdit, embedded 
   });
 
   const options = [
-    { key: 'docx', tag: '.DOCX', title: 'Word', desc: 'หัวข้อ ตัวหนา/เอียง ตาราง (รวมเซลล์) หัว-ท้ายกระดาษ เลขหน้า และอ้างอิง', action: () => generateDocx(document, { includeImages: withImages, pageBreaks }) },
-    { key: 'xlsx', tag: '.XLSX', title: 'Excel', desc: 'คงหัวข้อ ตัวหนา/เอียง ตารางพร้อมเซลล์ผสาน และหัว-ท้ายกระดาษตอนพิมพ์', action: () => generateXlsx(document) },
+    { key: 'docx', tag: '.DOCX', title: 'Word', desc: t('หัวข้อ ตัวหนา/เอียง ตาราง (รวมเซลล์) หัว-ท้ายกระดาษ เลขหน้า และอ้างอิง'), action: () => generateDocx(document, { includeImages: withImages, pageBreaks }) },
+    { key: 'xlsx', tag: '.XLSX', title: 'Excel', desc: t('คงหัวข้อ ตัวหนา/เอียง ตารางพร้อมเซลล์ผสาน และหัว-ท้ายกระดาษตอนพิมพ์'), action: () => generateXlsx(document) },
   ];
 
   return (
@@ -90,18 +113,26 @@ export default function ExportPage({ document, onDone, onBack, onEdit, embedded 
             </div>
           </div>
 
+          <HowTo
+            id="export"
+            items={[
+              ['Aa', 'แตะการ์ดฟอนต์เพื่อเลือก ดูตัวอย่างด้านล่างได้ทันที'],
+              ['⬇', 'กดดาวน์โหลด .DOCX (Word) หรือ .XLSX (Excel) ไฟล์จะอยู่ในโฟลเดอร์ดาวน์โหลด'],
+              ['🎬', 'Export as Slide = คัดลอก prompt ไปให้ AI ทำสไลด์ต่อ'],
+              ['📋', 'คัดลอกข้อความทั้งหมด ไปวางในแชทหรือโน้ตได้'],
+            ]}
+          />
+
           {/* Fonts */}
           <Card className="p-5 md:p-6 mb-4">
-            <p className="font-pixel uppercase mb-4">Fonts</p>
-            <div className="grid sm:grid-cols-2 gap-4 mb-4">
-              <FontSelect label="ภาษาไทย (TH)" list={TH_FONTS} value={fonts.th} onChange={(v) => setFont('th', v)} />
-              <FontSelect label="English (EN)" list={EN_FONTS} value={fonts.en} onChange={(v) => setFont('en', v)} />
-            </div>
-            <div className="bg-white border border-ink/10 rounded-[3px] p-4 text-[17px] leading-relaxed" aria-label="ตัวอย่างฟอนต์">
-              <span style={{ fontFamily: `${cssFont(TH_FONTS, fonts.th)}, sans-serif` }}>ฟันกรามซี่ที่ ๖ มีรอยผุ ผู้ป่วยปวดเสียวเมื่อดื่มน้ำเย็น </span>
-              <span style={{ fontFamily: `${cssFont(EN_FONTS, fonts.en)}, sans-serif` }}>Lower first molar, deep caries — <b>Bold</b> <i>Italic</i> 123</span>
-              <p className="text-[11px] text-ink/40 mt-2 font-mono">ขนาดตัวอักษรในไฟล์ {fontSizeFor(fonts.th)} pt · ถ้าเครื่องที่เปิดไฟล์ไม่มีฟอนต์นี้ Word จะใช้ฟอนต์ใกล้เคียงแทน</p>
-            </div>
+            <p className="font-pixel uppercase mb-1">Fonts</p>
+            <p className="text-xs text-ink/60 mb-4">{t('เลือกฟอนต์สำหรับไฟล์ Word / Excel (ใช้ทั้งภาษาไทยและอังกฤษ)')}</p>
+            <FontPicker
+              value={font}
+              size={fontSize}
+              onChange={(name) => updateMeta(document.id, { font: name, fontSize: fontInfo(name).size })}
+              onSize={(n) => updateMeta(document.id, { fontSize: n })}
+            />
           </Card>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4 mb-4">
@@ -114,16 +145,16 @@ export default function ExportPage({ document, onDone, onBack, onEdit, embedded 
                   <div className="mb-3">
                     <label className="flex items-center gap-3 text-sm min-h-[40px] cursor-pointer">
                       <input type="checkbox" checked={pageBreaks} onChange={(e) => setPageBreaks(e.target.checked)} className="w-5 h-5 accent-[#111]" />
-                      ขึ้นหน้าใหม่ตามหน้าที่สแกน
+                      {t("ขึ้นหน้าใหม่ตามหน้าที่สแกน")}
                     </label>
                     <label className="flex items-center gap-3 text-sm min-h-[40px] cursor-pointer">
                       <input type="checkbox" checked={withImages} onChange={(e) => setWithImages(e.target.checked)} className="w-5 h-5 accent-[#111]" />
-                      แนบภาพต้นฉบับท้ายเอกสาร
+                      {t("แนบภาพต้นฉบับท้ายเอกสาร")}
                     </label>
                   </div>
                 )}
                 <Button onClick={() => run(o.key, o.action)} disabled={!!busy}>
-                  {busy === o.key ? 'กำลังสร้างไฟล์...' : `ดาวน์โหลด ${o.tag}`}
+                  {busy === o.key ? t('กำลังสร้างไฟล์...') : `ดาวน์โหลด ${o.tag}`}
                 </Button>
               </Card>
             ))}
@@ -132,7 +163,7 @@ export default function ExportPage({ document, onDone, onBack, onEdit, embedded 
             <Card className="p-5 md:p-6 flex flex-col border-[#7C3AED]/40" style={{ background: 'linear-gradient(160deg,#faf5ff,#ffffff)' }}>
               <span className="self-start text-white font-pixel text-xs px-2 py-1 mb-6" style={{ background: '#7C3AED' }}>.SLIDE</span>
               <h2 className="font-pixel text-2xl uppercase mb-1 text-[#5B21B6]">Slide</h2>
-              <p className="text-sm text-ink/60 mb-4 flex-1">สร้างพรีเซนเทชันโทนม่วง-ขาวจากเอกสารนี้</p>
+              <p className="text-sm text-ink/60 mb-4 flex-1">{t("สร้างพรีเซนเทชันโทนม่วง-ขาวจากเอกสารนี้")}</p>
               <button
                 onClick={() => setSlides(true)}
                 className="font-menu font-medium min-h-[48px] px-5 rounded-[3px] text-sm text-white transition active:scale-[0.98]"
@@ -144,10 +175,10 @@ export default function ExportPage({ document, onDone, onBack, onEdit, embedded 
           </div>
 
           <div className="flex flex-wrap gap-3 mb-6">
-            {onEdit && <Button variant="ghost" onClick={onEdit}>✎ แก้ไขเอกสาร</Button>}
-            <Button variant="ghost" onClick={copyText} disabled={!!busy}>📋 คัดลอกข้อความทั้งหมด</Button>
+            {onEdit && <Button variant="ghost" onClick={onEdit}>{t("✎ แก้ไขเอกสาร")}</Button>}
+            <Button variant="ghost" onClick={copyText} disabled={!!busy}>{t("📋 คัดลอกข้อความทั้งหมด")}</Button>
             {typeof navigator !== 'undefined' && navigator.share && (
-              <Button variant="ghost" onClick={share} disabled={!!busy}>↗ แชร์</Button>
+              <Button variant="ghost" onClick={share} disabled={!!busy}>{t("↗ แชร์")}</Button>
             )}
           </div>
 
@@ -158,7 +189,7 @@ export default function ExportPage({ document, onDone, onBack, onEdit, embedded 
           )}
 
           {onDone && (
-            <Button variant="soft" onClick={onDone} className="w-full sm:w-auto">เสร็จแล้ว กลับหน้าแรก</Button>
+            <Button variant="soft" onClick={onDone} className="w-full sm:w-auto">{t("เสร็จแล้ว กลับหน้าแรก")}</Button>
           )}
         </div>
       </div>

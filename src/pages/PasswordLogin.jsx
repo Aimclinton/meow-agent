@@ -1,3 +1,4 @@
+import { t } from '../i18n';
 import { useEffect, useState } from 'react';
 import { useDocumentStore, verifyPassword, hasRecoveryCode, generateRecoveryCode } from '../store/documentStore';
 import { openVault, recoverVault, cloudEnabled, wasLinked } from '../services/vault';
@@ -45,7 +46,7 @@ export default function PasswordLogin() {
         const r = await openVault(password).catch(() => ({ enabled: false }));
         if (r.enabled && !r.exists) {
           // The password was changed on another device (forgot-password flow).
-          if (wasLinked()) return fail('รหัสผ่านนี้ถูกเปลี่ยนจากเครื่องอื่นแล้ว ใช้รหัสใหม่นะ');
+          if (wasLinked()) return fail(t('รหัสผ่านนี้ถูกเปลี่ยนจากเครื่องอื่นแล้ว ใช้รหัสใหม่นะ'));
           // Older device that never synced: create its cloud history now.
           await openVault(password, { create: true }).catch(() => {});
         }
@@ -60,9 +61,9 @@ export default function PasswordLogin() {
         enter();
         return;
       }
-      fail('รหัสผ่านไม่ถูกต้อง');
+      fail(t('รหัสผ่านไม่ถูกต้อง'));
     } catch {
-      fail('ตรวจสอบรหัสผ่านไม่สำเร็จ');
+      fail(t('ตรวจสอบรหัสผ่านไม่สำเร็จ'));
     } finally {
       setBusy(false);
     }
@@ -70,25 +71,25 @@ export default function PasswordLogin() {
 
   const recover = async (e) => {
     e.preventDefault();
-    if (newPass.length < 4) return fail('รหัสผ่านใหม่ต้องมีอย่างน้อย 4 ตัวอักษร');
+    if (newPass.length < 4) return fail(t('รหัสผ่านใหม่ต้องมีอย่างน้อย 4 ตัวอักษร'));
     setBusy(true);
     try {
       if (cloud) {
         const r = await recoverVault(recovery, newPass);
-        if (r.reason === 'password_taken') return fail('รหัสผ่านนี้มีคนใช้แล้ว ลองตั้งรหัสอื่น');
+        if (r.reason === 'password_taken') return fail(t('รหัสผ่านนี้มีคนใช้แล้ว ลองตั้งรหัสอื่น'));
         if (r.ok) {
           const localOk = await resetPasswordWithCode(recovery, newPass);
           if (!localOk) {
             await wipeLocalDocs();
             await adoptPassword(newPass, recovery);
           }
-          setNotice('ตั้งรหัสใหม่แล้ว ประวัติทุกเครื่องยังอยู่ครบ รหัสกู้คืนเดิมยังใช้ได้');
+          setNotice(t('ตั้งรหัสใหม่แล้ว ประวัติทุกเครื่องยังอยู่ครบ รหัสกู้คืนเดิมยังใช้ได้'));
           enter();
           return;
         }
       }
       const code = await resetPasswordWithCode(recovery, newPass);
-      if (!code) return fail('รหัสกู้คืนไม่ถูกต้อง');
+      if (!code) return fail(t('รหัสกู้คืนไม่ถูกต้อง'));
       if (cloud) await openVault(newPass, { create: true, recoveryCode: code }).catch(() => {});
       setNewCode(code);
       setView('code');
@@ -99,7 +100,7 @@ export default function PasswordLogin() {
 
   const wipe = async (e) => {
     e.preventDefault();
-    if (wipeText.trim().toUpperCase() !== 'RESET') return fail('พิมพ์คำว่า RESET เพื่อยืนยัน');
+    if (wipeText.trim().toUpperCase() !== 'RESET') return fail(t('พิมพ์คำว่า RESET เพื่อยืนยัน'));
     await resetEverything();
   };
 
@@ -113,7 +114,7 @@ export default function PasswordLogin() {
           <form onSubmit={login} className="space-y-5">
             <div>
               <p className="text-xs uppercase tracking-wider text-ink/50 mb-2">Welcome back</p>
-              <h1 className="font-pixel text-3xl uppercase leading-tight">ใส่รหัสผ่าน</h1>
+              <h1 className="font-pixel text-3xl uppercase leading-tight">{t("ใส่รหัสผ่าน")}</h1>
             </div>
             <Field
               label="Password"
@@ -129,10 +130,10 @@ export default function PasswordLogin() {
             />
             <ErrorNote>{error}</ErrorNote>
             <button disabled={busy || !password} className="font-menu font-medium w-full min-h-[52px] bg-ink text-paper rounded-[3px] hover:bg-neutral-700 disabled:opacity-40 transition">
-              {busy ? 'กำลังตรวจสอบ...' : 'เข้าสู่ระบบ'}
+              {busy ? t('กำลังตรวจสอบ...') : t('เข้าสู่ระบบ')}
             </button>
             <button type="button" onClick={() => go(canRecover || cloud ? 'forgot' : 'wipe')} className="font-menu w-full min-h-[44px] text-sm underline underline-offset-4 text-ink/70 hover:text-ink">
-              ลืมรหัสผ่าน?
+              {t("ลืมรหัสผ่าน?")}
             </button>
           </form>
         )}
@@ -141,8 +142,8 @@ export default function PasswordLogin() {
           <form onSubmit={recover} className="space-y-5">
             <div>
               <p className="text-xs uppercase tracking-wider text-ink/50 mb-2">Forgot password</p>
-              <h1 className="font-pixel text-3xl uppercase leading-tight">กู้คืนรหัสผ่าน</h1>
-              <p className="text-sm text-ink/60 mt-2">ใส่รหัสกู้คืน (MEOW-XXXX-XXXX-XXXX) ที่ได้ตอนตั้งรหัสผ่าน เอกสารทั้งหมดจะยังอยู่ครบ</p>
+              <h1 className="font-pixel text-3xl uppercase leading-tight">{t("กู้คืนรหัสผ่าน")}</h1>
+              <p className="text-sm text-ink/60 mt-2">{t("ใส่รหัสกู้คืน (MEOW-XXXX-XXXX-XXXX) ที่ได้ตอนตั้งรหัสผ่าน เอกสารทั้งหมดจะยังอยู่ครบ")}</p>
             </div>
             <Field
               label="Recovery code"
@@ -161,15 +162,15 @@ export default function PasswordLogin() {
               onFocus={() => setTyping(true)}
               onBlur={() => setTyping(false)}
               onChange={(e) => { setNewPass(e.target.value); setError(''); }}
-              placeholder="อย่างน้อย 4 ตัว"
+              placeholder={t("อย่างน้อย 4 ตัว")}
             />
             <ErrorNote>{error}</ErrorNote>
             <button disabled={busy || !recovery || !newPass} className="font-menu font-medium w-full min-h-[52px] bg-ink text-paper rounded-[3px] hover:bg-neutral-700 disabled:opacity-40 transition">
-              ตั้งรหัสผ่านใหม่
+              {t("ตั้งรหัสผ่านใหม่")}
             </button>
             <div className="flex justify-between gap-3 text-sm font-menu">
-              <button type="button" onClick={() => go('login')} className="min-h-[44px] underline underline-offset-4 text-ink/70">‹ กลับ</button>
-              <button type="button" onClick={() => go('wipe')} className="min-h-[44px] underline underline-offset-4 text-ink/70">ไม่มีรหัสกู้คืน</button>
+              <button type="button" onClick={() => go('login')} className="min-h-[44px] underline underline-offset-4 text-ink/70">{t("‹ กลับ")}</button>
+              <button type="button" onClick={() => go('wipe')} className="min-h-[44px] underline underline-offset-4 text-ink/70">{t("ไม่มีรหัสกู้คืน")}</button>
             </div>
           </form>
         )}
@@ -178,17 +179,17 @@ export default function PasswordLogin() {
           <form onSubmit={wipe} className="space-y-5">
             <div>
               <p className="text-xs uppercase tracking-wider text-red-700 mb-2">Reset device</p>
-              <h1 className="font-pixel text-3xl uppercase leading-tight">เริ่มใหม่ทั้งหมด</h1>
+              <h1 className="font-pixel text-3xl uppercase leading-tight">{t("เริ่มใหม่ทั้งหมด")}</h1>
               <p className="text-sm text-ink/60 mt-2">
-                ถ้าไม่มีรหัสกู้คืน วิธีเดียวคือล้างข้อมูลในเครื่องนี้แล้วตั้งรหัสใหม่ <b className="text-red-700">เอกสารและประวัติทั้งหมดจะถูกลบ</b>
+                {t("ถ้าไม่มีรหัสกู้คืน วิธีเดียวคือล้างข้อมูลในเครื่องนี้แล้วตั้งรหัสใหม่")} <b className="text-red-700">{t("เอกสารและประวัติทั้งหมดจะถูกลบ")}</b>
               </p>
             </div>
-            <Field label='พิมพ์ "RESET" เพื่อยืนยัน' value={wipeText} autoCapitalize="characters" onChange={(e) => { setWipeText(e.target.value); setError(''); }} placeholder="RESET" />
+            <Field label={t('พิมพ์ "RESET" เพื่อยืนยัน')} value={wipeText} autoCapitalize="characters" onChange={(e) => { setWipeText(e.target.value); setError(''); }} placeholder="RESET" />
             <ErrorNote>{error}</ErrorNote>
             <button className="font-menu font-medium w-full min-h-[52px] bg-red-700 text-white rounded-[3px] hover:bg-red-800 transition">
-              ลบข้อมูลและเริ่มใหม่
+              {t("ลบข้อมูลและเริ่มใหม่")}
             </button>
-            <button type="button" onClick={() => go('login')} className="font-menu w-full min-h-[44px] text-sm underline underline-offset-4 text-ink/70">‹ กลับไปหน้าเข้าสู่ระบบ</button>
+            <button type="button" onClick={() => go('login')} className="font-menu w-full min-h-[44px] text-sm underline underline-offset-4 text-ink/70">{t("‹ กลับไปหน้าเข้าสู่ระบบ")}</button>
           </form>
         )}
 

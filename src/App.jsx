@@ -1,3 +1,4 @@
+import { t, useLang } from './i18n';
 import { useEffect, useState } from 'react';
 import { useDocumentStore } from './store/documentStore';
 import PasswordSetup from './pages/PasswordSetup';
@@ -10,6 +11,7 @@ function App() {
   const { isAuthenticated, passwordSet, initStore } = useDocumentStore();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  useLang((s) => s.lang); // re-render everything when the language changes
 
   useEffect(() => watchQuotaReset(), []);
 
@@ -18,7 +20,7 @@ function App() {
       try {
         await initStore();
       } catch {
-        setError('เปิดแอปไม่สำเร็จ ลองรีเฟรชหน้าอีกครั้ง');
+        setError(t('เปิดแอปไม่สำเร็จ ลองรีเฟรชหน้าอีกครั้ง'));
       } finally {
         setLoading(false);
       }

@@ -1,7 +1,8 @@
+import { t } from '../i18n';
 import { useEffect, useRef, useState } from 'react';
 import CameraCapture from '../components/CameraCapture';
 import CalicoCat from '../components/CalicoCat';
-import { Button, Card, PageTitle, PixelProgress, TypeLine } from '../components/ui';
+import { Button, Card, HowTo, PageTitle, PixelProgress, TypeLine } from '../components/ui';
 import { compressToDataURL } from '../utils/image';
 import { scanPage } from '../services/ocrClient';
 import { useQuota } from '../store/quotaStore';
@@ -44,7 +45,7 @@ export default function CapturePage({ onCapture }) {
     if (!next) return;
     setWorking({ id: next.id, stage: 'ai', progress: 5 });
     setPages((prev) => prev.map((p) => (p.id === next.id ? { ...p, status: 'reading' } : p)));
-    const template = useTemplates.getState().templates.find((t) => t.id === next.templateId) || null;
+    const template = useTemplates.getState().templates.find((tp) => tp.id === next.templateId) || null;
     scanPage(next.imageData, {
       template,
       onStage: (s) => setWorking((w) => (w ? { ...w, ...s, progress: Math.max(w.progress, s.progress || 0) } : w)),
@@ -54,7 +55,7 @@ export default function CapturePage({ onCapture }) {
         setPages((prev) => prev.map((p) => (p.id === next.id ? { ...p, ...res, status: 'done' } : p)));
       })
       .catch((err) => {
-        setScanError(err.message || 'สแกนไม่สำเร็จ');
+        setScanError(err.message || t('สแกนไม่สำเร็จ'));
         setPages((prev) => prev.map((p) => (p.id === next.id ? { ...p, status: 'error' } : p)));
       })
       .finally(() => {
@@ -75,7 +76,7 @@ export default function CapturePage({ onCapture }) {
       try {
         add(await compressToDataURL(f));
       } catch {
-        setPickError('เปิดรูปบางรูปไม่ได้ (ลองเลือกเป็น JPG/PNG)');
+        setPickError(t('เปิดรูปบางรูปไม่ได้ (ลองเลือกเป็น JPG/PNG)'));
       }
     }
   };
@@ -112,15 +113,26 @@ export default function CapturePage({ onCapture }) {
     <div className="safe-x pb-36">
       <div className="max-w-6xl mx-auto pt-8">
         <PageTitle kicker="Step 01" title="Scan">
-          ถ่ายหรือเลือกรูปเอกสาร ได้หลายหน้า แมวจะประมวลผลทีละหน้าตามลำดับ ระหว่างนั้นถ่ายหน้าต่อไปได้เลย
+          {t("ถ่ายหรือเลือกรูปเอกสาร ได้หลายหน้า แมวจะประมวลผลทีละหน้าตามลำดับ ระหว่างนั้นถ่ายหน้าต่อไปได้เลย")}
         </PageTitle>
+
+        <HowTo
+          id="capture"
+          items={[
+            ['📷', 'Open Camera = ถ่ายรัวได้เลย รูปไปรอในถาดด้านล่าง แล้วกด “ให้แมวอ่านทั้งหมดทีเดียว”'],
+            ['🖼', 'Choose Photo = เลือกรูปจากอัลบั้ม เลือกหลายรูปพร้อมกันได้'],
+            ['↑ ↓', 'กดลูกศรใต้รูปเพื่อสลับลำดับหน้า กด ✕ เพื่อลบรูป'],
+            ['📋', 'ฟอร์มที่ใช้บ่อย เลือก Template ก่อนถ่าย แมวจะกรอกลงช่องให้'],
+            ['›', 'แมวอ่านครบแล้ว กดปุ่ม “ตรวจทาน” มุมขวาล่าง'],
+          ]}
+        />
 
         <label className="block max-w-md mb-8">
           <span className="block text-xs uppercase tracking-wider text-ink/60 mb-2">Document title</span>
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="เช่น รายงานเคส 001"
+            placeholder={t("เช่น รายงานเคส 001")}
             className="w-full min-h-[52px] px-4 bg-white/70 border border-ink/20 rounded-[3px] outline-none focus:border-ink focus:bg-white transition"
           />
         </label>
@@ -137,9 +149,9 @@ export default function CapturePage({ onCapture }) {
                 <p className="text-sm text-red-700">{scanError}</p>
               ) : (
                 <>
-                  <p className="text-sm font-medium mb-1">กำลังประมวลผลหน้าที่ {currentIndex} จาก {pages.length}...</p>
+                  <p className="text-sm font-medium mb-1">{t('กำลังประมวลผลหน้าที่ {i} จาก {n}...', { i: currentIndex, n: pages.length })}</p>
                   <p className="text-xs text-ink/60 mb-3 truncate">
-                    <TypeLine key={working.stage} text={STAGE_TEXT[working.stage] || STAGE_TEXT.ai} />
+                    <TypeLine key={working.stage} text={t(STAGE_TEXT[working.stage] || STAGE_TEXT.ai)} />
                   </p>
                   <PixelProgress value={working.progress} />
                 </>
@@ -155,7 +167,7 @@ export default function CapturePage({ onCapture }) {
               <CalicoCat backdrop={false} />
             </div>
             <p className="font-pixel text-lg uppercase mb-1 text-ink">No pages yet</p>
-            <p className="text-sm text-ink/60 mb-6">เริ่มจากถ่ายรูปหรือเลือกรูปจากอัลบั้ม</p>
+            <p className="text-sm text-ink/60 mb-6">{t("เริ่มจากถ่ายรูปหรือเลือกรูปจากอัลบั้ม")}</p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Button onClick={() => setCamera(true)}>📷 Open Camera</Button>
               <Button variant="ghost" onClick={() => albumRef.current?.click()}>🖼 Choose Photo</Button>
@@ -180,23 +192,23 @@ export default function CapturePage({ onCapture }) {
                   </button>
                 </div>
                 <div className="p-3 text-xs min-h-[64px]">
-                  {p.status === 'queued' && <span className="text-ink/50">รอคิว...</span>}
-                  {p.status === 'reading' && <span className="text-[#c9661d]">กำลังประมวลผล...</span>}
+                  {p.status === 'queued' && <span className="text-ink/50">{t("รอคิว...")}</span>}
+                  {p.status === 'reading' && <span className="text-[#c9661d]">{t("กำลังประมวลผล...")}</span>}
                   {p.status === 'done' && (
                     <>
-                      <span className="text-ink/50">{p.engine === 'tesseract' ? `ออฟไลน์ · ${Math.round(p.confidence)}%` : 'AI ✓'}</span>
-                      <p className="line-clamp-2 mt-1 text-ink/80">{p.ocrText || '(ไม่พบข้อความ)'}</p>
+                      <span className="text-ink/50">{p.engine === 'tesseract' ? t('ออฟไลน์ · {p}%', { p: Math.round(p.confidence) }) : 'AI ✓'}</span>
+                      <p className="line-clamp-2 mt-1 text-ink/80">{p.ocrText || t('(ไม่พบข้อความ)')}</p>
                     </>
                   )}
                   {p.status === 'error' && (
                     <button onClick={() => retry(p.id)} className="font-menu text-red-700 underline underline-offset-4 min-h-[40px]">
-                      ไม่สำเร็จ — ลองใหม่
+                      {t("ไม่สำเร็จ — ลองใหม่")}
                     </button>
                   )}
                 </div>
                 <div className="flex border-t border-ink/10">
-                  <button disabled={i === 0} onClick={() => move(i, -1)} aria-label="เลื่อนขึ้น" className="flex-1 h-10 hover:bg-ink/5 disabled:opacity-25">↑</button>
-                  <button disabled={i === pages.length - 1} onClick={() => move(i, 1)} aria-label="เลื่อนลง" className="flex-1 h-10 hover:bg-ink/5 disabled:opacity-25 border-l border-ink/10">↓</button>
+                  <button disabled={i === 0} onClick={() => move(i, -1)} aria-label={t("เลื่อนขึ้น")} className="flex-1 h-10 hover:bg-ink/5 disabled:opacity-25">↑</button>
+                  <button disabled={i === pages.length - 1} onClick={() => move(i, 1)} aria-label={t("เลื่อนลง")} className="flex-1 h-10 hover:bg-ink/5 disabled:opacity-25 border-l border-ink/10">↓</button>
                 </div>
               </Card>
             ))}
@@ -206,7 +218,7 @@ export default function CapturePage({ onCapture }) {
             >
               <span className="text-center font-menu text-sm">
                 <span className="block font-pixel text-3xl mb-2">+</span>
-                เพิ่มหน้า
+                {t("เพิ่มหน้า")}
               </span>
             </button>
           </div>
@@ -223,9 +235,9 @@ export default function CapturePage({ onCapture }) {
         <div className="fixed bottom-0 inset-x-0 z-20 bg-paper/90 backdrop-blur border-t border-ink/10 safe-x pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3">
           <div className="max-w-6xl mx-auto flex gap-3">
             <Button variant="ghost" onClick={() => albumRef.current?.click()} className="px-4" aria-label="Choose Photo">🖼</Button>
-            <Button variant="ghost" onClick={() => setCamera(true)} className="flex-1 sm:flex-none">📷 ถ่ายเพิ่ม</Button>
+            <Button variant="ghost" onClick={() => setCamera(true)} className="flex-1 sm:flex-none">{t("📷 ถ่ายเพิ่ม")}</Button>
             <Button onClick={finish} disabled={busy} className="flex-1 sm:ml-auto sm:flex-none sm:px-8">
-              {busy ? `เหลือ ${queued + (working ? 1 : 0)} หน้า...` : `ตรวจทาน (${pages.length}) ›`}
+              {busy ? t('เหลือ {n} หน้า...', { n: queued + (working ? 1 : 0) }) : t('ตรวจทาน ({n}) ›', { n: pages.length })}
             </Button>
           </div>
         </div>

@@ -34,6 +34,7 @@
     .bar nav a { text-decoration: none; padding: 4px 8px; border-radius: 3px; white-space: nowrap; color: rgba(238,238,236,.8); }
     .bar nav a:hover { background: rgba(238,238,236,.12); color: var(--paper); }
     .bar nav a.app { border: 1px solid rgba(238,238,236,.4); color: var(--paper); }
+    .bar .lang { font-family: 'Silkscreen', monospace; font-size: 11px; background: none; color: var(--paper); border: 1px solid rgba(238,238,236,.4); border-radius: 3px; padding: 2px 8px; cursor: pointer; }
     @media (max-width: 640px) { .bar nav a:not(.app) { display: none; } }
 
     header.hero { padding: 40px 0 16px; display: grid; gap: 20px; align-items: center; }
@@ -158,6 +159,7 @@
         <a href="#features">ลูกเล่น</a>
         <a href="#careful">ข้อควรระวัง</a>
         <a href="#faq">คำถาม</a>
+        <button class="lang" id="langBtn" type="button" aria-label="Switch language">TH/EN</button>
         <a class="app" href="/">เปิดแอป ›</a>
       </nav>
     </div>
@@ -363,7 +365,7 @@
             <span class="num">05</span>
             <h3>ส่งออกเป็นไฟล์</h3>
             <ul class="clean">
-              <li>เลือกฟอนต์ <b>ภาษาไทย</b> และ <b>ภาษาอังกฤษ</b> (แนะนำ Sarabun หรือ Noto Sans Thai สำหรับภาษาไทย สระไม่ลอย)</li>
+              <li>เลือกฟอนต์รายงาน มีให้เลือก 11 แบบ เช่น TH Sarabun New, Sarabun, Kanit ดูตัวอย่างก่อนได้</li>
               <li>กด <span class="chip dark">ดาวน์โหลด .DOCX</span> (Word) หรือ <span class="chip dark">ดาวน์โหลด .XLSX</span> (Excel)</li>
               <li>อยากได้สไลด์? กด <span class="chip purple">Export as Slide</span> เลือกสไตล์ แล้วกด Copy Prompt ไปวางใน Gemini / ChatGPT / Claude</li>
               <li>เอกสารเก็บไว้ในหน้า <b>History</b> 7 วัน กลับมาแก้หรือโหลดซ้ำได้</li>
@@ -382,6 +384,8 @@
         <div class="card"><span class="icon">👀</span><h3>ข้าต้องการสิ่งนี้เพิ่ม</h3><p>อยากได้ฟีเจอร์อะไร กดปุ่มที่มีแมวจ้องตา พิมพ์บอกได้เลย ส่งถึงคนทำแอปทันที ไม่ต้องล็อกอิน</p></div>
         <div class="card"><span class="icon">🔊</span><h3>เสียงแมว</h3><p>กดรูปลำโพงมุมขวาบน เปิดแล้วจะมีเสียง “เมี๊ยว~” ตอนสแกนเสร็จหรือส่งออกไฟล์สำเร็จ</p></div>
         <div class="card"><span class="icon">📋</span><h3>Template ของทีม</h3><p>เทมเพลตที่บันทึกไว้ เพื่อนในทีมใช้ได้ด้วย เหมาะกับฟอร์มเดิม ๆ เช่น Chart ตรวจฟัน</p></div>
+        <div class="card"><span class="icon">🌏</span><h3>ไทย / English</h3><p>กดปุ่ม <span class="chip">TH/EN</span> บนแถบดำด้านบน เพื่อสลับภาษาของหน้าเว็บ</p></div>
+        <div class="card"><span class="icon">💡</span><h3>วิธีใช้ทุกหน้า</h3><p>ทุกหน้าจะมีกล่อง “วิธีใช้หน้านี้” บอกสั้น ๆ ว่ากดตรงไหน อ่านแล้วกดปิดได้</p></div>
         <div class="card"><span class="icon">🔑</span><h3>คีย์ส่วนตัว (ไม่บังคับ)</h3><p>ถ้าโควตาวันนี้หมด ผู้ที่มี Gemini API Key ใส่ของตัวเองได้ที่ <b>⚙ ตั้งค่า</b></p></div>
       </div>
     </section>
@@ -522,7 +526,7 @@
           setTimeout(() => w.classList.remove('fast'), 1500);
         } else if (toy === 'sachet') {
           licks += 1;
-          document.getElementById('lickCount').textContent = `แตะซองแมวเลีย (เลียไปแล้ว ${licks} ครั้ง)`;
+          document.getElementById('lickCount').textContent = lang === 'en' ? `Tap the treat (licked ${licks} times)` : `แตะซองแมวเลีย (เลียไปแล้ว ${licks} ครั้ง)`;
         } else if (toy === 'bowl') {
           const k = document.getElementById('kibbles');
           const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
@@ -538,6 +542,97 @@
       el.addEventListener('click', act);
       el.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); act(); } });
     });
+  // ---- English translation (text-node dictionary). Language is shared with the app. ----
+  const EN = {
+    'คู่มือ MEOW Agent': 'MEOW Agent guide', 'รหัสผ่าน': 'Password', 'วิธีใช้': 'How to', 'ลูกเล่น': 'Extras', 'ข้อควรระวัง': 'Be careful', 'คำถาม': 'FAQ',
+    'เปิดแอป ›': 'Open app ›', 'คู่มือฉบับเข้าใจง่าย': 'The easy guide',
+    'ถ่ายรูปเอกสาร (ลายมือก็ได้) แล้วให้แมว AI อ่านและพิมพ์ให้ ได้ไฟล์ Word หรือ Excel ที่มีหัวข้อ ตาราง และตัวหนาครบ ไม่ต้องนั่งพิมพ์ใหม่เอง': 'Snap a document (handwriting is fine) and the AI cat types it up for you — a Word or Excel file with headings, tables and bold text. No retyping.',
+    'เริ่มใช้งาน ›': 'Get started ›', 'ดูวิธีใช้ 5 ขั้นตอน': 'See the 5 steps', 'เมี้ยว!': 'Meow!',
+    'ก่อนเริ่ม': 'Before you start', 'ใช้ได้กับเครื่องไหนบ้าง': 'What can I use it on?', 'มือถือ / iPad / คอมพิวเตอร์': 'Phone / iPad / computer',
+    'เปิดผ่านเว็บเบราว์เซอร์ (Safari หรือ Chrome) ไม่ต้องติดตั้งแอป': 'Open it in a web browser (Safari or Chrome). Nothing to install.',
+    'อินเทอร์เน็ต': 'Internet', 'ต้องต่อเน็ตตอนให้แมวอ่าน ถ้าเน็ตหลุด แมวจะอ่านแบบออฟไลน์ให้แทน (แม่นน้อยลงหน่อย)': "You need internet while the cat reads. If it drops, the cat reads offline instead (a bit less accurate).",
+    'เพิ่มไว้หน้าจอหลัก': 'Add to Home Screen', 'iPhone/iPad: กดปุ่มแชร์': 'iPhone/iPad: tap Share', 'เพิ่มไปยังหน้าจอโฮม': 'Add to Home Screen', 'จะได้เปิดเหมือนแอปทั่วไป': 'and open it like a normal app',
+    'สำคัญที่สุด': 'Most important', 'รหัสผ่าน = กุญแจประวัติของคุณ': 'Your password = the key to your history',
+    '1. ตั้งรหัสครั้งแรก': '1. Set it the first time', 'เปิดแอปครั้งแรก จะให้ตั้งรหัสผ่าน (อย่างน้อย 4 ตัว)': 'The first time you open the app, set a password (at least 4 characters)',
+    'หลังตั้งเสร็จ แอปจะโชว์': 'Then the app shows a', 'รหัสกู้คืน': 'recovery code', 'หน้าตาแบบนี้': 'like this', 'กด': 'Tap',
+    'บันทึกเป็นไฟล์': 'Save as file', 'หรือแคปหน้าจอเก็บไว้': 'or take a screenshot.', 'แอปจะโชว์ให้ดูแค่ครั้งเดียว': 'It is shown only once.',
+    '2. ใช้รหัสเดียวกัน ทุกเครื่องเห็นเหมือนกัน': '2. Same password, same history everywhere', 'เอกสารและประวัติ 7 วันจะ': 'Documents and 7-day history', 'ซิงก์ทุกเครื่อง': 'sync to every device',
+    'ที่ใส่รหัสเดียวกัน สแกนจากมือถือ แล้วไปเปิดต่อบน iPad หรือคอมก็ได้': 'that uses the same password. Scan on your phone, continue on an iPad or computer.',
+    'มือถือ': 'Phone', 'คอม': 'PC', 'เปิดแอปในเครื่องใหม่ → พิมพ์รหัสเดิม → ประวัติตามมาเอง': 'Open the app on a new device → type the same password → your history follows',
+    '3. ลืมรหัสผ่าน ทำยังไง': '3. Forgot your password?', 'หน้าใส่รหัส กด': 'On the password screen, tap', 'ลืมรหัสผ่าน?': 'Forgot password?', 'ใส่': 'Enter your',
+    '(MEOW-XXXX-XXXX-XXXX) แล้วตั้งรหัสใหม่': '(MEOW-XXXX-XXXX-XXXX) and set a new password', 'เอกสารไม่หาย และทุกเครื่องใช้รหัสใหม่ได้เลย': 'Nothing is lost, and every device can use the new password',
+    'ไม่มีทั้งรหัสผ่านและรหัสกู้คืน = ต้องเริ่มใหม่ ประวัติเดิมจะเปิดไม่ได้': "No password and no recovery code = start over; the old history can't be opened",
+    '4. ตั้งรหัสยังไงให้ปลอดภัย': '4. Choosing a safe password', 'ยิ่งยาวยิ่งดี': 'Longer is better', 'เช่น วลีสั้น ๆ ที่จำได้': 'e.g. a short phrase you remember', 'แมวส้มกินปลาทู88': 'OrangeCatEatsFish88',
+    'อย่าใช้วันเกิด เบอร์โทร หรือ 1234': "Don't use birthdays, phone numbers or 1234", 'ใครรู้รหัส = เห็นเอกสารของคุณ': 'Anyone with your password can see your documents', 'อย่าบอกคนอื่น': "— don't share it",
+    'ถ้าคนสองคนบังเอิญตั้งรหัสเหมือนกัน จะเห็นเอกสารของกันและกัน รหัสที่เดายากจึงสำคัญ': "If two people happen to pick the same password they'll see each other's documents, so make it hard to guess",
+    'ทำตามนี้ทีละขั้น': 'Follow these one at a time', 'เปิดแอป แล้วใส่รหัสผ่าน': 'Open the app and enter your password', 'ครั้งแรกให้ตั้งรหัส (อ่าน': 'Set a password the first time (see', 'เรื่องรหัสผ่าน': 'Password',
+    ') ครั้งต่อไปพิมพ์รหัสแล้วกด': '). Next time, type it and tap', 'เข้าสู่ระบบ': 'Log in', 'ระหว่างพิมพ์ น้องแมวจะปิดตาให้ ไม่แอบดู': "— the cat covers its eyes while you type, no peeking",
+    'แตะน้องแมวดูสิ': 'Tap the cat!', 'ถ่ายรูป หรือเลือกรูปจากอัลบั้ม': 'Take photos or pick from your album', 'แล้วเลือก': 'then choose', '(ถ่ายตอนนี้) หรือ': '(shoot now) or', '(เลือกรูปที่มีอยู่ เลือกหลายรูปได้)': '(pick existing photos, several at once)',
+    'ถ่ายรัวได้เลย': 'Shoot in bursts', 'ไม่ต้องกดยืนยันทีละรูป รูปจะไปรอในถาดด้านล่าง รูปไหนเบลอ แตะแล้วกดลบ': '— no confirming each photo. Shots wait in the tray below; tap a blurry one to delete it',
+    'ถ่ายครบแล้วกด': 'When done, tap', 'ให้แมวอ่านทั้งหมดทีเดียว': 'Let the cat read them all', 'เป็นฟอร์มที่ใช้บ่อย (เช่น ใบซักประวัติ)? เลือก': 'A form you use often (e.g. patient history)? Pick a',
+    'ก่อนถ่าย แมวจะกรอกลงช่องให้ตรงเป๊ะ': 'before shooting and the cat fills the exact fields', 'แตะไม้ตกแมวให้แกว่งเร็วขึ้น': 'Tap the teaser wand to make it swing',
+    'รอแมวอ่าน (ไม่ต้องทำอะไร)': 'Let the cat read (nothing to do)', 'แมวอ่านทีละหน้าตามลำดับ จะขึ้นว่า': 'The cat reads one page at a time and shows', '“กำลังประมวลผลหน้าที่ 1 จาก 5...”': '“Processing page 1 of 5...”',
+    'ระหว่างรอ ถ่ายหน้าต่อไปได้เลย': 'Keep shooting while you wait,', 'แต่อย่าปิดหน้าเว็บ': "but don't close the page", 'แถบดำด้านบนบอกว่าวันนี้': 'The black bar at the top shows', '“แมวทำให้ได้อีกกี่รูป”': 'how many images the cat can still do today',
+    'ดูหน้าแมวก็รู้ คึกคัก = เหลือเยอะ, หาวง่วง = ใกล้หมด, หลับ = หมดแล้ว รอพรุ่งนี้': '— just look at the cat: playful = plenty left, yawning = almost out, asleep = none left until tomorrow',
+    'แตะซองแมวเลีย (เลียไปแล้ว 0 ครั้ง)': 'Tap the treat (licked 0 times)', 'ตรวจทานให้ถูกต้อง': 'Check everything', 'จอแบ่งสองฝั่ง': 'Split screen:', 'ซ้าย = รูปต้นฉบับ': 'left = original photo',
+    '(จีบนิ้วเพื่อซูม)': '(pinch to zoom)', 'ขวา = ข้อความที่แมวพิมพ์ให้': 'right = the text the cat typed', 'แตะแก้ได้ทุกจุดเหมือนพิมพ์ใน Word': '— tap anything to edit, just like Word',
+    'คำที่แมวอ่านไม่ออกจะเป็น': 'Words the cat could not read show as', '[ไม่ชัดเจน]': '[ไม่ชัดเจน]', 'สีเหลือง แก้ให้ถูกก่อนส่งออก': 'in yellow — fix them before exporting',
+    'ตารางยาก ๆ อ่านเพี้ยน? กด': 'Tricky table came out wrong? Tap', '🔍 สแกนหน้านี้ใหม่แบบละเอียด': '🔍 Re-scan this page in detail', 'หน้าสลับกัน? แท็บ': 'Pages out of order? The', 'จัดเรียงหน้า': 'Reorder pages',
+    'ลากวาง หรือกด ↑ ↓': 'tab: drag and drop, or tap ↑ ↓', 'ฟอร์มนี้ใช้บ่อย? กด': 'Use this form often? Tap', '💾 บันทึกโครงสร้างนี้เป็น Template': '💾 Save structure as template',
+    '(เก็บแค่หัวตาราง ไม่เก็บข้อมูลคนไข้)': '(keeps only table headers, never patient data)', 'แตะถ้วยเพื่อเติมข้าว': 'Tap the bowl to add kibble', 'ส่งออกเป็นไฟล์': 'Export a file',
+    'เลือกฟอนต์รายงาน มีให้เลือก 11 แบบ เช่น TH Sarabun New, Sarabun, Kanit ดูตัวอย่างก่อนได้': 'Pick a report font — 11 choices such as TH Sarabun New, Sarabun and Kanit, with a live preview',
+    'ดาวน์โหลด .DOCX': 'Download .DOCX', '(Word) หรือ': '(Word) or', 'ดาวน์โหลด .XLSX': 'Download .XLSX', 'อยากได้สไลด์? กด': 'Want slides? Tap',
+    'เลือกสไตล์ แล้วกด Copy Prompt ไปวางใน Gemini / ChatGPT / Claude': 'pick a style, then Copy Prompt into Gemini / ChatGPT / Claude', 'เอกสารเก็บไว้ในหน้า': 'Documents stay in', '7 วัน กลับมาแก้หรือโหลดซ้ำได้': 'for 7 days — come back to edit or download again',
+    'ลูกเล่นเพิ่มเติม': 'More goodies', 'รู้ไว้ ใช้คล่องขึ้น': 'Good to know', 'ข้าต้องการสิ่งนี้เพิ่ม': 'I want this feature',
+    'อยากได้ฟีเจอร์อะไร กดปุ่มที่มีแมวจ้องตา พิมพ์บอกได้เลย ส่งถึงคนทำแอปทันที ไม่ต้องล็อกอิน': 'Want something new? Tap the button with the staring cat and type it in — it goes straight to the developer, no login needed',
+    'เสียงแมว': 'Cat sounds', 'กดรูปลำโพงมุมขวาบน เปิดแล้วจะมีเสียง “เมี๊ยว~” ตอนสแกนเสร็จหรือส่งออกไฟล์สำเร็จ': 'Tap the speaker at the top right to hear a “meow~” when scans finish or a file is exported',
+    'ไทย / English': 'ไทย / English', 'กดปุ่ม': 'Tap', 'บนแถบดำด้านบน เพื่อสลับภาษาของหน้าเว็บ': 'in the black bar to switch the site language',
+    'วิธีใช้ทุกหน้า': 'How-to on every page', 'ทุกหน้าจะมีกล่อง “วิธีใช้หน้านี้” บอกสั้น ๆ ว่ากดตรงไหน อ่านแล้วกดปิดได้': 'Every page has a short “How to use this page” box. Close it once you know',
+    'Template ของทีม': 'Team templates', 'เทมเพลตที่บันทึกไว้ เพื่อนในทีมใช้ได้ด้วย เหมาะกับฟอร์มเดิม ๆ เช่น Chart ตรวจฟัน': 'Saved templates are shared with your team — great for repeat forms like dental charts',
+    'คีย์ส่วนตัว (ไม่บังคับ)': 'Personal key (optional)', 'ถ้าโควตาวันนี้หมด ผู้ที่มี Gemini API Key ใส่ของตัวเองได้ที่': "If today's quota runs out, anyone with a Gemini API key can add their own in", '⚙ ตั้งค่า': '⚙ Settings',
+    'อ่านสักนิด กันพลาด': 'A quick read to avoid mistakes', '⚠️ ตรวจก่อนใช้จริงเสมอ': '⚠️ Always check before real use', 'แมว AI เก่ง แต่': 'The AI cat is good, but it', 'อ่านผิดได้': 'can misread',
+    'โดยเฉพาะลายมือหวัด ตัวเลข ชื่อยา และขนาดยา': '— especially messy handwriting, numbers, drug names and doses', 'เทียบกับต้นฉบับทุกครั้งก่อนส่งต่อ หรือก่อนใช้ในการรักษา': 'Compare with the original before sharing or using it for treatment',
+    '🔒 ข้อมูลคนไข้': '🔒 Patient data', 'อย่าบอกรหัสผ่านใคร ใครรู้รหัสจะเห็นเอกสารทั้งหมด': 'Never share your password — whoever has it sees all documents', 'ใช้เครื่องคนอื่นหรือเครื่องสาธารณะ? กด': "On someone else's or a shared device? Tap",
+    'ทุกครั้ง': 'every time', 'รูปที่สแกนถูกส่งให้ระบบ AI (Google Gemini) ช่วยอ่าน': 'Scanned images are sent to an AI service (Google Gemini) to be read',
+    '🗓 ประวัติอยู่แค่ 7 วัน': '🗓 History lasts 7 days', 'เอกสารที่เก่ากว่า 7 วันจะถูกลบอัตโนมัติ': 'Documents older than 7 days are deleted automatically', 'อยากเก็บนาน ๆ ให้': 'To keep them longer,', 'ดาวน์โหลดไฟล์': 'download the file', 'เก็บไว้ในเครื่อง': 'to your device',
+    '📸 ถ่ายให้แมวอ่านง่าย': '📸 Help the cat read', 'เช็ดเลนส์กล้องก่อน ถ่ายตรง ๆ ทีละหน้า ให้เอกสารเต็มกรอบ': 'Wipe the lens, shoot straight on, one page at a time, filling the frame',
+    'แสงสว่าง ไม่มีเงามือ ไม่มีแสงสะท้อน': 'Good light, no hand shadows, no glare', 'อย่าปิดหรือสลับแอปตอนแมวกำลังอ่าน': "Don't close or switch apps while the cat is reading",
+    'คำถามที่พบบ่อย': 'Frequently asked', 'สงสัยตรงไหน ดูตรงนี้': 'Answers to common questions', 'เปิดในเครื่องใหม่ แล้วเอกสารเก่าหายไปไหน?': 'I opened it on a new device — where are my documents?',
+    'รหัสผ่านเดิม': 'same password', 'ที่ใช้ในเครื่องแรก แล้วรอสักครู่ ประวัติ 7 วันจะตามมาเอง (ต้องต่ออินเทอร์เน็ต)': 'you used on the first device and wait a moment — your 7-day history appears (internet needed)',
+    'ตัวเลข “แมวทำให้ได้อีก ... รูป” คืออะไร?': 'What is the “the cat can do ... images” number?',
+    'จำนวนรูปที่ให้แมว AI อ่านได้อีกในวันนี้ (ใช้ร่วมกันทั้งทีม) จะเติมใหม่ทุกวันประมาณบ่ายสองถึงบ่ายสามโมง หน้าเว็บจะรีเฟรชเองตอนเติม': "How many more images the AI cat can read today (shared by the team). It refills daily around 14:00–15:00 Thai time and the page refreshes itself",
+    'ทำไมบางคำขึ้นสีเหลือง [ไม่ชัดเจน]?': 'Why are some words yellow [ไม่ชัดเจน]?', 'แมวอ่านไม่ออกเลยไม่เดา จะใส่ [ไม่ชัดเจน] ไว้ให้คุณแก้เอง ช่วยกันกันข้อมูลผิด': "The cat couldn't read them, so instead of guessing it marks [ไม่ชัดเจน] for you to fix — it prevents wrong data",
+    'เปิดไฟล์ Word แล้วฟอนต์ไม่เหมือนในแอป?': "The Word file's font looks different?", 'เครื่องที่เปิดไฟล์ต้องมีฟอนต์นั้นติดตั้งอยู่ ถ้าไม่มี Word จะใช้ฟอนต์ใกล้เคียงแทน ดาวน์โหลด Sarabun / Noto Sans Thai ได้จาก Google Fonts': 'The computer opening the file needs that font installed; otherwise Word uses a similar one. Sarabun / Noto Sans Thai are on Google Fonts',
+    'Android ใช้ได้ไหม?': 'Does it work on Android?', 'เปิดผ่าน Chrome ได้ ฟีเจอร์เหมือนกัน (ทีมทดสอบบน iPhone / iPad / คอมเป็นหลัก)': 'Yes, in Chrome, with the same features (tested mainly on iPhone / iPad / computers)',
+    'มีปัญหา หรืออยากได้ฟีเจอร์เพิ่ม?': 'Problem or feature idea?', '“ข้าต้องการสิ่งนี้เพิ่ม”': '“I want this feature”', 'ในแอป (ปุ่มที่มีแมวจ้องตา) พิมพ์มาได้เลย': 'in the app (the button with the staring cat) and type away',
+    'MEOW Agent · ทำด้วยแมวและปลาทู 🐟 ·': 'MEOW Agent · made with cats and fish 🐟 ·', 'เปิดแอป': 'Open app',
+  };
+  const textNodes = [];
+  (function walk(node) {
+    for (const c of node.childNodes) {
+      if (c.nodeType === 3 && c.nodeValue.trim()) textNodes.push({ node: c, th: c.nodeValue });
+      else if (c.nodeType === 1 && !['SCRIPT', 'STYLE', 'svg'].includes(c.nodeName) && c.id !== 'lickCount') walk(c);
+    }
+  })(document.body);
+  let lang = 'th';
+  try { lang = localStorage.getItem('meow-lang') || 'th'; } catch { /* ignore */ }
+  function applyLang(l) {
+    lang = l;
+    document.documentElement.lang = l;
+    textNodes.forEach(({ node, th }) => {
+      const key = th.replace(/\s+/g, ' ').trim();
+      const lead = th.match(/^\s*/)[0];
+      const trail = th.match(/\s*$/)[0];
+      node.nodeValue = l === 'en' && EN[key] ? lead + EN[key] + trail : th;
+    });
+    document.getElementById('lickCount').textContent = l === 'en' ? `Tap the treat (licked ${licks} times)` : `แตะซองแมวเลีย (เลียไปแล้ว ${licks} ครั้ง)`;
+    document.getElementById('langBtn').innerHTML = l === 'th' ? 'TH<span style="opacity:.4">/EN</span>' : '<span style="opacity:.4">TH/</span>EN';
+    document.title = l === 'en' ? 'MEOW Agent — Guide' : 'MEOW Agent — คู่มือใช้งาน';
+    try { localStorage.setItem('meow-lang', l); } catch { /* ignore */ }
+  }
+  document.getElementById('langBtn').addEventListener('click', () => applyLang(lang === 'th' ? 'en' : 'th'));
+  applyLang(lang);
+  phrases.splice(0, phrases.length, ...(lang === 'en' ? ['Meow!', 'Treat please', "Let's scan", 'Purrr...', "Where's my wand?", '=^..^='] : phrases));
   </script>
 </body>
 </html>

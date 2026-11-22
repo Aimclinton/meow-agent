@@ -204,3 +204,24 @@ body {
 @keyframes mood-breathe { 50% { transform: scaleY(0.94); } }
 @keyframes mood-z { 0% { opacity: 0; transform: translateY(1px); } 30% { opacity: 1; } 100% { opacity: 0; transform: translateY(-3px); } }
 @media (prefers-reduced-motion: reduce) { .mood-cat * { animation: none !important; } }
+
+/* ---------- Page transitions ---------- */
+.page-in { animation: page-up .42s cubic-bezier(.2,.9,.3,1.15) both; position: relative; }
+.page-in.page-next { animation-name: page-next; }
+.page-in.page-prev { animation-name: page-prev; }
+@keyframes page-up { from { opacity: 0; transform: translateY(18px) scale(.985); } to { opacity: 1; transform: none; } }
+@keyframes page-next { from { opacity: 0; transform: translateX(28px) rotate(.4deg); } to { opacity: 1; transform: none; } }
+@keyframes page-prev { from { opacity: 0; transform: translateX(-28px) rotate(-.4deg); } to { opacity: 1; transform: none; } }
+
+/* little paw prints that tip-toe across the top on every page change */
+.paw-trail { position: fixed; top: calc(env(safe-area-inset-top) + 2.25rem); left: 0; right: 0; height: 28px; pointer-events: none; z-index: 35; }
+.paw-trail span { position: absolute; top: 0; font-size: 16px; opacity: 0; animation: paw-step .9s ease-out both; filter: grayscale(.2); }
+.paw-trail span:nth-child(1) { left: 18%; animation-delay: 0s; }
+.paw-trail span:nth-child(2) { left: 44%; top: 8px; animation-delay: .12s; transform: rotate(14deg); }
+.paw-trail span:nth-child(3) { left: 70%; animation-delay: .24s; }
+@keyframes paw-step { 0% { opacity: 0; transform: translateY(6px) scale(.6); } 30% { opacity: .9; transform: none; } 100% { opacity: 0; transform: translateY(-4px); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .page-in, .paw-trail span { animation: none !important; }
+  .paw-trail { display: none; }
+}

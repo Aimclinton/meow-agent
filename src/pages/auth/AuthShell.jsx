@@ -1,5 +1,6 @@
+import { t } from '../../i18n';
 import CalicoCat from '../../components/CalicoCat';
-import { PixelLogo } from '../../components/ui';
+import { HowTo, PixelLogo } from '../../components/ui';
 
 // Split layout: cat on top (phone) / left (iPad), form card below / right.
 export default function AuthShell({ mood = 'open', shake = false, children }) {
@@ -14,7 +15,19 @@ export default function AuthShell({ mood = 'open', shake = false, children }) {
           <div className="w-[62%] max-w-[300px] md:w-full md:max-w-[440px] mx-auto">
             <CalicoCat mood={mood} />
           </div>
-          <div className={`rise w-full max-w-md mx-auto ${shake ? 'shake' : ''}`}>{children}</div>
+          <div className={`rise w-full max-w-md mx-auto ${shake ? 'shake' : ''}`}>
+            {children}
+            <div className="mt-6">
+              <HowTo
+                id="auth"
+                items={[
+                  ['🔑', 'ตั้งรหัสอย่างน้อย 4 ตัว ยิ่งยาวยิ่งปลอดภัย ใครรู้รหัสจะเห็นเอกสารของคุณ'],
+                  ['🔄', 'เครื่องใหม่? ใส่รหัสเดิม ประวัติจะตามมาเอง'],
+                  ['🧾', 'เก็บรหัสกู้คืน (MEOW-XXXX-...) ไว้ ใช้ตอนลืมรหัสผ่าน'],
+                ]}
+              />
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -44,7 +57,7 @@ export function RecoveryCodeCard({ code, onDone }) {
     try { await navigator.clipboard.writeText(code); } catch { /* ignore */ }
   };
   const save = () => {
-    const blob = new Blob([`MEOW AI Agent — recovery code\n\n${code}\n\nใช้รหัสนี้เมื่อลืมรหัสผ่าน`], { type: 'text/plain' });
+    const blob = new Blob([`MEOW AI Agent — recovery code\n\n${code}\n\n${t('ใช้รหัสนี้เมื่อลืมรหัสผ่าน')}`], { type: 'text/plain' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
     a.download = 'meow-recovery-code.txt';
@@ -55,20 +68,20 @@ export function RecoveryCodeCard({ code, onDone }) {
     <div className="space-y-5">
       <div>
         <p className="text-xs uppercase tracking-wider text-ink/50 mb-2">Recovery code</p>
-        <h2 className="font-pixel text-2xl uppercase leading-tight">เก็บรหัสกู้คืนไว้นะ</h2>
+        <h2 className="font-pixel text-2xl uppercase leading-tight">{t("เก็บรหัสกู้คืนไว้นะ")}</h2>
         <p className="text-sm text-ink/60 mt-2">
-          ถ้าลืมรหัสผ่าน ใช้รหัสนี้ตั้งรหัสใหม่ได้โดยเอกสารไม่หาย ระบบจะแสดงรหัสนี้แค่ครั้งเดียว
+          {t("ถ้าลืมรหัสผ่าน ใช้รหัสนี้ตั้งรหัสใหม่ได้โดยเอกสารไม่หาย ระบบจะแสดงรหัสนี้แค่ครั้งเดียว")}
         </p>
       </div>
       <div className="bg-ink text-paper rounded-[3px] px-4 py-5 text-center font-pixel text-xl sm:text-2xl tracking-wider select-all break-all">
         {code}
       </div>
       <div className="grid grid-cols-2 gap-3">
-        <button onClick={copy} className="font-menu min-h-[48px] border border-ink rounded-[3px] text-sm hover:bg-ink hover:text-paper transition">คัดลอก</button>
-        <button onClick={save} className="font-menu min-h-[48px] border border-ink rounded-[3px] text-sm hover:bg-ink hover:text-paper transition">บันทึกเป็นไฟล์</button>
+        <button onClick={copy} className="font-menu min-h-[48px] border border-ink rounded-[3px] text-sm hover:bg-ink hover:text-paper transition">{t("คัดลอก")}</button>
+        <button onClick={save} className="font-menu min-h-[48px] border border-ink rounded-[3px] text-sm hover:bg-ink hover:text-paper transition">{t("บันทึกเป็นไฟล์")}</button>
       </div>
       <button onClick={onDone} className="font-menu font-medium w-full min-h-[52px] bg-ink text-paper rounded-[3px] hover:bg-neutral-700 transition">
-        เก็บแล้ว เข้าแอปเลย ›
+        {t("เก็บแล้ว เข้าแอปเลย ›")}
       </button>
     </div>
   );
