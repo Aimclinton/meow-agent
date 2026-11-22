@@ -1,6 +1,6 @@
 import { readJSON, sendJSON, supabaseEnabled } from './_lib/config.js';
 import {
-  createVault, deleteDoc, findVault, imagePath, listDocs, listOldDocs, recoverVault, saveDoc, signedUrls, uploadImage,
+  createVault, dbReady, deleteDoc, findVault, imagePath, listDocs, listOldDocs, recoverVault, saveDoc, signedUrls, uploadImage,
 } from './_lib/supabase.js';
 
 const DAY = 24 * 60 * 60 * 1000;
@@ -20,6 +20,9 @@ export default async function handler(req, res) {
   const { action, token } = body;
 
   try {
+    // Not ready (wrong URL/key or schema.sql not run) → the app quietly stays local.
+    const ready = await dbReady();
+    if (!ready.ok) return sendJSON(res, 200, { enabled: false, reason: ready.reason, message: ready.message });
     if (action === 'status') return sendJSON(res, 200, { enabled: true });
 
     if (action === 'open') {

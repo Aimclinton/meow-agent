@@ -28,10 +28,11 @@ export default function PasswordSetup() {
         return;
       }
       const newCode = generateRecoveryCode();
-      if (existing.enabled) await openVault(password, { create: true, recoveryCode: newCode });
+      if (existing.enabled) await openVault(password, { create: true, recoveryCode: newCode }).catch((err) => console.warn('Cloud vault not created', err));
       setCode(await setPassword(password, newCode));
-    } catch {
-      setError(t('บันทึกรหัสผ่านไม่สำเร็จ ลองใหม่อีกครั้ง'));
+    } catch (err) {
+      console.error('Password setup failed', err);
+      setError(`${t('บันทึกรหัสผ่านไม่สำเร็จ ลองใหม่อีกครั้ง')} (${err?.message || err})`);
     } finally {
       setBusy(false);
     }

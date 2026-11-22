@@ -1,9 +1,9 @@
 import { readJSON, sendJSON, supabaseEnabled } from './_lib/config.js';
-import { findVault, insertTemplate, listTemplates, removeTemplate } from './_lib/supabase.js';
+import { dbReady, findVault, insertTemplate, listTemplates, removeTemplate } from './_lib/supabase.js';
 
 // Shared template library for the whole team (stored in Supabase `templates`).
 export default async function handler(req, res) {
-  if (!supabaseEnabled()) return sendJSON(res, 200, { enabled: false, templates: [] });
+  if (!supabaseEnabled() || !(await dbReady()).ok) return sendJSON(res, 200, { enabled: false, templates: [] });
   const token = req.headers['x-meow-vault'];
   if (!(await findVault(token).catch(() => null))) return sendJSON(res, 401, { error: 'unauthorized' });
 

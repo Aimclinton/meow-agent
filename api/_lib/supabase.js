@@ -20,6 +20,17 @@ async function rest(path, { method = 'GET', body, prefer } = {}) {
   return text ? JSON.parse(text) : null;
 }
 
+// Is the database set up (schema.sql run, URL and key correct)?
+export async function dbReady() {
+  if (!supabaseEnabled()) return { ok: false, reason: 'not_configured' };
+  try {
+    await rest('meow_vaults?select=id&limit=1');
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, reason: 'db_error', message: String(err.message || err).slice(0, 200) };
+  }
+}
+
 // ---------- vaults: "same password → same history" ----------
 const SECRET = () => process.env.VAULT_SECRET || SUPABASE_SERVICE_ROLE_KEY;
 const hmac = (kind, value) => createHmac('sha256', SECRET()).update(`${kind}:${value}`).digest('hex');

@@ -10,8 +10,11 @@ export default async function handler(req, res) {
   // With Supabase configured, only people logged in with a team password may use the shared key.
   const userKey = (req.headers['x-user-gemini-key'] || '').trim();
   if (supabaseEnabled() && !userKey) {
-    const vault = await findVault(req.headers['x-meow-vault']).catch(() => null);
-    if (!vault) return sendJSON(res, 401, { error: 'unauthorized' });
+    // If the database itself is unreachable, don't lock everyone out of scanning.
+    let vault = null;
+    let dbDown = false;
+    try { vault = await findVault(req.headers['x-meow-vault']); } catch { dbDown = true; }
+    if (!vault && !dbDown) return sendJSON(res, 401, { error: 'unauthorized' });
   }
 
   const apiKey = userKey || process.env.GEMINI_API_KEY;

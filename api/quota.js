@@ -9,6 +9,7 @@ export default async function handler(req, res) {
     limit: DAILY_LIMIT,
     used,
     shared: used !== null,
+    cloud: supabaseEnabled(),
     gemini: !!process.env.GEMINI_API_KEY,
     timeZone: 'America/Los_Angeles',
   });
