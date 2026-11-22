@@ -1,6 +1,5 @@
 import { create } from 'zustand';
-import { schedulePush, deleteRemote, pullDocuments } from '../services/sync';
-import { supabase, supabaseEnabled } from '../lib/supabase';
+import { schedulePush, deleteFromCloud, pullFromCloud, setVaultToken } from '../services/vault';
 
 const HISTORY_DAYS = 7;
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -10,7 +9,7 @@ function persist(get, docId) {
   const doc = get().documents.find((d) => d.id === docId);
   if (!doc) return;
   saveToIndexedDB(doc).catch((err) => console.error('Save failed', err));
-  schedulePush(doc, (paths) => get().setImagePaths(docId, paths));
+  schedulePush(doc, (pageIds) => get().markUploaded(docId, pageIds));
 }
 
 function touch(doc) {
@@ -63,12 +62,11 @@ export const useDocumentStore = create((set, get) => ({
     return newDoc;
   },
 
-  // Record uploaded image paths without changing updatedAt (avoids sync loops).
-  setImagePaths: (docId, paths) => {
-    const byId = new Map(paths.map((p) => [p.id, p.imagePath]));
+  // Mark images as uploaded without changing updatedAt (avoids sync loops).
+  markUploaded: (docId, pageIds) => {
     set((state) => ({
       documents: state.documents.map((d) => (d.id === docId
-        ? { ...d, pages: d.pages.map((p) => (byId.has(p.id) ? { ...p, imagePath: byId.get(p.id) } : p)) }
+        ? { ...d, pages: d.pages.map((p) => (pageIds.includes(p.id) ? { ...p, uploaded: true } : p)) }
         : d)),
     }));
     const doc = get().documents.find((d) => d.id === docId);
@@ -78,7 +76,7 @@ export const useDocumentStore = create((set, get) => ({
   // Merge the cloud copy of the last 7 days into this device.
   syncFromCloud: async () => {
     try {
-      const fresh = await pullDocuments(get().documents);
+      const fresh = await pullFromCloud(get().documents);
       if (!fresh.length) return;
       const byId = new Map(get().documents.map((d) => [d.id, d]));
       fresh.forEach((d) => { byId.set(d.id, d); saveToIndexedDB(d).catch(() => {}); });
@@ -131,7 +129,7 @@ export const useDocumentStore = create((set, get) => ({
     const doc = get().documents.find((d) => d.id === docId);
     set((state) => ({ documents: state.documents.filter((d) => d.id !== docId) }));
     deleteFromIndexedDB(docId);
-    if (doc) deleteRemote(doc).catch((err) => console.warn('Remote delete failed', err));
+    if (doc) deleteFromCloud(docId).catch((err) => console.warn('Cloud delete failed', err));
   },
 
   getRecentDocuments: () => {
@@ -141,8 +139,8 @@ export const useDocumentStore = create((set, get) => ({
 
   // ---- Auth ----
   // Returns the recovery code the user must keep for "forgot password".
-  setPassword: async (password) => {
-    const recoveryCode = generateRecoveryCode();
+  setPassword: async (password, existingCode = null) => {
+    const recoveryCode = existingCode || generateRecoveryCode();
     await saveAuth(password, recoveryCode);
     return recoveryCode; // call finishAuth() once the user has saved it
   },
@@ -164,19 +162,25 @@ export const useDocumentStore = create((set, get) => ({
 
   finishAuth: () => set({ passwordSet: true, isAuthenticated: true }),
   authenticate: () => set({ isAuthenticated: true }),
-  logout: async () => {
-    if (supabaseEnabled) {
-      // Cloud mode: documents live in the account, so clear this device's copy.
-      await supabase.auth.signOut().catch(() => {});
-      const db = await openIndexedDB();
-      const tx = db.transaction('documents', 'readwrite');
-      tx.objectStore('documents').clear();
-      await txDone(tx).catch(() => {});
-      set({ isAuthenticated: false, documents: [] });
-      return;
-    }
+  logout: () => {
+    setVaultToken(null);
     set({ isAuthenticated: false });
   },
+
+  // Save this device's password (and recovery code if known) after a cloud login.
+  adoptPassword: async (password, recoveryCode = null) => {
+    await saveAuth(password, recoveryCode);
+  },
+
+  // Remove this device's documents (used when switching to another password's history).
+  wipeLocalDocs: async () => {
+    const db = await openIndexedDB();
+    const tx = db.transaction('documents', 'readwrite');
+    tx.objectStore('documents').clear();
+    await txDone(tx);
+    set({ documents: [] });
+  },
+
 }));
 
 // ---------- crypto helpers ----------
@@ -198,6 +202,8 @@ function generateRecoveryCode() {
   const chars = [...vals].map((v) => alphabet[v % alphabet.length]).join('');
   return `MEOW-${chars.slice(0, 4)}-${chars.slice(4, 8)}-${chars.slice(8, 12)}`;
 }
+
+export { generateRecoveryCode };
 
 export function normalizeCode(code) {
   return code.toUpperCase().replace(/[^A-Z0-9]/g, '');
@@ -261,7 +267,8 @@ async function saveAuth(password, recoveryCode) {
   const tx = db.transaction('auth', 'readwrite');
   const store = tx.objectStore('auth');
   store.put({ type: 'password', salt, hash: await sha256(salt + password) });
-  store.put({ type: 'recovery', salt: codeSalt, hash: await sha256(codeSalt + normalizeCode(recoveryCode)) });
+  if (recoveryCode) store.put({ type: 'recovery', salt: codeSalt, hash: await sha256(codeSalt + normalizeCode(recoveryCode)) });
+  else store.delete('recovery');
   return txDone(tx);
 }
 

@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import CalicoCat from './CalicoCat';
 import { useQuota } from '../store/quotaStore';
+import { useSound } from '../utils/sound';
+import MoodCat from './MoodCat';
 
 export function PixelLogo({ size = 22 }) {
   return (
@@ -186,25 +188,49 @@ export function TypeLine({ text, speed = 35, className = '' }) {
   );
 }
 
-// Thin bar shown at the top of every screen.
+// Thin bar shown at the top of every screen: quota + cat mood + sound toggle.
 export function QuotaBar() {
   const used = useQuota((s) => s.used);
   const limit = useQuota((s) => s.limit);
+  const soundOn = useSound((s) => s.on);
+  const toggleSound = useSound((s) => s.toggle);
   const left = Math.max(0, limit - used);
   const pct = limit ? (left / limit) * 100 : 0;
+  const mood = left <= 0 ? 'asleep' : pct > 50 ? 'playful' : 'sleepy';
   const low = pct <= 10;
   return (
     <div className="sticky top-0 z-40 bg-ink text-paper safe-x pt-[env(safe-area-inset-top)]">
-      <div className="max-w-6xl mx-auto h-7 flex items-center gap-3 text-[11px] sm:text-xs">
-        <span className="font-pixel shrink-0" aria-hidden="true">=^.^=</span>
+      <div className="max-w-6xl mx-auto h-7 flex items-center gap-2 sm:gap-3 text-[11px] sm:text-xs">
+        <span className="shrink-0 -mb-1" title={mood === 'playful' ? 'แมวคึกคัก' : mood === 'sleepy' ? 'แมวเริ่มง่วง' : 'แมวหลับ'}>
+          <MoodCat mood={mood} size={30} />
+        </span>
         <span className="truncate">
-          แมวเลียตอนนี้ แมวทำให้ได้อีก <b className={`font-pixel ${low ? 'text-[#e2782a]' : ''}`}>{left.toLocaleString()}</b> รูป
+          {left > 0 ? (
+            <>แมวเลียตอนนี้ แมวทำให้ได้อีก <b className={`font-pixel ${low ? 'text-[#e2782a]' : ''}`}>{left.toLocaleString()}</b> รูป</>
+          ) : (
+            <>รอเติมแมวเลียพรุ่งนี้น้า</>
+          )}
         </span>
         <span className="ml-auto hidden sm:flex gap-[2px] w-24" aria-hidden="true">
           {Array.from({ length: 10 }, (_, i) => (
             <span key={i} className={`h-2 flex-1 ${i < Math.ceil(pct / 10) ? (low ? 'bg-[#e2782a]' : 'bg-paper') : 'bg-paper/20'}`} />
           ))}
         </span>
+        <button
+          onClick={toggleSound}
+          aria-label={soundOn ? 'ปิดเสียงแมว' : 'เปิดเสียงแมว'}
+          aria-pressed={soundOn}
+          className="ml-auto sm:ml-0 w-7 h-7 -mr-1 grid place-items-center shrink-0 hover:bg-paper/10 rounded-[3px]"
+        >
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
+            <path d="M2 6h3l4-3v10l-4-3H2z" fill="currentColor" stroke="none" />
+            {soundOn ? (
+              <><path d="M11 5.5a3.5 3.5 0 0 1 0 5" /><path d="M12.8 3.5a6 6 0 0 1 0 9" /></>
+            ) : (
+              <path d="M11 6l4 4M15 6l-4 4" />
+            )}
+          </svg>
+        </button>
       </div>
     </div>
   );

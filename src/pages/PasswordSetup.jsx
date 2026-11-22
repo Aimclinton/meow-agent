@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { useDocumentStore } from '../store/documentStore';
+import { useDocumentStore, generateRecoveryCode } from '../store/documentStore';
+import { openVault } from '../services/vault';
 import AuthShell, { Field, ErrorNote, RecoveryCodeCard } from './auth/AuthShell';
 
 export default function PasswordSetup() {
@@ -9,7 +10,7 @@ export default function PasswordSetup() {
   const [typing, setTyping] = useState(false);
   const [code, setCode] = useState(null);
   const [busy, setBusy] = useState(false);
-  const { setPassword, finishAuth } = useDocumentStore();
+  const { setPassword, finishAuth, adoptPassword, syncFromCloud } = useDocumentStore();
 
   const submit = async (e) => {
     e.preventDefault();
@@ -17,7 +18,17 @@ export default function PasswordSetup() {
     if (password !== confirm) return setError('รหัสผ่านสองช่องไม่ตรงกัน');
     setBusy(true);
     try {
-      setCode(await setPassword(password));
+      // Same password used on another device? Join that history instead.
+      const existing = await openVault(password).catch(() => ({ enabled: false }));
+      if (existing.exists) {
+        await adoptPassword(password);
+        finishAuth();
+        syncFromCloud();
+        return;
+      }
+      const newCode = generateRecoveryCode();
+      if (existing.enabled) await openVault(password, { create: true, recoveryCode: newCode });
+      setCode(await setPassword(password, newCode));
     } catch {
       setError('บันทึกรหัสผ่านไม่สำเร็จ ลองใหม่อีกครั้ง');
     } finally {
@@ -39,7 +50,7 @@ export default function PasswordSetup() {
         <div>
           <p className="text-xs uppercase tracking-wider text-ink/50 mb-2">First time</p>
           <h1 className="font-pixel text-3xl uppercase leading-tight">ตั้งรหัสผ่าน</h1>
-          <p className="text-sm text-ink/60 mt-2">ใช้ล็อกเอกสารและประวัติ 7 วันในเครื่องนี้ (แมวจะไม่แอบดู)</p>
+          <p className="text-sm text-ink/60 mt-2">ใช้ล็อกเอกสารและประวัติ 7 วัน ใส่รหัสเดียวกันในเครื่องอื่นแล้วประวัติจะตามไปด้วย (แมวจะไม่แอบดู)</p>
         </div>
         <Field
           label="Password"

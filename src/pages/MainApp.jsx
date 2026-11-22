@@ -5,6 +5,7 @@ import HistoryPage from './HistoryPage';
 import ExportPage from './ExportPage';
 import CreateSlidesModal from '../components/CreateSlidesModal';
 import SettingsModal from '../components/SettingsModal';
+import FeatureRequest from '../components/FeatureRequest';
 import { CatMascot, PixelLogo } from '../components/ui';
 
 export default function MainApp() {
@@ -117,7 +118,7 @@ export default function MainApp() {
       </section>
 
       {/* Dashboard */}
-      <main className="safe-x pb-[max(2.5rem,env(safe-area-inset-bottom))]">
+      <main className="safe-x pb-28">
         <div className="max-w-6xl mx-auto border-t border-ink/15 pt-8">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-12">
             {actions.map((a) => (
@@ -177,6 +178,7 @@ export default function MainApp() {
         </div>
       </main>
 
+      <FeatureRequest />
       {settings && <SettingsModal onClose={() => setSettings(false)} />}
       {slidesDoc && <CreateSlidesModal document={slidesDoc} onClose={() => setSlidesDoc(null)} />}
     </div>

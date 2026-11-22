@@ -1,12 +1,14 @@
--- MEOW Agent — run once in Supabase: Dashboard → SQL Editor → New query → Run
+-- MEOW Agent — run once in Supabase: Dashboard → SQL Editor → New query → paste → Run
+-- Everything is accessed only by the Vercel functions with the service role key,
+-- so Row Level Security is ON with no public policies (the browser never talks to the DB).
 
--- 1) Team-wide daily scan counter (used by /api/ocr with the service role key)
+-- 1) Team-wide daily scan counter
 create table if not exists public.meow_usage (
   day text primary key,          -- YYYY-MM-DD in America/Los_Angeles (Gemini reset time)
   count integer not null default 0,
   updated_at timestamptz not null default now()
 );
-alter table public.meow_usage enable row level security;   -- only the service role may write
+alter table public.meow_usage enable row level security;
 
 create or replace function public.meow_increment_usage(p_day text, p_n integer default 1)
 returns integer language plpgsql security definer set search_path = public as $$
@@ -19,31 +21,43 @@ begin
 end $$;
 revoke all on function public.meow_increment_usage(text, integer) from public, anon, authenticated;
 
--- 2) Per-user document history (synced across a user's devices)
-create table if not exists public.meow_documents (
-  user_id uuid not null references auth.users(id) on delete cascade default auth.uid(),
+-- 2) Vaults: the same password opens the same history on every device.
+--    Only keyed hashes (HMAC) of the password / recovery code are stored.
+create table if not exists public.meow_vaults (
+  id uuid primary key default gen_random_uuid(),
+  key_hash text not null unique,
+  recovery_hash text unique,
+  created_at timestamptz not null default now()
+);
+alter table public.meow_vaults enable row level security;
+
+create table if not exists public.meow_vault_documents (
+  vault_id uuid not null references public.meow_vaults(id) on delete cascade,
   id text not null,
   title text,
   data jsonb not null,           -- document without image bytes (images live in Storage)
   updated_at timestamptz not null default now(),
-  primary key (user_id, id)
+  primary key (vault_id, id)
 );
-alter table public.meow_documents enable row level security;
-drop policy if exists "own documents" on public.meow_documents;
-create policy "own documents" on public.meow_documents
-  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
-create index if not exists meow_documents_updated on public.meow_documents (user_id, updated_at desc);
+alter table public.meow_vault_documents enable row level security;
+create index if not exists meow_vault_documents_updated on public.meow_vault_documents (vault_id, updated_at desc);
 
--- 3) Private bucket for page images: <user_id>/<doc_id>/<page_id>.jpg
+-- 3) Shared form/table templates for the whole team
+create table if not exists public.templates (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  description text,
+  structure jsonb not null,      -- page structure (headings, table headers, empty cells)
+  created_at timestamptz not null default now()
+);
+alter table public.templates enable row level security;
+
+-- 4) Private bucket for page images: <vault_id>/<doc_id>/<page_id>.jpg
 insert into storage.buckets (id, name, public) values ('meow-pages', 'meow-pages', false)
 on conflict (id) do nothing;
-drop policy if exists "own page images" on storage.objects;
-create policy "own page images" on storage.objects
-  for all to authenticated
-  using (bucket_id = 'meow-pages' and (storage.foldername(name))[1] = auth.uid()::text)
-  with check (bucket_id = 'meow-pages' and (storage.foldername(name))[1] = auth.uid()::text);
 
--- 4) Housekeeping: the app removes documents (and their images) older than 7 days
---    each time a user opens it. Old usage rows can be cleared with pg_cron if wanted:
+-- Documents older than 7 days (and their images) are removed by the app
+-- whenever someone with that password opens it.
+-- Optional nightly clean-up of old counters (enable the pg_cron extension first):
 -- select cron.schedule('meow-usage-cleanup', '0 3 * * *',
 --   $$ delete from public.meow_usage where updated_at < now() - interval '30 days' $$);

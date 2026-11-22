@@ -124,7 +124,7 @@ body {
 }
 
 /* Viewfinder corner brackets */
-.viewfinder { position: relative; }
+/* .viewfinder needs a positioned parent: add `relative` or `absolute` on the element */
 .viewfinder > i {
   position: absolute;
   width: 22px;
@@ -184,3 +184,23 @@ body {
 }
 
 .unclear-mark { background: #fde047; box-shadow: 0 0 0 2px #fde047; border-radius: 2px; }
+
+/* ---------- Mood cat (quota bar) ---------- */
+.mood-cat { overflow: visible; display: block; }
+.mood-playful .mood-body { animation: mood-bounce .5s ease-in-out infinite; }
+.mood-playful .mood-tail { transform-origin: 3px 9px; animation: mood-wag .35s ease-in-out infinite alternate; }
+.mood-playful .mood-legs { animation: mood-run .25s steps(2) infinite; }
+.mood-sleepy .mood-head { transform-origin: 15px 9px; animation: mood-nod 2.6s ease-in-out infinite; }
+.mood-sleepy .mood-yawn { transform-origin: 15px 7.8px; animation: mood-yawn 2.6s ease-in-out infinite; }
+.mood-sleepy .mood-tail { transform-origin: 3px 9px; animation: mood-wag 2s ease-in-out infinite alternate; }
+.mood-asleep .mood-body { transform-origin: 12px 14px; animation: mood-breathe 3s ease-in-out infinite; }
+.mood-asleep .mood-zzz text { animation: mood-z 2.4s ease-in-out infinite; }
+.mood-asleep .mood-zzz text:nth-child(2) { animation-delay: 1.2s; }
+@keyframes mood-bounce { 50% { transform: translateY(-1.2px); } }
+@keyframes mood-wag { from { transform: rotate(-25deg); } to { transform: rotate(20deg); } }
+@keyframes mood-run { 50% { transform: translateX(0.8px); } }
+@keyframes mood-nod { 0%, 60%, 100% { transform: rotate(0); } 75% { transform: rotate(10deg); } }
+@keyframes mood-yawn { 0%, 30%, 100% { transform: scale(0); } 45%, 70% { transform: scale(1); } }
+@keyframes mood-breathe { 50% { transform: scaleY(0.94); } }
+@keyframes mood-z { 0% { opacity: 0; transform: translateY(1px); } 30% { opacity: 1; } 100% { opacity: 0; transform: translateY(-3px); } }
+@media (prefers-reduced-motion: reduce) { .mood-cat * { animation: none !important; } }

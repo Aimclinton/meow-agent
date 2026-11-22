@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useDocumentStore } from '../store/documentStore';
 import { AppHeader, Button, Card, PageTitle } from '../components/ui';
 import CalicoCat from '../components/CalicoCat';
+import FeatureRequest from '../components/FeatureRequest';
 
 const DAY = 24 * 60 * 60 * 1000;
 
@@ -28,7 +29,8 @@ export default function HistoryPage({ onBack, onSelect, onExport, onNew }) {
   return (
     <div className="min-h-screen bg-paper text-ink font-mono overflow-x-hidden">
       <AppHeader onBack={onBack} backLabel="Home" />
-      <div className="safe-x pb-[max(2.5rem,env(safe-area-inset-bottom))]">
+      <FeatureRequest />
+      <div className="safe-x pb-28">
         <div className="max-w-6xl mx-auto pt-8">
           <PageTitle kicker="Last 7 days" title="History">
             เอกสารเก็บไว้ในเครื่องนี้ 7 วัน แล้วลบอัตโนมัติ

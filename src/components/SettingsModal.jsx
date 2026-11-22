@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { supabase, supabaseEnabled } from '../lib/supabase';
+import { cloudEnabled } from '../services/vault';
 import { useDocumentStore } from '../store/documentStore';
 import { useSettings } from '../store/settingsStore';
 import { useQuota } from '../store/quotaStore';
@@ -11,12 +11,12 @@ export default function SettingsModal({ onClose }) {
   const [draft, setDraft] = useState(geminiKey);
   const [show, setShow] = useState(false);
   const [saved, setSaved] = useState(false);
-  const [email, setEmail] = useState('');
+  const [cloud, setCloud] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const syncFromCloud = useDocumentStore((st) => st.syncFromCloud);
 
   useEffect(() => {
-    if (supabaseEnabled) supabase.auth.getSession().then(({ data }) => setEmail(data.session?.user?.email || ''));
+    cloudEnabled().then(setCloud);
   }, []);
 
   const save = () => {
@@ -41,10 +41,10 @@ export default function SettingsModal({ onClose }) {
           <button onClick={onClose} aria-label="Close" className="w-11 h-11 grid place-items-center hover:bg-ink/5 shrink-0">✕</button>
         </div>
 
-        {supabaseEnabled && (
+        {cloud && (
           <section className="mb-6 pb-6 border-b border-ink/10">
-            <p className="font-menu font-medium mb-1">บัญชี</p>
-            <p className="text-sm text-ink/60 mb-3">{email || '—'} · ประวัติ 7 วันซิงก์ทุกเครื่อง</p>
+            <p className="font-menu font-medium mb-1">ซิงก์ประวัติ</p>
+            <p className="text-sm text-ink/60 mb-3">เครื่องไหนใส่รหัสผ่านเดียวกัน จะเห็นประวัติ 7 วันชุดเดียวกัน</p>
             <Button
               variant="ghost"
               disabled={syncing}

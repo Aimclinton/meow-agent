@@ -83,6 +83,16 @@ Rules:
 - Footnotes, endnotes and reference/bibliography entries go into "references".
 - Handwriting is common (e.g. dental/medical notes): transcribe carefully, abbreviations as written.`;
 
+export function templateInstruction(template) {
+  return `TEMPLATE MODE — this page is a filled-in copy of a known form. Use EXACTLY this structure:
+- Output the same blocks in the same order, the same headings, the same tables with the same number of rows, columns, merged cells and header cells.
+- Fill each empty cell / "Label:" with the value written in the image for that position. Keep header and label text exactly as in the template.
+- If a field is blank in the image, leave it empty. If it is unreadable, write [ไม่ชัดเจน]. Never move values to a different cell.
+- Extra content that does not fit the template goes in additional paragraph blocks at the end.
+Template "${String(template.name || '').slice(0, 80)}":
+${JSON.stringify(template.structure).slice(0, 20000)}`;
+}
+
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 class GeminiError extends Error {
@@ -92,12 +102,12 @@ class GeminiError extends Error {
   }
 }
 
-async function callModel(model, apiKey, image, mimeType) {
+async function callModel(model, apiKey, image, mimeType, template) {
   const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
     body: JSON.stringify({
-      contents: [{ role: 'user', parts: [{ inline_data: { mime_type: mimeType, data: image } }, { text: PROMPT }] }],
+      contents: [{ role: 'user', parts: [{ inline_data: { mime_type: mimeType, data: image } }, { text: template ? `${PROMPT}\n\n${templateInstruction(template)}` : PROMPT }] }],
       generationConfig: {
         temperature: 0,
         responseMimeType: 'application/json',
@@ -117,14 +127,14 @@ async function callModel(model, apiKey, image, mimeType) {
 
 // Try models in order; on 429/503 wait ~3.5s and retry once before moving on.
 // Stops before the function's time budget runs out.
-export async function transcribePage({ image, mimeType = 'image/jpeg', apiKey, models, deadline, onAttempt }) {
+export async function transcribePage({ image, mimeType = 'image/jpeg', apiKey, models, deadline, onAttempt, template }) {
   let lastErr;
   for (const model of models) {
     for (let attempt = 0; attempt < 2; attempt++) {
       if (Date.now() > deadline - 8000) throw lastErr || new GeminiError(504, 'time budget exhausted');
       try {
         onAttempt?.(model, attempt);
-        const page = await callModel(model, apiKey, image, mimeType);
+        const page = await callModel(model, apiKey, image, mimeType, template);
         return { page, model };
       } catch (err) {
         lastErr = err;

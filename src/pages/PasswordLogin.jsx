@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { useDocumentStore, verifyPassword, hasRecoveryCode } from '../store/documentStore';
+import { useDocumentStore, verifyPassword, hasRecoveryCode, generateRecoveryCode } from '../store/documentStore';
+import { openVault, recoverVault, cloudEnabled, wasLinked } from '../services/vault';
 import AuthShell, { Field, ErrorNote, RecoveryCodeCard } from './auth/AuthShell';
 
 export default function PasswordLogin() {
@@ -15,11 +16,20 @@ export default function PasswordLogin() {
   const [newPass, setNewPass] = useState('');
   const [newCode, setNewCode] = useState(null);
   const [wipeText, setWipeText] = useState('');
-  const { authenticate, resetPasswordWithCode, resetEverything } = useDocumentStore();
+  const [cloud, setCloud] = useState(false);
+  const [notice, setNotice] = useState('');
+  const { authenticate, resetPasswordWithCode, resetEverything, adoptPassword, wipeLocalDocs, syncFromCloud } = useDocumentStore();
 
   useEffect(() => {
     hasRecoveryCode().then(setCanRecover).catch(() => setCanRecover(false));
+    cloudEnabled().then(setCloud);
   }, []);
+
+  const enter = () => {
+    setHappy(true);
+    syncFromCloud();
+    setTimeout(authenticate, 450);
+  };
 
   const fail = (msg) => {
     setError(msg);
@@ -32,11 +42,25 @@ export default function PasswordLogin() {
     setError('');
     try {
       if (await verifyPassword(password)) {
-        setHappy(true);
-        setTimeout(authenticate, 450);
-      } else {
-        fail('รหัสผ่านไม่ถูกต้อง');
+        const r = await openVault(password).catch(() => ({ enabled: false }));
+        if (r.enabled && !r.exists) {
+          // The password was changed on another device (forgot-password flow).
+          if (wasLinked()) return fail('รหัสผ่านนี้ถูกเปลี่ยนจากเครื่องอื่นแล้ว ใช้รหัสใหม่นะ');
+          // Older device that never synced: create its cloud history now.
+          await openVault(password, { create: true }).catch(() => {});
+        }
+        enter();
+        return;
       }
+      // Not this device's password — maybe it's the password used on another device.
+      const remote = await openVault(password).catch(() => ({}));
+      if (remote.exists) {
+        await wipeLocalDocs();
+        await adoptPassword(password);
+        enter();
+        return;
+      }
+      fail('รหัสผ่านไม่ถูกต้อง');
     } catch {
       fail('ตรวจสอบรหัสผ่านไม่สำเร็จ');
     } finally {
@@ -49,8 +73,23 @@ export default function PasswordLogin() {
     if (newPass.length < 4) return fail('รหัสผ่านใหม่ต้องมีอย่างน้อย 4 ตัวอักษร');
     setBusy(true);
     try {
+      if (cloud) {
+        const r = await recoverVault(recovery, newPass);
+        if (r.reason === 'password_taken') return fail('รหัสผ่านนี้มีคนใช้แล้ว ลองตั้งรหัสอื่น');
+        if (r.ok) {
+          const localOk = await resetPasswordWithCode(recovery, newPass);
+          if (!localOk) {
+            await wipeLocalDocs();
+            await adoptPassword(newPass, recovery);
+          }
+          setNotice('ตั้งรหัสใหม่แล้ว ประวัติทุกเครื่องยังอยู่ครบ รหัสกู้คืนเดิมยังใช้ได้');
+          enter();
+          return;
+        }
+      }
       const code = await resetPasswordWithCode(recovery, newPass);
       if (!code) return fail('รหัสกู้คืนไม่ถูกต้อง');
+      if (cloud) await openVault(newPass, { create: true, recoveryCode: code }).catch(() => {});
       setNewCode(code);
       setView('code');
     } finally {
@@ -92,7 +131,7 @@ export default function PasswordLogin() {
             <button disabled={busy || !password} className="font-menu font-medium w-full min-h-[52px] bg-ink text-paper rounded-[3px] hover:bg-neutral-700 disabled:opacity-40 transition">
               {busy ? 'กำลังตรวจสอบ...' : 'เข้าสู่ระบบ'}
             </button>
-            <button type="button" onClick={() => go(canRecover ? 'forgot' : 'wipe')} className="font-menu w-full min-h-[44px] text-sm underline underline-offset-4 text-ink/70 hover:text-ink">
+            <button type="button" onClick={() => go(canRecover || cloud ? 'forgot' : 'wipe')} className="font-menu w-full min-h-[44px] text-sm underline underline-offset-4 text-ink/70 hover:text-ink">
               ลืมรหัสผ่าน?
             </button>
           </form>
@@ -153,7 +192,8 @@ export default function PasswordLogin() {
           </form>
         )}
 
-        {view === 'code' && newCode && <RecoveryCodeCard code={newCode} onDone={authenticate} />}
+        {view === 'code' && newCode && <RecoveryCodeCard code={newCode} onDone={enter} />}
+        {notice && <p className="text-sm border-l-2 border-[#e2782a] pl-3 py-1 mt-4">{notice}</p>}
       </div>
     </AuthShell>
   );

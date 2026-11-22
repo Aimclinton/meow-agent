@@ -5,6 +5,8 @@ import { useDocumentStore } from '../store/documentStore';
 import { documentToMarkdown } from '../utils/docContent';
 import { TH_FONTS, EN_FONTS, cssFont, fontSizeFor } from '../utils/fonts';
 import CreateSlidesModal from '../components/CreateSlidesModal';
+import FeatureRequest from '../components/FeatureRequest';
+import { meow } from '../utils/sound';
 import { AppHeader, Button, Card, CatMascot, PageTitle, PawBurst } from '../components/ui';
 
 const DONE_PHRASES = ['เสร็จแล้ว! เมี้ยว~', 'ขอแมวเลียเป็นค่าจ้าง', 'Purrfect!', 'งานไวเหมือนแมววิ่ง'];
@@ -49,6 +51,7 @@ export default function ExportPage({ document, onDone, onBack, onEdit, embedded 
       if (res?.success === false) throw new Error(res.error);
       setMessage({ ok: true, text: res?.fileName ? `บันทึก ${res.fileName} แล้ว` : 'เรียบร้อย!' });
       setBurst((n) => n + 1);
+      if (kind === 'docx' || kind === 'xlsx') meow();
     } catch (err) {
       setMessage({ ok: false, text: `ไม่สำเร็จ: ${err.message}` });
     } finally {
@@ -76,7 +79,7 @@ export default function ExportPage({ document, onDone, onBack, onEdit, embedded 
       {!embedded && <AppHeader onBack={onBack} />}
       <PawBurst key={burst} show={burst > 0} />
 
-      <div className="safe-x pb-[max(2.5rem,env(safe-area-inset-bottom))]">
+      <div className="safe-x pb-28">
         <div className="max-w-6xl mx-auto pt-8">
           <div className="grid md:grid-cols-[1fr_220px] gap-6 items-end">
             <PageTitle kicker={embedded ? 'Step 03' : 'Export'} title="Export">
@@ -160,6 +163,7 @@ export default function ExportPage({ document, onDone, onBack, onEdit, embedded 
         </div>
       </div>
 
+      <FeatureRequest />
       {slides && <CreateSlidesModal document={document} onClose={() => setSlides(false)} />}
     </div>
   );

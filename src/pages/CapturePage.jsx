@@ -5,6 +5,9 @@ import { Button, Card, PageTitle, PixelProgress, TypeLine } from '../components/
 import { compressToDataURL } from '../utils/image';
 import { scanPage } from '../services/ocrClient';
 import { useQuota } from '../store/quotaStore';
+import { meow } from '../utils/sound';
+import TemplatePicker from '../components/TemplatePicker';
+import { useTemplates } from '../store/templateStore';
 
 // Album picker: explicit types and NO `capture` attribute, so phones open the
 // photo library / gallery instead of forcing the camera.
@@ -32,7 +35,7 @@ export default function CapturePage({ onCapture }) {
   const consume = useQuota((q) => q.consume);
 
   const add = (imageData) =>
-    setPages((prev) => [...prev, { id: newId(), imageData, status: 'queued', ocrText: '', confidence: 0 }]);
+    setPages((prev) => [...prev, { id: newId(), imageData, status: 'queued', ocrText: '', confidence: 0, templateId: useTemplates.getState().selectedId || null }]);
 
   // Sequential queue: one page at a time, in order.
   useEffect(() => {
@@ -41,7 +44,9 @@ export default function CapturePage({ onCapture }) {
     if (!next) return;
     setWorking({ id: next.id, stage: 'ai', progress: 5 });
     setPages((prev) => prev.map((p) => (p.id === next.id ? { ...p, status: 'reading' } : p)));
+    const template = useTemplates.getState().templates.find((t) => t.id === next.templateId) || null;
     scanPage(next.imageData, {
+      template,
       onStage: (s) => setWorking((w) => (w ? { ...w, ...s, progress: Math.max(w.progress, s.progress || 0) } : w)),
     })
       .then((res) => {
@@ -52,7 +57,14 @@ export default function CapturePage({ onCapture }) {
         setScanError(err.message || 'สแกนไม่สำเร็จ');
         setPages((prev) => prev.map((p) => (p.id === next.id ? { ...p, status: 'error' } : p)));
       })
-      .finally(() => setWorking(null));
+      .finally(() => {
+        setWorking(null);
+        // Meow once when the whole queue is done.
+        setPages((prev) => {
+          if (!prev.some((p) => p.status === 'queued')) meow();
+          return prev;
+        });
+      });
   }, [pages, working, consume]);
 
   const pickFiles = async (e) => {
@@ -113,6 +125,8 @@ export default function CapturePage({ onCapture }) {
           />
         </label>
 
+        <TemplatePicker />
+
         {(working || scanError) && (
           <Card className="rise p-4 md:p-5 mb-6 flex items-center gap-4" aria-live="polite">
             <div className="w-16 shrink-0">
@@ -135,7 +149,7 @@ export default function CapturePage({ onCapture }) {
         )}
 
         {pages.length === 0 ? (
-          <Card className="viewfinder text-ink/70 border-dashed py-10 md:py-14 px-6 text-center">
+          <Card className="viewfinder relative text-ink/70 border-dashed py-10 md:py-14 px-6 text-center">
             <i /><i /><i /><i />
             <div className="w-28 mx-auto mb-6">
               <CalicoCat backdrop={false} />
@@ -219,8 +233,8 @@ export default function CapturePage({ onCapture }) {
 
       {camera && (
         <CameraCapture
-          shots={pages.length}
-          onCapture={add}
+          alreadyQueued={pages.length}
+          onDone={(images) => { images.forEach(add); setCamera(false); }}
           onClose={() => setCamera(false)}
           onNativeCamera={() => { setCamera(false); nativeCamRef.current?.click(); }}
         />

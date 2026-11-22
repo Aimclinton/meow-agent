@@ -68,3 +68,81 @@ export function structuredToText(page) {
   if (page?.footer) lines.push(page.footer);
   return lines.join('\n');
 }
+
+// ---------- TipTap → structured page (reverse) ----------
+const runsFrom = (nodes = []) =>
+  nodes.filter((n) => n.type === 'text').map((n) => {
+    const m = new Set((n.marks || []).map((x) => x.type));
+    const r = { text: n.text };
+    if (m.has('bold')) r.bold = true;
+    if (m.has('italic')) r.italic = true;
+    if (m.has('underline')) r.underline = true;
+    return r;
+  });
+
+export function contentToStructured(doc) {
+  const blocks = [];
+  for (const n of doc?.content || []) {
+    const align = n.attrs?.textAlign && n.attrs.textAlign !== 'left' ? n.attrs.textAlign : undefined;
+    if (n.type === 'heading') blocks.push({ type: 'heading', level: n.attrs?.level || 2, runs: runsFrom(n.content), ...(align ? { align } : {}) });
+    else if (n.type === 'paragraph') blocks.push({ type: 'paragraph', runs: runsFrom(n.content), ...(align ? { align } : {}) });
+    else if (n.type === 'bulletList' || n.type === 'orderedList') {
+      blocks.push({ type: 'list', ordered: n.type === 'orderedList', items: (n.content || []).map((li) => ({ runs: runsFrom(li.content?.[0]?.content) })) });
+    } else if (n.type === 'table') {
+      blocks.push({
+        type: 'table',
+        rows: (n.content || []).map((tr) => ({
+          cells: (tr.content || []).map((c) => ({
+            runs: (c.content || []).flatMap((p) => runsFrom(p.content)),
+            ...(c.attrs?.colspan > 1 ? { colspan: c.attrs.colspan } : {}),
+            ...(c.attrs?.rowspan > 1 ? { rowspan: c.attrs.rowspan } : {}),
+            ...(c.type === 'tableHeader' ? { header: true } : {}),
+          })),
+        })),
+      });
+    }
+  }
+  return { blocks };
+}
+
+const runsText = (runs = []) => runs.map((r) => r.text || '').join('').trim();
+// A label is short text ending with ":" (e.g. "ชื่อผู้ป่วย:") — kept in templates.
+const isLabel = (t) => /[:：]\s*$/.test(t) || /^[^:：]{1,40}[:：]/.test(t);
+
+// Keep the form's skeleton, drop the filled-in content:
+// headings stay, table header rows/cells and first-column row labels stay,
+// other cells are emptied; paragraphs keep only "Label:" parts.
+export function makeTemplate(structured) {
+  const blocks = [];
+  for (const b of structured.blocks || []) {
+    if (b.type === 'heading') blocks.push({ type: 'heading', level: b.level, runs: [{ text: runsText(b.runs) }] });
+    else if (b.type === 'table') {
+      const rows = b.rows || [];
+      const headerRows = rows.filter((r) => r.cells.every((c) => c.header)).length || 1;
+      blocks.push({
+        type: 'table',
+        rows: rows.map((r, ri) => ({
+          cells: r.cells.map((c, ci) => {
+            const keep = ri < headerRows || c.header || (ci === 0 && runsText(c.runs) && !/^\d+([.,]\d+)?$/.test(runsText(c.runs)) && isLabelColumn(rows, headerRows));
+            return { ...c, runs: keep ? [{ text: runsText(c.runs), ...(ri < headerRows || c.header ? { bold: true } : {}) }] : [] };
+          }),
+        })),
+      });
+    } else if (b.type === 'paragraph') {
+      const t = runsText(b.runs);
+      if (isLabel(t)) blocks.push({ type: 'paragraph', runs: [{ text: `${t.split(/[:：]/)[0]}: ` }] });
+    } else if (b.type === 'list') {
+      const labels = (b.items || []).map((it) => runsText(it.runs)).filter(isLabel);
+      if (labels.length) blocks.push({ type: 'list', ordered: b.ordered, items: labels.map((l) => ({ runs: [{ text: `${l.split(/[:：]/)[0]}: ` }] })) });
+    }
+  }
+  return { blocks };
+}
+
+// First column looks like row labels (text that repeats as a list of names like "ซี่ 11", "BOP")?
+function isLabelColumn(rows, headerRows) {
+  const body = rows.slice(headerRows).map((r) => runsText(r.cells[0]?.runs));
+  if (body.length < 2) return false;
+  const textual = body.filter((t) => t && !/^\d+([.,]\d+)?$/.test(t)).length;
+  return textual / body.length >= 0.6 && rows[0]?.cells?.length > 1;
+}

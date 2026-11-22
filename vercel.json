@@ -26,6 +26,12 @@
     },
     "api/quota.js": {
       "maxDuration": 10
+    },
+    "api/vault.js": {
+      "maxDuration": 30
+    },
+    "api/templates.js": {
+      "maxDuration": 10
     }
   }
 }

@@ -7,6 +7,9 @@ import CalicoCat from '../components/CalicoCat';
 import { Button, Card, PageTitle, PixelProgress } from '../components/ui';
 import { ocrPagesToDoc } from '../utils/ocrToDoc';
 import { scanPage } from '../services/ocrClient';
+import { meow } from '../utils/sound';
+import SaveTemplateModal from '../components/SaveTemplateModal';
+import { Toast } from '../components/FeatureRequest';
 
 const contentOf = (page) => page.content || ocrPagesToDoc([page]);
 
@@ -52,6 +55,8 @@ export default function ReviewPage({ document, onExport }) {
   const [rescanError, setRescanError] = useState('');
   const [editorKey, setEditorKey] = useState(0);
   const [showImage, setShowImage] = useState(true);
+  const [saveTpl, setSaveTpl] = useState(false);
+  const [toast, setToast] = useState('');
   const timer = useRef(null);
   const pending = useRef({ pages: {}, meta: {} });
   const pages = document.pages;
@@ -117,6 +122,7 @@ export default function ReviewPage({ document, onExport }) {
       if (refs.length !== (document.references || []).length) meta.references = refs;
       if (Object.keys(meta).length) updateMeta(document.id, meta);
       setEditorKey((k) => k + 1);
+      meow();
       if (res.engine === 'tesseract') setRescanError('ตอนนี้ใช้ AI ไม่ได้ เลยสแกนแบบออฟไลน์ให้แทน');
     } catch (err) {
       setRescanError(err.message || 'สแกนใหม่ไม่สำเร็จ');
@@ -194,9 +200,19 @@ export default function ReviewPage({ document, onExport }) {
               <button onClick={() => setShowImage((v) => !v)} className="md:hidden font-menu text-sm min-h-[44px] px-3 underline underline-offset-4 text-ink/70">
                 {showImage ? 'ซ่อนต้นฉบับ' : 'ดูต้นฉบับ'}
               </button>
-              <Button variant="ghost" onClick={rescanDetailed} disabled={!!rescan} className="ml-auto">
-                🔍 สแกนหน้านี้ใหม่แบบละเอียด
-              </Button>
+              <div className="ml-auto flex flex-wrap gap-2">
+                <Button
+                  variant="ghost"
+                  onClick={() => { flush(); setSaveTpl(true); }}
+                  disabled={!(pending.current.pages[page.id] || value.content)?.content?.some((n) => n.type === 'table')}
+                  title="ต้องมีตารางในหน้านี้"
+                >
+                  💾 บันทึกโครงสร้างนี้เป็น Template
+                </Button>
+                <Button variant="ghost" onClick={rescanDetailed} disabled={!!rescan}>
+                  🔍 สแกนหน้านี้ใหม่แบบละเอียด
+                </Button>
+              </div>
             </div>
 
             {(rescan || rescanError) && (
@@ -224,6 +240,16 @@ export default function ReviewPage({ document, onExport }) {
           </>
         )}
       </div>
+
+      {saveTpl && (
+        <SaveTemplateModal
+          content={value.content}
+          defaultName={document.title}
+          onClose={() => setSaveTpl(false)}
+          onSaved={(t) => { setSaveTpl(false); setToast(`บันทึก Template “${t.name}” แล้ว ใช้ได้ตอนสแกนครั้งหน้า`); }}
+        />
+      )}
+      {toast && <Toast text={toast} onDone={() => setToast('')} />}
 
       <div className="fixed bottom-0 inset-x-0 z-20 bg-paper/90 backdrop-blur border-t border-ink/10 safe-x pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3">
         <div className="max-w-7xl mx-auto flex justify-end">

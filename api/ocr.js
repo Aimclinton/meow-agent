@@ -1,5 +1,5 @@
 import { DAILY_LIMIT, DETAILED_MODEL, FALLBACK_MODELS, PRIMARY_MODEL, quotaDay, readJSON, sendJSON, supabaseEnabled } from './_lib/config.js';
-import { addUsage, getUsage, getUser } from './_lib/supabase.js';
+import { addUsage, findVault, getUsage } from './_lib/supabase.js';
 import { transcribePage } from './_lib/gemini.js';
 
 
@@ -7,11 +7,11 @@ export default async function handler(req, res) {
   const started = Date.now();
   if (req.method !== 'POST') return sendJSON(res, 405, { error: 'method_not_allowed' });
 
-  // With Supabase configured, only signed-in team members may use the shared key.
+  // With Supabase configured, only people logged in with a team password may use the shared key.
   const userKey = (req.headers['x-user-gemini-key'] || '').trim();
   if (supabaseEnabled() && !userKey) {
-    const user = await getUser(req);
-    if (!user) return sendJSON(res, 401, { error: 'unauthorized' });
+    const vault = await findVault(req.headers['x-meow-vault']).catch(() => null);
+    if (!vault) return sendJSON(res, 401, { error: 'unauthorized' });
   }
 
   const apiKey = userKey || process.env.GEMINI_API_KEY;
@@ -44,6 +44,7 @@ export default async function handler(req, res) {
       apiKey,
       models: [...new Set(models)],
       deadline: started + 60_000,
+      template: body.template && body.template.structure ? body.template : undefined,
     });
     const used = shared ? await addUsage(day, 1) : null;
     return sendJSON(res, 200, { page, model, usage: used === null ? null : { used, limit: DAILY_LIMIT, day } });

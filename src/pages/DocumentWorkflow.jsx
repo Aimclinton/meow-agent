@@ -5,6 +5,7 @@ import ReviewPage from './ReviewPage';
 import ExportPage from './ExportPage';
 import CreateSlidesModal from '../components/CreateSlidesModal';
 import { AppHeader, StepBar } from '../components/ui';
+import FeatureRequest from '../components/FeatureRequest';
 
 export default function DocumentWorkflow({ onExit, initialDocId = null }) {
   const [step, setStep] = useState(initialDocId ? 'review' : 'capture');
@@ -25,9 +26,12 @@ export default function DocumentWorkflow({ onExit, initialDocId = null }) {
         onBack={back}
         backLabel={step === 'capture' || (step === 'review' && initialDocId) ? 'Home' : 'Back'}
         right={
-          document && step !== 'capture' ? (
-            <button onClick={() => setShowSlides(true)} className="min-h-[44px] px-2 hover:underline underline-offset-4">🎬 Slides</button>
-          ) : null
+          <>
+            {step !== 'export' && <FeatureRequest variant="header" />}
+            {document && step !== 'capture' && (
+              <button onClick={() => setShowSlides(true)} className="min-h-[44px] px-2 hover:underline underline-offset-4">🎬<span className="hidden sm:inline"> Slides</span></button>
+            )}
+          </>
         }
       >
         <StepBar step={step} />
