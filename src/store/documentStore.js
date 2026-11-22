@@ -105,6 +105,21 @@ export const useDocumentStore = create((set, get) => ({
   logout: () => {
     set({ isAuthenticated: false });
   },
+
+  // Get documents within 7 days (for history)
+  getRecentDocuments: () => {
+    const { documents } = get();
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    return documents.filter((doc) => new Date(doc.updatedAt) > sevenDaysAgo);
+  },
+
+  // Delete document permanently
+  deleteDocument: (docId) => {
+    set((state) => ({
+      documents: state.documents.filter((d) => d.id !== docId),
+    }));
+    deleteFromIndexedDB(docId);
+  },
 }));
 
 // IndexedDB helpers
@@ -193,5 +208,16 @@ export async function verifyPassword(password) {
       resolve(stored === btoa(password));
     };
     request.onerror = () => reject(request.error);
+  });
+}
+
+export async function deleteFromIndexedDB(docId) {
+  const db = await openIndexedDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('documents', 'readwrite');
+    const store = tx.objectStore('documents');
+    const request = store.delete(docId);
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => resolve();
   });
 }

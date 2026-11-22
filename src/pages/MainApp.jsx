@@ -1,14 +1,41 @@
 import { useState } from 'react';
 import { useDocumentStore } from '../store/documentStore';
 import DocumentWorkflow from './DocumentWorkflow';
+import HistoryPage from './HistoryPage';
+import ExportPage from './ExportPage';
 
 export default function MainApp() {
   const [currentPage, setCurrentPage] = useState('dashboard');
+  const [selectedDocForExport, setSelectedDocForExport] = useState(null);
   const { documents, logout } = useDocumentStore();
 
   // Handle page routing
   if (currentPage === 'workflow') {
     return <DocumentWorkflow />;
+  }
+
+  if (currentPage === 'history') {
+    return (
+      <HistoryPage
+        onBack={() => setCurrentPage('dashboard')}
+        onSelect={(doc) => {
+          setSelectedDocForExport(doc);
+          setCurrentPage('export');
+        }}
+      />
+    );
+  }
+
+  if (currentPage === 'export' && selectedDocForExport) {
+    return (
+      <ExportPage
+        document={selectedDocForExport}
+        onBack={() => {
+          setCurrentPage('dashboard');
+          setSelectedDocForExport(null);
+        }}
+      />
+    );
   }
 
   return (
@@ -58,6 +85,19 @@ export default function MainApp() {
                   </button>
                 </div>
               ))}
+
+              {/* Document History */}
+              <div className="bg-white rounded-xl border border-gray-200 p-8 cursor-pointer hover:shadow-lg hover:border-gray-300 transition-all">
+                <div className="text-5xl mb-6">📚</div>
+                <h2 className="text-xl font-bold text-gray-900 mb-2">Document History</h2>
+                <p className="text-gray-600 text-sm mb-6">View & export past 7 days</p>
+                <button
+                  onClick={() => setCurrentPage('history')}
+                  className="w-full bg-gray-100 hover:bg-gray-200 text-gray-900 font-medium py-3 px-4 rounded-lg transition-colors"
+                >
+                  View History
+                </button>
+              </div>
 
               {/* Create Slides */}
               <div className="bg-white rounded-xl border border-gray-200 p-8 cursor-pointer hover:shadow-lg hover:border-gray-300 transition-all">
