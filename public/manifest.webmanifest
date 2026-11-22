@@ -1,0 +1,17 @@
+{
+  "name": "MEOW Agent",
+  "short_name": "MEOW",
+  "description": "ถ่ายเอกสาร แล้วให้จ๋องอ่านและพิมพ์เป็น Word / Excel",
+  "lang": "th",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#eeeeec",
+  "theme_color": "#eeeeec",
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "/icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}
